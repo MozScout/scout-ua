@@ -9,7 +9,7 @@ app.get('/api', function (req, res) {
 app.get('/hello', function(req, res) {
   res.status(200).send('hello world');
 });
-
+/*
 var UserController = require('./user/UserController');
 app.use('/api/users', UserController);
 
@@ -18,6 +18,6 @@ var AuthController = require('./auth/AuthController');
 app.use('/api/auth', AuthController);
 
 var CommandController = require('./command/CommandController');
-app.use('/command', CommandController);
+app.use('/command', CommandController);*/
  
 module.exports = app;
