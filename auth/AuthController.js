@@ -14,8 +14,10 @@ var bcrypt = require('bcryptjs');
 var config = require('../config');
 
 router.post('/register', function(req, res) {
-  
+  console.log('STARTING REGISTER');
   var hashedPassword = bcrypt.hashSync(req.body.password, 8);
+  console.log('AFTER HASH');
+  console.log(req.body.name);
   
   User.create({
     name : req.body.name,
@@ -24,9 +26,11 @@ router.post('/register', function(req, res) {
   },
   function (err, user) {
     if (err) {
+      console.log('There was a problem registering the user');
       return res.status(500).send('There was a problem registering the user.');
     }
 
+    console.log('before jwt signing');
     // create a token
     var token = jwt.sign({ id: user._id }, config.secret, {
       expiresIn: 86400 // expires in 24 hours

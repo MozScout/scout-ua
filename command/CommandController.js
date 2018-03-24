@@ -10,6 +10,13 @@ var rp = require('request-promise');
 var jwt = require('jsonwebtoken');
 var config = require('../config');
 
+const pocketRecOptions = {
+  uri: 'https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?'
+      + 'count=3&version=3&consumer_key='
+      + process.env.POCKET_KEY,
+  method: 'GET'
+};
+
 const getOptions = {
   uri: 'https://getpocket.com/v3/get',
   method: 'POST',
@@ -18,7 +25,9 @@ const getOptions = {
             'X-Accept': 'application/json'}
 };
 
-const summaryLink = 'https://api.smmry.com?SM_API_KEY=D9D01DE170&SM_URL='
+const summaryLink = 'https://api.smmry.com?SM_API_KEY=' + 
+  process.env.SM_API_KEY + '&SM_URL=';
+console.log('SummaryLink Creation is: ' + summaryLink);
 const summaryOptions = {
   uri: '',
   method: 'GET',
@@ -37,9 +46,7 @@ router.post('/intent', VerifyToken, function(req, res) {
       if (err) return res.status(500).send({
          auth: false, message: 'Failed to authenticate token.' });
 
-      console.log('Got a command:' + JSON.stringify(req.body));
       var command = req.body.cmd;
-      console.log('Command is: ' + command);
     
       res.setHeader('Content-Type', 'application/json');
       switch(command) {
@@ -155,6 +162,61 @@ router.post('/intent', VerifyToken, function(req, res) {
           res.status(404).send(JSON.stringify({ text: errSpeech }));
         });
     
+        break;
+      case 'ScoutHeadlines':
+        console.log('Processing ScoutHeadlines: ' + process.env.POCKET_KEY);
+        rp(pocketRecOptions)
+          .then(function(body) {
+            var jsonBody = JSON.parse(body);
+            if(jsonBody.status == '1') {
+              let summLoop = function() {
+                let promiseArray = [];
+                Object.keys(jsonBody.recommendations).forEach(key => {
+                  summaryOptions.uri = summaryLink + 
+                    jsonBody.recommendations[key].url;
+                    console.log('Summary link is: ' + summaryLink);
+                    console.log('Summary uri is: ' + summaryOptions.uri);
+                  promiseArray.push(rp(summaryOptions)
+                    .then(function(sumResults) {
+                    return sumResults;
+                  }));
+                });
+                return Promise.all(promiseArray);
+              }
+              
+              let sumRes = summLoop();
+              sumRes.then(function(sumVal) {
+                let textResponse = '';
+                sumVal.forEach(function(element) {
+                  var sumBody = JSON.parse(element);
+                  // Link up the response text for all summaries
+                  textResponse += 'Here is a summary of: ' + 
+                    sumBody.sm_api_title + '.  ' +
+                    sumBody.sm_api_content;
+                });
+                res.status(200).send(JSON.stringify({ text: textResponse }));
+              })
+              .catch(function(err) {
+                res.status(500).send(JSON.stringify({ text: 'Summary Engine error' }));
+              });
+            } else {
+              throw 'NoSearchMatch';
+            }
+          })
+          .catch(reason => {
+            console.log('caught an error: ', reason );
+            let errSpeech = ''
+            switch(reason) {
+              case 'NoSearchMatch':
+                errSpeech = 'Unable to find a matching article.' +
+                  '  Try another phrase.';
+                break;
+              default:
+                errSpeech = 'There was an error finding the article.'
+                break;
+            }
+            res.status(404).send(JSON.stringify({ text: errSpeech }));
+          });
         break;
       default:
         break;
