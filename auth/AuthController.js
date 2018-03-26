@@ -11,7 +11,6 @@ var VerifyToken = require('../VerifyToken');
 
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
-var config = require('../config');
 
 router.post('/register', function(req, res) {
   console.log('STARTING REGISTER');
@@ -32,7 +31,7 @@ router.post('/register', function(req, res) {
 
     console.log('before jwt signing');
     // create a token
-    var token = jwt.sign({ id: user._id }, config.secret, {
+    var token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: 86400 // expires in 24 hours
     });
 
@@ -46,7 +45,7 @@ router.get('/me', VerifyToken, function(req, res) {
     if (!token) return res.status(401).send({ 
       auth: false, message: 'No token provided.' });
     
-    jwt.verify(token, config.secret, function(err, decoded) {
+    jwt.verify(token, process.env.JWT_SECRET, function(err, decoded) {
       if (err) return res.status(500).send({ auth: false, 
         message: 'Failed to authenticate token.' });
       // res.status(200).send(decoded);
