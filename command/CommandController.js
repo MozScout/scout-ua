@@ -8,7 +8,6 @@ var read = require('readability-js');
 var rp = require('request-promise');
 
 var jwt = require('jsonwebtoken');
-var config = require('../config');
 
 const pocketRecOptions = {
   uri: 'https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?'
@@ -42,7 +41,7 @@ router.post('/intent', VerifyToken, function(req, res) {
     if (!token) return res.status(401).send({ 
       auth: false, message: 'No token provided.' });
     
-    jwt.verify(token, config.secret, function(err) {
+    jwt.verify(token, process.env.JWT_SECRET, function(err) {
       if (err) return res.status(500).send({
          auth: false, message: 'Failed to authenticate token.' });
 
@@ -75,8 +74,8 @@ router.post('/intent', VerifyToken, function(req, res) {
         break;
       case 'ReadPocketArticle':
         var getBody = {
-          'consumer_key': '75081-21a26943be96172d3714c290',
-          'access_token': 'bc13dc5c-4dc3-0ca8-d826-41a852',
+          'consumer_key': process.env.POCKET_KEY,
+          'access_token': process.env.POCKET_TOKEN,
           'search': req.body.searchTerms
         };
         getOptions.body = JSON.stringify(getBody);
@@ -190,9 +189,11 @@ router.post('/intent', VerifyToken, function(req, res) {
                 sumVal.forEach(function(element) {
                   var sumBody = JSON.parse(element);
                   // Link up the response text for all summaries
+
                   textResponse += 'Here is a summary of: ' + 
                     sumBody.sm_api_title + '.  ' +
                     sumBody.sm_api_content;
+                    console.log(textResponse);
                 });
                 res.status(200).send(JSON.stringify({ text: textResponse }));
               })
