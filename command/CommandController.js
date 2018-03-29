@@ -6,6 +6,7 @@ router.use(bodyParser.json());
 var VerifyToken = require('../VerifyToken');
 var read = require('readability-js');
 var rp = require('request-promise');
+const texttools = require('./texttools');
 
 var jwt = require('jsonwebtoken');
 
@@ -49,7 +50,14 @@ router.post('/intent', VerifyToken, function(req, res) {
     
       res.setHeader('Content-Type', 'application/json');
       switch(command) {
-      case 'GetPocketList':
+      case 'ScoutTitles':
+      // This intent gets the user's titles from Pocket and lists out 
+      // all the titles.
+        var getBody = {
+          'consumer_key': process.env.POCKET_KEY,
+          'access_token': process.env.POCKET_TOKEN
+        };
+
         getOptions.body = JSON.stringify(getBody);
         rp(getOptions)
           .then(function(body) {
@@ -72,7 +80,11 @@ router.post('/intent', VerifyToken, function(req, res) {
             console.log(err);
           });
         break;
-      case 'ReadPocketArticle':
+      case 'SearchAndPlayArticle':
+      // Searches for an article with the search term in the request
+      // and returns the text of that article after converting it to
+      // a readable format.
+        console.log('Search term is: ' + req.body.searchTerms);
         var getBody = {
           'consumer_key': process.env.POCKET_KEY,
           'access_token': process.env.POCKET_TOKEN,
@@ -81,22 +93,23 @@ router.post('/intent', VerifyToken, function(req, res) {
         getOptions.body = JSON.stringify(getBody);
         rp(getOptions)
           .then(function(body) {
-            var titles = '';
-            var url = '';
             var jsonBody = JSON.parse(body);
-            if(jsonBody.status == '1') {
-              Object.keys(jsonBody.list).forEach(key => {
-                console.log(jsonBody.list[key].resolved_title);
-                titles = jsonBody.list[key].resolved_title + '.  ';
-                url = jsonBody.list[key].given_url;
-              });
-              console.log('URL is:  ' + url);
+            if (jsonBody.status == '1') {
+              var title = '';
+              var url = '';
+              console.log('List length is: ' + Object.keys(jsonBody.list).length);
+              let keysArr = Object.keys(jsonBody.list);
+              console.log(keysArr);
+              if (keysArr.length > 0) {
+                url = jsonBody.list[keysArr[0]].given_url;
+                title = jsonBody.list[keysArr[0]].resolved_title;
     
-              read(url, function(err, article) {
-                var speechText = titles + article.content.text();
-                console.log(speechText);
-                res.status(200).send(JSON.stringify({ text: speechText }));
-              });
+                read(url, function(err, article) {
+                  var speechText = title + article.content.text();
+                  let speechText2 = texttools.truncateArticle(speechText);
+                  res.status(200).send(JSON.stringify(speechText2));
+                });
+              }
             } else {
               console.log('Searching for the article failed to find a match');
               throw 'NoSearchMatch';
@@ -117,34 +130,67 @@ router.post('/intent', VerifyToken, function(req, res) {
             res.status(404).send(JSON.stringify({ text: errSpeech }));
           });
         break;
-      case 'SummarizePocketArticle':
+      case 'ScoutMyPocketSummary':
+      // Gets the user's Pocket titles and summarizes first three.
+
+      //TODO:  This function is a very close dupe of ScoutHeadlines.  Need to
+      // refactor this to remove duplicate code.
+        var getBody = {
+          'consumer_key': process.env.POCKET_KEY,
+          'access_token': process.env.POCKET_TOKEN,
+          'count': '3'
+        };
         getOptions.body = JSON.stringify(getBody);
         rp(getOptions)
           .then(function(body) {
             var url = '';
             var jsonBody = JSON.parse(body);
             if(jsonBody.status == '1') {
-              console.log('Length is: ' + jsonBody.list.length);
-              Object.keys(jsonBody.list).forEach(key => {
-                console.log(jsonBody.list[key].resolved_title);
-                url = jsonBody.list[key].given_url;
+              let summLoop = function() {
+                let promiseArray = [];
+                Object.keys(jsonBody.list).forEach(key => {
+                  summaryOptions.uri = summaryLink + 
+                    jsonBody.list[key].given_url;
+                    console.log('Summary link is: ' + summaryLink);
+                    console.log('Summary uri is: ' + summaryOptions.uri);
+                  promiseArray.push(rp(summaryOptions)
+                    .then(function(sumResults) {
+                      console.log(sumResults);
+                      return sumResults;
+                    })
+                    .catch(function(err) {
+                      console.log('Caught an error: ' + err);
+                    })
+                  );
+                });
+                return Promise.all(promiseArray);
+              }
+
+              let sumRes = summLoop();
+              sumRes.then(function(sumVal) {
+                let textResponse = '';
+                sumVal.forEach(function(element) {
+                  var sumBody = JSON.parse(element);
+                  // Link up the response text for all summaries
+                  if (sumBody.sm_api_character_count) {
+                    //TODO:Right now, some of the pages are not parseable.
+                    //Want to change this later to allow it to get 3 that are
+                    // parseable.
+                    textResponse += 'Here is a summary of: ' + 
+                      sumBody.sm_api_title + '.  ' +
+                      sumBody.sm_api_content;
+                  }
+                });
+                console.log('Text response is: ' + textResponse)
+                res.status(200).send(JSON.stringify({ text: textResponse }));
+              })
+              .catch(function(err) {
+                res.status(500).send(JSON.stringify({ text: 'Summary Engine error' }));
               });
-              // Format for the summarization engine and send
-              summaryOptions.uri = summaryLink + url;
-              return rp(summaryOptions);
             } else {
               console.log('Searching for the article failed to find a match');
               throw 'NoSearchMatch';
             }
-        })
-        .then(function(summaryBody) {
-          console.log('Got the summary back from summary engine');
-          let jsonBody = JSON.parse(summaryBody);
-          let textToSpeak = 'Here is a summary of: ' + 
-            jsonBody.sm_api_title + '.  ' +
-            jsonBody.sm_api_content;
-          console.log('Summary is:  ' + textToSpeak);
-          res.status(200).send(JSON.stringify({ text: textToSpeak }));
         })
         .catch(reason => {
           console.log('caught an error: ', reason );
@@ -160,9 +206,11 @@ router.post('/intent', VerifyToken, function(req, res) {
           }
           res.status(404).send(JSON.stringify({ text: errSpeech }));
         });
-    
         break;
+      // Gets the global pocket recommendation and summarizes first three.
       case 'ScoutHeadlines':
+      //TODO:  Refactor with ScoutMyPocketSummary to remove some of the 
+      // duplication in the codes.  
         console.log('Processing ScoutHeadlines: ' + process.env.POCKET_KEY);
         rp(pocketRecOptions)
           .then(function(body) {
@@ -189,11 +237,12 @@ router.post('/intent', VerifyToken, function(req, res) {
                 sumVal.forEach(function(element) {
                   var sumBody = JSON.parse(element);
                   // Link up the response text for all summaries
-
-                  textResponse += 'Here is a summary of: ' + 
-                    sumBody.sm_api_title + '.  ' +
-                    sumBody.sm_api_content;
-                    console.log(textResponse);
+                  if (sumBody.sm_api_character_count) {
+                    textResponse += 'Here is a summary of: ' + 
+                      sumBody.sm_api_title + '.  ' +
+                      sumBody.sm_api_content;
+                      console.log(textResponse);
+                  }
                 });
                 res.status(200).send(JSON.stringify({ text: textResponse }));
               })
