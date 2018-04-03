@@ -67,8 +67,12 @@ router.post('/intent', VerifyToken, function(req, res) {
               console.log('Status is successful');    
               console.log('Length is: ' + jsonBody.list.length);
               Object.keys(jsonBody.list).forEach(key => {
-                console.log(jsonBody.list[key].resolved_title);
-                titles += jsonBody.list[key].resolved_title + '.  ';
+                if (jsonBody.list[key].resolved_title) {
+                  console.log('title is: ' + jsonBody.list[key].resolved_title);
+                  let titleString = jsonBody.list[key].resolved_title + '.  ';
+                  console.log('TitleString: ' + titleString);
+                  titles = titles + titleString;
+                }
               });
 
               res.status(200).send(JSON.stringify({ text: titles }));
