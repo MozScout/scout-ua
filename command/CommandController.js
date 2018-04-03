@@ -25,6 +25,14 @@ const getOptions = {
             'X-Accept': 'application/json'}
 };
 
+const articleOptions = {
+  uri: 'https://text.getpocket.com/v3/text',
+  method: 'POST',
+  body: '',
+  headers: {'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Accept': 'application/json'}
+};
+
 const summaryLink = 'https://api.smmry.com?SM_API_KEY=' + 
   process.env.SM_API_KEY + '&SM_URL=';
 console.log('SummaryLink Creation is: ' + summaryLink);
@@ -67,8 +75,12 @@ router.post('/intent', VerifyToken, function(req, res) {
               console.log('Status is successful');    
               console.log('Length is: ' + jsonBody.list.length);
               Object.keys(jsonBody.list).forEach(key => {
-                console.log(jsonBody.list[key].resolved_title);
-                titles += jsonBody.list[key].resolved_title + '.  ';
+                if (jsonBody.list[key].resolved_title) {
+                  console.log('title is: ' + jsonBody.list[key].resolved_title);
+                  let titleString = jsonBody.list[key].resolved_title + '.  ';
+                  console.log('TitleString: ' + titleString);
+                  titles = titles + titleString;
+                }
               });
 
               res.status(200).send(JSON.stringify({ text: titles }));
@@ -103,17 +115,30 @@ router.post('/intent', VerifyToken, function(req, res) {
               if (keysArr.length > 0) {
                 url = jsonBody.list[keysArr[0]].given_url;
                 title = jsonBody.list[keysArr[0]].resolved_title;
-    
-                read(url, function(err, article) {
-                  var speechText = title + article.content.text();
-                  let speechText2 = texttools.truncateArticle(speechText);
-                  res.status(200).send(JSON.stringify(speechText2));
-                });
+                articleOptions.formData = {
+                  'consumer_key': process.env.POCKET_KEY,
+                  'url': jsonBody.list[keysArr[0]].given_url,
+                  'images': '0',
+                  'videos': '0',
+                  'refresh': '0',
+                  'output': 'json'
+                };
+                return rp(articleOptions)
+              } else {
+                console.log('no keys');
               }
             } else {
               console.log('Searching for the article failed to find a match');
               throw 'NoSearchMatch';
             }
+          })
+          .then(function(articleBody) {
+            console.log('received body');
+            var artBody = JSON.parse(articleBody);
+            var cleanText = texttools.cleanText(artBody.article);
+            var chunkText = texttools.truncateArticle(cleanText);
+            console.log('chunkText is: ' + chunkText);
+            res.status(200).send(JSON.stringify({text: chunkText}));
           })
           .catch(reason => {
             console.log('caught an error: ', reason );
@@ -176,9 +201,12 @@ router.post('/intent', VerifyToken, function(req, res) {
                     //TODO:Right now, some of the pages are not parseable.
                     //Want to change this later to allow it to get 3 that are
                     // parseable.
+                    let title_modified = sumBody.sm_api_title.replace("\\","");
+                    let content_modified = sumBody.sm_api_content.replace("\\","");
+                    console.log('title modified: ' + title_modified);
                     textResponse += 'Here is a summary of: ' + 
-                      sumBody.sm_api_title + '.  ' +
-                      sumBody.sm_api_content;
+                    title_modified + '.  ' +
+                    content_modified;
                   }
                 });
                 console.log('Text response is: ' + textResponse)
