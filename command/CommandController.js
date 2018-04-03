@@ -89,7 +89,7 @@ router.post('/intent', VerifyToken, function(req, res) {
       // and returns the text of that article after converting it to
       // a readable format.
         console.log('Search term is: ' + req.body.searchTerms);
-        var getBody = {
+/*        var getBody = {
           'consumer_key': process.env.POCKET_KEY,
           'access_token': process.env.POCKET_TOKEN,
           'search': req.body.searchTerms
@@ -113,6 +113,8 @@ router.post('/intent', VerifyToken, function(req, res) {
                   let speechText2 = texttools.truncateArticle(speechText);
                   res.status(200).send(JSON.stringify(speechText2));
                 });
+              } else {
+                console.log('no keys');
               }
             } else {
               console.log('Searching for the article failed to find a match');
@@ -132,7 +134,8 @@ router.post('/intent', VerifyToken, function(req, res) {
                 break;
             }
             res.status(404).send(JSON.stringify({ text: errSpeech }));
-          });
+          });*/
+          res.status(200).send(JSON.stringify({text: 'How Fake News Turned a Small Town Upside Down.  On a Tuesday morning in June 2016, Nathan Brown, a reporter for The Times-News, the local paper in Twin Falls, Idaho, strolled into the office and cleared off a spot for his coffee cup amid the documents and notebooks piled on his desk. Brown, 32, started his career at a paper in upstate New York, where he grew up, and looks the part of a local reporter, clad in a fresh oxford and khakis that tend to become disheveled over the course of his long days. His first order of business was an article about a City Council meeting from the night before, which he hadn’t attended. Brown pulled up a recording of the proceedings and began punching out notes for his weekly article. Because most governing in Twin Falls is done by a city manager, these meetings tend to deal with trivial subjects like lawn-watering and potholes, but Brown could tell immediately that this one was different.'}));
         break;
       case 'ScoutMyPocketSummary':
       // Gets the user's Pocket titles and summarizes first three.
@@ -180,9 +183,12 @@ router.post('/intent', VerifyToken, function(req, res) {
                     //TODO:Right now, some of the pages are not parseable.
                     //Want to change this later to allow it to get 3 that are
                     // parseable.
+                    let title_modified = sumBody.sm_api_title.replace("\\","");
+                    let content_modified = sumBody.sm_api_content.replace("\\","");
+                    console.log('title modified: ' + title_modified);
                     textResponse += 'Here is a summary of: ' + 
-                      sumBody.sm_api_title + '.  ' +
-                      sumBody.sm_api_content;
+                    title_modified + '.  ' +
+                    content_modified;
                   }
                 });
                 console.log('Text response is: ' + textResponse)
