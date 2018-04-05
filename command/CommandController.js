@@ -4,7 +4,6 @@ var bodyParser = require('body-parser');
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 var VerifyToken = require('../VerifyToken');
-var read = require('readability-js');
 var rp = require('request-promise');
 const texttools = require('./texttools');
 
@@ -46,6 +45,11 @@ const summaryOptions = {
 
 router.post('/intent', VerifyToken, function(req, res) {
     console.log(req.body.cmd);
+    var getBody = {
+      'consumer_key': process.env.POCKET_KEY,
+      'access_token': process.env.POCKET_TOKEN
+    };
+
     var token = req.headers['x-access-token'];
     if (!token) return res.status(401).send({ 
       auth: false, message: 'No token provided.' });
@@ -61,10 +65,6 @@ router.post('/intent', VerifyToken, function(req, res) {
       case 'ScoutTitles':
       // This intent gets the user's titles from Pocket and lists out 
       // all the titles.
-        var getBody = {
-          'consumer_key': process.env.POCKET_KEY,
-          'access_token': process.env.POCKET_TOKEN
-        };
 
         getOptions.body = JSON.stringify(getBody);
         rp(getOptions)
@@ -97,24 +97,15 @@ router.post('/intent', VerifyToken, function(req, res) {
       // and returns the text of that article after converting it to
       // a readable format.
         console.log('Search term is: ' + req.body.searchTerms);
-        var getBody = {
-          'consumer_key': process.env.POCKET_KEY,
-          'access_token': process.env.POCKET_TOKEN,
-          'search': req.body.searchTerms
-        };
+        getBody.search = req.body.searchTerms;
         getOptions.body = JSON.stringify(getBody);
         rp(getOptions)
           .then(function(body) {
             var jsonBody = JSON.parse(body);
             if (jsonBody.status == '1') {
-              var title = '';
-              var url = '';
-              console.log('List length is: ' + Object.keys(jsonBody.list).length);
               let keysArr = Object.keys(jsonBody.list);
               console.log(keysArr);
               if (keysArr.length > 0) {
-                url = jsonBody.list[keysArr[0]].given_url;
-                title = jsonBody.list[keysArr[0]].resolved_title;
                 articleOptions.formData = {
                   'consumer_key': process.env.POCKET_KEY,
                   'url': jsonBody.list[keysArr[0]].given_url,
@@ -160,15 +151,10 @@ router.post('/intent', VerifyToken, function(req, res) {
 
       //TODO:  This function is a very close dupe of ScoutHeadlines.  Need to
       // refactor this to remove duplicate code.
-        var getBody = {
-          'consumer_key': process.env.POCKET_KEY,
-          'access_token': process.env.POCKET_TOKEN,
-          'count': '3'
-        };
+        getBody.count = '3';
         getOptions.body = JSON.stringify(getBody);
         rp(getOptions)
           .then(function(body) {
-            var url = '';
             var jsonBody = JSON.parse(body);
             if(jsonBody.status == '1') {
               let summLoop = function() {
@@ -201,8 +187,9 @@ router.post('/intent', VerifyToken, function(req, res) {
                     //TODO:Right now, some of the pages are not parseable.
                     //Want to change this later to allow it to get 3 that are
                     // parseable.
-                    let title_modified = sumBody.sm_api_title.replace("\\","");
-                    let content_modified = sumBody.sm_api_content.replace("\\","");
+                    let title_modified = sumBody.sm_api_title.replace('\\','');
+                    let content_modified = 
+                      sumBody.sm_api_content.replace('\\','');
                     console.log('title modified: ' + title_modified);
                     textResponse += 'Here is a summary of: ' + 
                     title_modified + '.  ' +
@@ -213,7 +200,9 @@ router.post('/intent', VerifyToken, function(req, res) {
                 res.status(200).send(JSON.stringify({ text: textResponse }));
               })
               .catch(function(err) {
-                res.status(500).send(JSON.stringify({ text: 'Summary Engine error' }));
+                res.status(500)
+                  .send(JSON.stringify({ text: 'Summary Engine error' }));
+                console.log('Error parsing: ' + err);
               });
             } else {
               console.log('Searching for the article failed to find a match');
@@ -275,7 +264,9 @@ router.post('/intent', VerifyToken, function(req, res) {
                 res.status(200).send(JSON.stringify({ text: textResponse }));
               })
               .catch(function(err) {
-                res.status(500).send(JSON.stringify({ text: 'Summary Engine error' }));
+                res.status(500)
+                  .send(JSON.stringify({ text: 'Summary Engine error' }));
+                console.log('Error getting summary: ' + err);
               });
             } else {
               throw 'NoSearchMatch';

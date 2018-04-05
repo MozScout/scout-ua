@@ -1,3 +1,5 @@
+/* eslint no-useless-escape: 0 */  // --> OFF
+/* eslint quotes: 0 */  // --> OFF
 var texttools = {
 
   truncateArticle: function(str, length, ending) {
