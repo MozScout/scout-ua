@@ -7,6 +7,10 @@ router.use(bodyParser.urlencoded({ extended: false }));
 router.use(bodyParser.json());
 var User = require('../user/User');
 var VerifyToken = require('../VerifyToken');
+var mongoose = require('mongoose');
+console.log('connecting to mongoose');
+mongoose.connect(process.env.MONGO_STRING, {  })
+console.log('after connecting to mongoose');
 
 
 var jwt = require('jsonwebtoken');
