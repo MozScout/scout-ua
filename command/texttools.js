@@ -5,7 +5,7 @@ var texttools = {
   truncateArticle: function(str, length, ending) {
     console.log('Truncating article');
     if (length == null) {
-      length = 7990;
+      length = 600;
     }
     if (ending == null) {
       ending = '...';

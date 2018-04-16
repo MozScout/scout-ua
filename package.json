@@ -10,6 +10,7 @@
     "cov": "jest --coverage"
   },
   "dependencies": {
+    "aws-sdk": "^2.224.1",
     "babel-eslint": "^8.2.2",
     "bcryptjs": "^2.4.3",
     "body-parser": "~1.18.2",
@@ -26,6 +27,7 @@
     "mongoose": "^5.0.7",
     "mongoose-unique-validator": "^2.0.0",
     "morgan": "~1.9.0",
+    "node-uuid-generator": "^1.0.0",
     "nyc": "^11.6.0",
     "readability-js": "^1.0.7",
     "request-promise": "^4.2.2",
