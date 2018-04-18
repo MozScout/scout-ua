@@ -9,6 +9,7 @@ const texttools = require('./texttools');
 var mongoose = require('mongoose');
 var scoutuser = require('../scout_user');
 mongoose.connect(process.env.MONGO_STRING, {  })
+var polly_tts = require('./polly_tts');
 
 
 var jwt = require('jsonwebtoken');
@@ -99,7 +100,8 @@ router.post('/intent', VerifyToken, function(req, res) {
                 console.log('Length is: ' + jsonBody.list.length);
                 Object.keys(jsonBody.list).forEach(key => {
                   if (jsonBody.list[key].resolved_title) {
-                    console.log('title is: ' + jsonBody.list[key].resolved_title);
+                    console.log('title is: ' + 
+                      jsonBody.list[key].resolved_title);
                     let titleString = jsonBody.list[key].resolved_title + '.  ';
                     console.log('TitleString: ' + titleString);
                     titles = titles + titleString;
@@ -110,7 +112,7 @@ router.post('/intent', VerifyToken, function(req, res) {
               }
             })
             .catch(function(err) {
-              res.status(404).send(JSON.stringify({ text: 'Wow.  Amazing.  ' }));
+              res.status(404).send(JSON.stringify({ text: 'Wow.  Amazing.'}));
               console.log('Failed to get to pocket');
               console.log(err);
             });
@@ -152,7 +154,10 @@ router.post('/intent', VerifyToken, function(req, res) {
               var cleanText = texttools.cleanText(artBody.article);
               var chunkText = texttools.truncateArticle(cleanText);
               console.log('chunkText is: ' + chunkText);
-              res.status(200).send(JSON.stringify({text: chunkText}));
+              return polly_tts.getSpeechSynthUrl(chunkText);
+            })
+            .then(function(url) {
+              res.status(200).send(JSON.stringify({url: url}));
             })
             .catch(reason => {
               console.log('caught an error: ', reason );
@@ -210,7 +215,8 @@ router.post('/intent', VerifyToken, function(req, res) {
                       //TODO:Right now, some of the pages are not parseable.
                       //Want to change this later to allow it to get 3 that are
                       // parseable.
-                      let title_modified = sumBody.sm_api_title.replace('\\','');
+                      let title_modified = 
+                        sumBody.sm_api_title.replace('\\','');
                       let content_modified = 
                         sumBody.sm_api_content.replace('\\','');
                       console.log('title modified: ' + title_modified);
