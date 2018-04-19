@@ -198,8 +198,8 @@ router.post('/intent', VerifyToken, function(req, res) {
           case 'ScoutMyPocketSummary':
             // Gets the user's Pocket titles and summarizes first three.
 
-            //TODO:  This function is a very close dupe of ScoutHeadlines.  Need to
-            // refactor this to remove duplicate code.
+            // TODO: This function is a very close dupe of ScoutHeadlines.
+            // Need to refactor this to remove duplicate code.
             getBody.count = '3';
             getOptions.body = JSON.stringify(getBody);
             rp(getOptions)
@@ -235,9 +235,9 @@ router.post('/intent', VerifyToken, function(req, res) {
                         var sumBody = JSON.parse(element);
                         // Link up the response text for all summaries
                         if (sumBody.sm_api_character_count) {
-                          //TODO:Right now, some of the pages are not parseable.
-                          //Want to change this later to allow it to get 3 that are
-                          // parseable.
+                          // TODO: Right now, some of the pages are not
+                          // parseable. Want to change this later to allow
+                          // it to get 3 that are parseable.
                           let title_modified = sumBody.sm_api_title.replace(
                             '\\',
                             ''
