@@ -3,25 +3,26 @@ var fs = require('fs');
 var uuidgen = require('node-uuid-generator');
 
 var polly_tts = {
-    
   getSpeechSynthUrl: function(str) {
     return new Promise((resolve, reject) => {
       var polly = new AWS.Polly({
         signatureVersion: 'v4',
-        region: 'us-east-1'
+        region: 'us-east-1',
+        accessKeyId: process.env.POLLY_ACCCESSKEYID,
+        secretAccessKey: process.env.POLLY_SECRETACCESSKEY
       });
-      
+
       let params = {
-        'Text': str,
-        'OutputFormat': 'mp3',
-        'SampleRate' : '16000',
-        'VoiceId': 'Kimberly'
+        Text: str,
+        OutputFormat: 'mp3',
+        SampleRate: '16000',
+        VoiceId: 'Kimberly'
       };
 
       polly.synthesizeSpeech(params, (err, data) => {
         console.log('synthesizeSpeech callback');
         if (err) {
-          console.log(err.code)
+          console.log(err.code);
           reject(err);
         } else if (data) {
           if (data.AudioStream instanceof Buffer) {
@@ -29,9 +30,13 @@ var polly_tts = {
             fs.writeFile('./' + audio_file, data.AudioStream, function(err) {
               if (err) {
                 reject(err);
-                return console.log(err)
+                return console.log(err);
               }
-              var s3 = new AWS.S3({apiVersion: '2006-03-01'});
+              var s3 = new AWS.S3({
+                apiVersion: '2006-03-01',
+                accessKeyId: process.env.POLLY_ACCCESSKEYID,
+                secretAccessKey: process.env.POLLY_SECRETACCESSKEY
+              });
               var bucketParams = {
                 Bucket: 'scout-streaming-2018',
                 Key: '',
@@ -55,7 +60,7 @@ var polly_tts = {
                 } else {
                   console.log('Upload Success', data.Location);
                   // Return the URL of the Mp3 in the S3 bucket.
-                  resolve(data.Location); 
+                  resolve(data.Location);
                   // Remove the file.
                   fs.unlink('./' + audio_file, function(err) {
                     if (err) {
@@ -66,14 +71,14 @@ var polly_tts = {
                   });
                 }
               });
-            })
+            });
           } else {
             reject('Not a proper AudioStream');
           }
         }
       });
-    })
+    });
   }
-}
+};
 
- module.exports = polly_tts;
+module.exports = polly_tts;
