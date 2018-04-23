@@ -31,7 +31,8 @@
     "nyc": "^11.6.0",
     "readability-js": "^1.0.7",
     "request-promise": "^4.2.2",
-    "serve-favicon": "~2.4.5"
+    "serve-favicon": "~2.4.5",
+    "url": "^0.11.0"
   },
   "devDependencies": {
     "eslint-config-google": "^0.9.1"
