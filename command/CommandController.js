@@ -96,35 +96,53 @@ router.post('/intent', VerifyToken, function(req, res) {
         res.setHeader('Content-Type', 'application/json');
         var getBody = {
           consumer_key: process.env.POCKET_KEY,
-          access_token: theToken
+          access_token: theToken,
+          detailType: 'complete',
+          count: 3
         };
 
         switch (req.body.cmd) {
           case 'ScoutTitles':
             // This intent gets the user's titles from Pocket and lists out
             // all the titles.
-
             getOptions.body = JSON.stringify(getBody);
             rp(getOptions)
               .then(function(body) {
-                var titles = '';
+                var articles = [];
                 var jsonBody = JSON.parse(body);
                 if (jsonBody.status == '1') {
                   console.log('Status is successful');
-                  console.log('Length is: ' + jsonBody.list.length);
+                  console.log(`jsonBody = ${jsonBody}`);
+                  let speech = '';
+                  let articleCount = 1;
+                  let result = {};
+
+                  // process list of articles
                   Object.keys(jsonBody.list).forEach(key => {
                     if (jsonBody.list[key].resolved_title) {
+                      const titleString = jsonBody.list[key].resolved_title;
+                      const imageURL = jsonBody.list[key].top_image_url;
+                      const authors = jsonBody.list[key].authors;
                       console.log(
-                        'title is: ' + jsonBody.list[key].resolved_title
+                        `Article: ${titleString}, image: ${imageURL}`
                       );
-                      let titleString =
-                        jsonBody.list[key].resolved_title + '.  ';
-                      console.log('TitleString: ' + titleString);
-                      titles = titles + titleString;
+                      console.log(authors);
+                      for (const auth in authors) {
+                        console.log(`auth = ${authors[auth].name}`);
+                      }
+                      speech = speech + `${articleCount++}. ${titleString}. `;
+                      articles.push({
+                        item_id: jsonBody.list[key].item_id,
+                        title: titleString,
+                        imageURL
+                      });
                     }
                   });
 
-                  res.status(200).send(JSON.stringify({ text: titles }));
+                  result.speech = speech;
+                  result.articles = articles;
+
+                  res.status(200).send(JSON.stringify(result));
                 }
               })
               .catch(function(err) {
