@@ -10,8 +10,8 @@ var mongoose = require('mongoose');
 var scoutuser = require('../scout_user');
 mongoose.connect(process.env.MONGO_STRING, {});
 var polly_tts = require('./polly_tts');
-
 var jwt = require('jsonwebtoken');
+const url = require('url');
 
 const pocketRecOptions = {
   uri:
@@ -74,7 +74,7 @@ function getAccessToken(userid) {
 }
 
 router.post('/intent', VerifyToken, function(req, res) {
-  console.log(req.body.cmd);
+  console.log(`Command = ${req.body.cmd}`);
 
   var token = req.headers['x-access-token'];
   if (!token)
@@ -92,48 +92,17 @@ router.post('/intent', VerifyToken, function(req, res) {
 
     // Get the Access Token from the DB.
     getAccessToken(req.body.userid)
-      .then(function(theToken) {
+      .then(theToken => {
         res.setHeader('Content-Type', 'application/json');
         var getBody = {
           consumer_key: process.env.POCKET_KEY,
-          access_token: theToken
+          access_token: theToken,
+          detailType: 'complete'
         };
 
         switch (req.body.cmd) {
           case 'ScoutTitles':
-            // This intent gets the user's titles from Pocket and lists out
-            // all the titles.
-
-            getOptions.body = JSON.stringify(getBody);
-            rp(getOptions)
-              .then(function(body) {
-                var titles = '';
-                var jsonBody = JSON.parse(body);
-                if (jsonBody.status == '1') {
-                  console.log('Status is successful');
-                  console.log('Length is: ' + jsonBody.list.length);
-                  Object.keys(jsonBody.list).forEach(key => {
-                    if (jsonBody.list[key].resolved_title) {
-                      console.log(
-                        'title is: ' + jsonBody.list[key].resolved_title
-                      );
-                      let titleString =
-                        jsonBody.list[key].resolved_title + '.  ';
-                      console.log('TitleString: ' + titleString);
-                      titles = titles + titleString;
-                    }
-                  });
-
-                  res.status(200).send(JSON.stringify({ text: titles }));
-                }
-              })
-              .catch(function(err) {
-                res
-                  .status(404)
-                  .send(JSON.stringify({ text: 'Wow.  Amazing.' }));
-                console.log('Failed to get to pocket');
-                console.log(err);
-              });
+            scoutTitles(getBody, res);
             break;
           case 'SearchAndPlayArticle':
             // Searches for an article with the search term in the request
@@ -192,7 +161,7 @@ router.post('/intent', VerifyToken, function(req, res) {
                     errSpeech = 'There was an error finding the article.';
                     break;
                 }
-                res.status(404).send(JSON.stringify({ text: errSpeech }));
+                res.status(404).send(JSON.stringify({ speech: errSpeech }));
               });
             break;
           case 'ScoutMyPocketSummary':
@@ -257,12 +226,14 @@ router.post('/intent', VerifyToken, function(req, res) {
                       console.log('Text response is: ' + textResponse);
                       res
                         .status(200)
-                        .send(JSON.stringify({ text: textResponse }));
+                        .send(JSON.stringify({ speech: textResponse }));
                     })
                     .catch(function(err) {
                       res
                         .status(500)
-                        .send(JSON.stringify({ text: 'Summary Engine error' }));
+                        .send(
+                          JSON.stringify({ speech: 'Summary Engine error' })
+                        );
                       console.log('Error parsing: ' + err);
                     });
                 } else {
@@ -285,7 +256,7 @@ router.post('/intent', VerifyToken, function(req, res) {
                     errSpeech = 'There was an error finding the article.';
                     break;
                 }
-                res.status(404).send(JSON.stringify({ text: errSpeech }));
+                res.status(404).send(JSON.stringify({ speech: errSpeech }));
               });
             break;
           // Gets the global pocket recommendation and summarizes first three.
@@ -331,12 +302,14 @@ router.post('/intent', VerifyToken, function(req, res) {
                       });
                       res
                         .status(200)
-                        .send(JSON.stringify({ text: textResponse }));
+                        .send(JSON.stringify({ speech: textResponse }));
                     })
                     .catch(function(err) {
                       res
                         .status(500)
-                        .send(JSON.stringify({ text: 'Summary Engine error' }));
+                        .send(
+                          JSON.stringify({ speech: 'Summary Engine error' })
+                        );
                       console.log('Error getting summary: ' + err);
                     });
                 } else {
@@ -356,7 +329,7 @@ router.post('/intent', VerifyToken, function(req, res) {
                     errSpeech = 'There was an error finding the article.';
                     break;
                 }
-                res.status(404).send(JSON.stringify({ text: errSpeech }));
+                res.status(404).send(JSON.stringify({ speech: errSpeech }));
               });
             break;
           default:
@@ -367,9 +340,67 @@ router.post('/intent', VerifyToken, function(req, res) {
         console.log('database err: ', reason);
         let errSpeech =
           'Unable to connect to Pocket.' + '  Please relink your account.';
-        res.status(404).send(JSON.stringify({ text: errSpeech }));
+        res.status(404).send(JSON.stringify({ speech: errSpeech }));
       });
   });
 });
+
+// Get the user's titles from Pocket and lists out all the titles.
+function scoutTitles(getBody, res) {
+  const wordsPerMinute = 100;
+  getOptions.body = JSON.stringify(getBody);
+  rp(getOptions)
+    .then(function(body) {
+      var jsonBody = JSON.parse(body);
+      if (jsonBody.status == '1') {
+        console.log(jsonBody);
+        let speech = '';
+        let articles = [];
+
+        // process list of articles
+        Object.keys(jsonBody.list).forEach(key => {
+          if (jsonBody.list[key].resolved_title) {
+            const title = jsonBody.list[key].resolved_title;
+            const imageURL = jsonBody.list[key].top_image_url;
+            const host = url.parse(jsonBody.list[key].resolved_url).hostname;
+
+            let lengthMinutes;
+            const wordCount = jsonBody.list[key].word_count;
+            if (wordCount) {
+              lengthMinutes = Math.floor(
+                parseInt(wordCount, 10) / wordsPerMinute
+              );
+            }
+
+            let author;
+            const authors = jsonBody.list[key].authors;
+            for (const auth in authors) {
+              author = author
+                ? `${author}, ${authors[auth].name}`
+                : authors[auth].name;
+            }
+
+            articles.push({
+              item_id: jsonBody.list[key].item_id,
+              title,
+              source: host,
+              author,
+              lengthMinutes,
+              imageURL
+            });
+            speech = `${speech} ${articles.length}. ${title}. `;
+          }
+        });
+
+        const result = { speech, articles };
+        res.status(200).send(JSON.stringify(result));
+      }
+    })
+    .catch(function(err) {
+      res.status(404).send(JSON.stringify({ speech: 'Wow.  Amazing.' }));
+      console.log('Failed to get to pocket');
+      console.log(err);
+    });
+}
 
 module.exports = router;

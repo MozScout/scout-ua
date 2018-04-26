@@ -5,7 +5,7 @@ var app = express();
 // app.js
 
 app.get('/hello', function(req, res) {
-  res.status(200).send('hello world');
+  res.status(200).send(`Hello! pocket=${process.env.POCKET_KEY}`);
 });
 
 var UserController = require('./user/UserController');
