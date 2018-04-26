@@ -388,7 +388,7 @@ function scoutTitles(getBody, res) {
               lengthMinutes,
               imageURL
             });
-            speech = speech + `${articles.length}. ${title}. `;
+            speech = `${speech} ${articles.length}. ${title}. `;
           }
         });
 
