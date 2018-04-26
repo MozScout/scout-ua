@@ -1,7 +1,8 @@
-/* eslint no-useless-escape: 0 */  // --> OFF
-/* eslint quotes: 0 */  // --> OFF
-var texttools = {
+/* eslint no-useless-escape: 0 */ // --> OFF
+/* eslint quotes: 0 */ // --> OFF
+var chunk = require('chunk-text');
 
+var texttools = {
   truncateArticle: function(str, length, ending) {
     console.log('Truncating article');
     if (length == null) {
@@ -23,16 +24,20 @@ var texttools = {
     // Remove the HTML marks.
     var strippedHtml = htmlStr.replace(/<[^>]+>/g, '');
     // Now replace the quotes and other markups.
-    strippedHtml = strippedHtml.replace(/&rdquo;/g, '\"' )
-      .replace(/&ldquo;/g, '\"' )
-      .replace(/&rsquo;/g, "'" )
-      .replace(/&lsquo;/g, "'" )
-      .replace(/&mdash;/g, '-' )
-      .replace(/&ndash;/g, '-' )
-      .replace(/&thinsp;/g, '' );
+    strippedHtml = strippedHtml
+      .replace(/&rdquo;/g, '"')
+      .replace(/&ldquo;/g, '"')
+      .replace(/&rsquo;/g, "'")
+      .replace(/&lsquo;/g, "'")
+      .replace(/&mdash;/g, '-')
+      .replace(/&ndash;/g, '-')
+      .replace(/&thinsp;/g, '');
     return strippedHtml;
+  },
+
+  chunkText: function(text, maxLength = 1000) {
+    return chunk(text, maxLength);
   }
 };
-
 
 module.exports = texttools;

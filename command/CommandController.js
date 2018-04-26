@@ -141,7 +141,7 @@ router.post('/intent', VerifyToken, function(req, res) {
                 console.log('received body');
                 var artBody = JSON.parse(articleBody);
                 var cleanText = texttools.cleanText(artBody.article);
-                var chunkText = texttools.truncateArticle(cleanText);
+                var chunkText = texttools.chunkText(cleanText);
                 console.log('chunkText is: ' + chunkText);
                 return polly_tts.getSpeechSynthUrl(chunkText);
               })
