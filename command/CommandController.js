@@ -161,7 +161,7 @@ router.post('/intent', VerifyToken, function(req, res) {
                     errSpeech = 'There was an error finding the article.';
                     break;
                 }
-                res.status(404).send(JSON.stringify({ text: errSpeech }));
+                res.status(404).send(JSON.stringify({ speech: errSpeech }));
               });
             break;
           case 'ScoutMyPocketSummary':
@@ -226,12 +226,14 @@ router.post('/intent', VerifyToken, function(req, res) {
                       console.log('Text response is: ' + textResponse);
                       res
                         .status(200)
-                        .send(JSON.stringify({ text: textResponse }));
+                        .send(JSON.stringify({ speech: textResponse }));
                     })
                     .catch(function(err) {
                       res
                         .status(500)
-                        .send(JSON.stringify({ text: 'Summary Engine error' }));
+                        .send(
+                          JSON.stringify({ speech: 'Summary Engine error' })
+                        );
                       console.log('Error parsing: ' + err);
                     });
                 } else {
@@ -254,7 +256,7 @@ router.post('/intent', VerifyToken, function(req, res) {
                     errSpeech = 'There was an error finding the article.';
                     break;
                 }
-                res.status(404).send(JSON.stringify({ text: errSpeech }));
+                res.status(404).send(JSON.stringify({ speech: errSpeech }));
               });
             break;
           // Gets the global pocket recommendation and summarizes first three.
@@ -300,12 +302,14 @@ router.post('/intent', VerifyToken, function(req, res) {
                       });
                       res
                         .status(200)
-                        .send(JSON.stringify({ text: textResponse }));
+                        .send(JSON.stringify({ speech: textResponse }));
                     })
                     .catch(function(err) {
                       res
                         .status(500)
-                        .send(JSON.stringify({ text: 'Summary Engine error' }));
+                        .send(
+                          JSON.stringify({ speech: 'Summary Engine error' })
+                        );
                       console.log('Error getting summary: ' + err);
                     });
                 } else {
@@ -325,7 +329,7 @@ router.post('/intent', VerifyToken, function(req, res) {
                     errSpeech = 'There was an error finding the article.';
                     break;
                 }
-                res.status(404).send(JSON.stringify({ text: errSpeech }));
+                res.status(404).send(JSON.stringify({ speech: errSpeech }));
               });
             break;
           default:
