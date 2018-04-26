@@ -74,7 +74,7 @@ function getAccessToken(userid) {
 }
 
 router.post('/intent', VerifyToken, function(req, res) {
-  console.log(req.body.cmd);
+  console.log(`Command = ${req.body.cmd}`);
 
   var token = req.headers['x-access-token'];
   if (!token)
@@ -92,7 +92,7 @@ router.post('/intent', VerifyToken, function(req, res) {
 
     // Get the Access Token from the DB.
     getAccessToken(req.body.userid)
-      .then(function(theToken) {
+      .then(theToken => {
         res.setHeader('Content-Type', 'application/json');
         var getBody = {
           consumer_key: process.env.POCKET_KEY,
@@ -341,6 +341,7 @@ router.post('/intent', VerifyToken, function(req, res) {
   });
 });
 
+// Get the user's titles from Pocket and lists out all the titles.
 function scoutTitles(getBody, res) {
   const wordsPerMinute = 100;
   getOptions.body = JSON.stringify(getBody);
@@ -358,8 +359,8 @@ function scoutTitles(getBody, res) {
             const title = jsonBody.list[key].resolved_title;
             const imageURL = jsonBody.list[key].top_image_url;
             const host = url.parse(jsonBody.list[key].resolved_url).hostname;
-            let lengthMinutes;
 
+            let lengthMinutes;
             const wordCount = jsonBody.list[key].word_count;
             if (wordCount) {
               lengthMinutes = Math.floor(
@@ -367,13 +368,14 @@ function scoutTitles(getBody, res) {
               );
             }
 
-            const authors = jsonBody.list[key].authors;
             let author;
+            const authors = jsonBody.list[key].authors;
             for (const auth in authors) {
               author = author
                 ? `${author}, ${authors[auth].name}`
                 : authors[auth].name;
             }
+
             articles.push({
               item_id: jsonBody.list[key].item_id,
               title,
@@ -385,9 +387,8 @@ function scoutTitles(getBody, res) {
             speech = speech + `${articles.length}. ${title}. `;
           }
         });
-        let result = {};
-        result.speech = speech;
-        result.articles = articles;
+
+        const result = { speech, articles };
         res.status(200).send(JSON.stringify(result));
       }
     })
