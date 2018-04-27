@@ -1,0 +1,41 @@
+{
+  "name": "scout-ua",
+  "scripts": {
+  },
+  "env": {
+    "JWT_SECRET": {
+      "required": true
+    },
+    "MONGO_STRING": {
+      "required": true
+    },
+    "POCKET_KEY": {
+      "required": true
+    },
+    "POLLY_ACCCESSKEYID": {
+      "required": true
+    },
+    "POLLY_SECRETACCESSKEY": {
+      "required": true
+    },
+    "SM_API_KEY": {
+      "required": true
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "addons": [
+
+  ],
+  "buildpacks": [
+    {
+      "url": "https://github.com/shunjikonishi/heroku-buildpack-ffmpeg.git"
+    },
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}
