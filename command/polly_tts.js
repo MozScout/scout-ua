@@ -88,7 +88,7 @@ var polly_tts = {
             secretAccessKey: process.env.POLLY_SECRETACCESSKEY
           });
           var bucketParams = {
-            Bucket: 'scout-streaming-2018',
+            Bucket: process.env.POLLY_S3_BUCKET,
             Key: '',
             Body: ''
           };
