@@ -5,7 +5,10 @@ var app = express();
 // app.js
 
 app.get('/hello', function(req, res) {
-  res.status(200).send(`Hello! pocket=${process.env.POCKET_KEY}`);
+  res.status(200).send(
+    `Hello! pocket=${process.env.POCKET_KEY}, 
+      pollybucket=${process.env.POLLY_S3_BUCKET}`
+  );
 });
 
 var UserController = require('./user/UserController');
