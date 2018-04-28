@@ -276,57 +276,70 @@ function scoutTitles(getBody, res) {
     });
 }
 
-function searchAndPlayArticle(getOptions, req, res) {
-  console.log('Search term is: ' + req.body.searchTerms);
-  rp(getOptions)
-    .then(function(body) {
-      var jsonBody = JSON.parse(body);
-      if (jsonBody.status == '1') {
-        let keysArr = Object.keys(jsonBody.list);
-        console.log(keysArr);
-        if (keysArr.length > 0) {
-          articleOptions.formData = {
-            consumer_key: process.env.POCKET_KEY,
-            url: jsonBody.list[keysArr[0]].given_url,
-            images: '0',
-            videos: '0',
-            refresh: '0',
-            output: 'json'
-          };
-          return rp(articleOptions);
-        } else {
-          console.log('no keys');
-        }
+async function searchAndPlayArticle(getOptions, req, res) {
+  try {
+    console.log('Search term is: ' + req.body.searchTerms);
+    let body = await rp(getOptions);
+    var jsonBody = JSON.parse(body);
+    if (jsonBody.status == '1') {
+      let keysArr = Object.keys(jsonBody.list);
+      console.log('keysarr = ', keysArr);
+      if (keysArr.length > 0) {
+        const audioUrl = await createAudio(jsonBody.list[keysArr[0]].given_url);
+        res.status(200).send(JSON.stringify({ url: audioUrl }));
       } else {
-        console.log('Searching for the article failed to find a match');
-        throw 'NoSearchMatch';
+        throw 'NoKeys';
       }
-    })
-    .then(function(articleBody) {
-      console.log('received body');
-      var artBody = JSON.parse(articleBody);
-      var cleanText = texttools.cleanText(artBody.article);
-      var chunkText = texttools.chunkText(cleanText);
-      console.log('chunkText is: ' + chunkText);
-      return polly_tts.getSpeechSynthUrl(chunkText);
-    })
-    .then(function(url) {
-      res.status(200).send(JSON.stringify({ url: url }));
-    })
-    .catch(reason => {
-      console.log('caught an error: ', reason);
-      let errSpeech = '';
-      switch (reason) {
-        case 'NoSearchMatch':
-          errSpeech =
-            'Unable to find a matching article.' + '  Try another phrase.';
-          break;
-        default:
-          errSpeech = 'There was an error finding the article.';
-          break;
-      }
-      res.status(404).send(JSON.stringify({ speech: errSpeech }));
-    });
+    } else {
+      console.log(
+        `Searching for '${
+          req.body.searchTerms
+        }' failed to find a matching article.`
+      );
+      throw 'NoSearchMatch';
+    }
+  } catch (reason) {
+    console.log('searchAndPlayArticle error: ', reason);
+    let errSpeech = '';
+    switch (reason) {
+      case 'NoSearchMatch':
+        errSpeech = 'Unable to find a matching article. Try another phrase.';
+        break;
+      default:
+        errSpeech = 'There was an error finding the article.';
+        break;
+    }
+    res.status(404).send(JSON.stringify({ speech: errSpeech }));
+  }
+}
+
+router.post('/article/audio', VerifyToken, async function(req, res) {
+  try {
+    const audioUrl = await createAudio(req.body.url);
+    res.status(200).send(JSON.stringify({ url: audioUrl }));
+  } catch (reason) {
+    console.log('caught an error: ', reason);
+    let errSpeech = `There was an error finding the article. ${reason}`;
+    res.status(404).send(JSON.stringify({ speech: errSpeech }));
+  }
+});
+
+async function createAudio(url) {
+  articleOptions.formData = {
+    consumer_key: process.env.POCKET_KEY,
+    url,
+    images: '0',
+    videos: '0',
+    refresh: '0',
+    output: 'json'
+  };
+  const articleBody = await rp(articleOptions);
+  console.log('received body', articleBody);
+  var artBody = JSON.parse(articleBody);
+  var cleanText = texttools.cleanText(artBody.article);
+  var chunkText = texttools.chunkText(cleanText);
+  console.log('chunkText is: ', chunkText.length, chunkText);
+  return polly_tts.getSpeechSynthUrl(chunkText);
 }
 
 module.exports = router;
