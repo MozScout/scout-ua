@@ -11,7 +11,6 @@ var scoutuser = require('../scout_user');
 mongoose.connect(process.env.MONGO_STRING, {});
 var polly_tts = require('./polly_tts');
 var jwt = require('jsonwebtoken');
-const url = require('url');
 
 const pocketRecOptions = {
   uri:
@@ -235,7 +234,7 @@ function scoutTitles(getBody, res) {
           if (jsonBody.list[key].resolved_title) {
             const title = jsonBody.list[key].resolved_title;
             const imageURL = jsonBody.list[key].top_image_url;
-            const host = url.parse(jsonBody.list[key].resolved_url).hostname;
+            const resolved_url = jsonBody.list[key].resolved_url;
 
             let lengthMinutes;
             const wordCount = jsonBody.list[key].word_count;
@@ -255,8 +254,8 @@ function scoutTitles(getBody, res) {
 
             articles.push({
               item_id: jsonBody.list[key].item_id,
+              resolved_url,
               title,
-              source: host,
               author,
               lengthMinutes,
               imageURL
