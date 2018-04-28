@@ -22,7 +22,7 @@ var texttools = {
 
   cleanText: function(htmlStr) {
     // Remove the HTML marks.
-    var strippedHtml = htmlStr.replace(/<[^>]+>/g, '');
+    var strippedHtml = htmlStr.replace(/<[^>]+>/g, ' ');
     // Now replace the quotes and other markups.
     strippedHtml = strippedHtml
       .replace(/&rdquo;/g, '"')
