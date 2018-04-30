@@ -113,7 +113,7 @@ router.post('/intent', VerifyToken, function(req, res) {
             searchAndPlayArticle(getOptions, req, res);
             break;
           case 'ScoutMyPocketSummary':
-            getBody.count = '1';
+            getBody.count = '3';
             getOptions.body = JSON.stringify(getBody);
             scoutSummaries(getOptions, 'list', 'given_url', res);
             break;
