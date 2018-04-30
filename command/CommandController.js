@@ -148,7 +148,6 @@ router.post('/article', VerifyToken, async function(req, res) {
 
 router.post('/summary', VerifyToken, async function(req, res) {
   try {
-    let summaryURL;
     summaryOptions.uri = summaryLink + req.body.url;
     console.log('Summary uri is: ' + summaryOptions.uri);
     const sumResults = JSON.parse(await rp(summaryOptions));
@@ -157,7 +156,7 @@ router.post('/summary', VerifyToken, async function(req, res) {
       let content_modified = sumResults.sm_api_content.replace('\\', '');
       const textResponse =
         'Here is a summary of: ' + title_modified + '.  ' + content_modified;
-      summaryURL = await buildAudioFromText(textResponse);
+      const summaryURL = await buildAudioFromText(textResponse);
       res.status(200).send(JSON.stringify({ url: summaryURL }));
     } else {
       throw 'No summary available';
@@ -363,7 +362,14 @@ async function buildAudioFromText(textString) {
   const cleanText = texttools.cleanText(textString);
   const chunkText = texttools.chunkText(cleanText);
   console.log('chunkText is: ', chunkText.length, chunkText);
+  if (!chunkText.every(isEmpty)) {
+    throw 'No Content';
+  }
   return polly_tts.getSpeechSynthUrl(chunkText);
+}
+
+function isEmpty(strValue) {
+  return !strValue.trim();
 }
 
 module.exports = router;
