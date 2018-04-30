@@ -1,16 +1,17 @@
-var express = require('express');
-var router = express.Router();
-var bodyParser = require('body-parser');
+const express = require('express');
+const router = express.Router();
+const bodyParser = require('body-parser');
+const VerifyToken = require('../VerifyToken');
+const rp = require('request-promise');
+const texttools = require('./texttools');
+const mongoose = require('mongoose');
+const scoutuser = require('../scout_user');
+const polly_tts = require('./polly_tts');
+const jwt = require('jsonwebtoken');
+
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
-var VerifyToken = require('../VerifyToken');
-var rp = require('request-promise');
-const texttools = require('./texttools');
-var mongoose = require('mongoose');
-var scoutuser = require('../scout_user');
 mongoose.connect(process.env.MONGO_STRING, {});
-var polly_tts = require('./polly_tts');
-var jwt = require('jsonwebtoken');
 
 const pocketRecOptions = {
   uri:
@@ -75,7 +76,7 @@ function getAccessToken(userid) {
 router.post('/intent', VerifyToken, function(req, res) {
   console.log(`Command = ${req.body.cmd}`);
 
-  var token = req.headers['x-access-token'];
+  const token = req.headers['x-access-token'];
   if (!token)
     return res.status(401).send({
       auth: false,
@@ -93,7 +94,7 @@ router.post('/intent', VerifyToken, function(req, res) {
     getAccessToken(req.body.userid)
       .then(theToken => {
         res.setHeader('Content-Type', 'application/json');
-        var getBody = {
+        const getBody = {
           consumer_key: process.env.POCKET_KEY,
           access_token: theToken,
           detailType: 'complete'
@@ -136,7 +137,7 @@ router.post('/intent', VerifyToken, function(req, res) {
 
 router.post('/article', VerifyToken, async function(req, res) {
   try {
-    const audioUrl = await createAudio(req.body.url);
+    const audioUrl = await buildAudioFromUrl(req.body.url);
     res.status(200).send(JSON.stringify({ url: audioUrl }));
   } catch (reason) {
     console.log('caught an error: ', reason);
@@ -156,9 +157,7 @@ router.post('/summary', VerifyToken, async function(req, res) {
       let content_modified = sumResults.sm_api_content.replace('\\', '');
       const textResponse =
         'Here is a summary of: ' + title_modified + '.  ' + content_modified;
-      var cleanText = texttools.cleanText(textResponse);
-      var chunkText = texttools.chunkText(cleanText);
-      summaryURL = await polly_tts.getSpeechSynthUrl(chunkText);
+      summaryURL = await buildAudioFromText(textResponse);
       res.status(200).send(JSON.stringify({ url: summaryURL }));
     } else {
       throw 'No summary available';
@@ -176,7 +175,7 @@ function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, res) {
   console.log('urlattr=', urlAttr);
   rp(getOptions)
     .then(function(body) {
-      var jsonBody = JSON.parse(body);
+      const jsonBody = JSON.parse(body);
       if (jsonBody.status == '1') {
         let summLoop = function() {
           let promiseArray = [];
@@ -201,7 +200,7 @@ function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, res) {
           .then(function(sumVal) {
             let textResponse = '';
             sumVal.forEach(function(element) {
-              var sumBody = JSON.parse(element);
+              const sumBody = JSON.parse(element);
               // Link up the response text for all summaries
               if (sumBody.sm_api_character_count) {
                 // TODO: Right now, some of the pages are not
@@ -218,9 +217,7 @@ function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, res) {
               }
             });
             console.log('Text response is: ' + textResponse);
-            var cleanText = texttools.cleanText(textResponse);
-            var chunkText = texttools.chunkText(cleanText);
-            return polly_tts.getSpeechSynthUrl(chunkText);
+            return buildAudioFromText(textResponse);
           })
           .then(function(url) {
             res.status(200).send(JSON.stringify({ url: url }));
@@ -258,7 +255,7 @@ function scoutTitles(getBody, res) {
   getOptions.body = JSON.stringify(getBody);
   rp(getOptions)
     .then(function(body) {
-      var jsonBody = JSON.parse(body);
+      const jsonBody = JSON.parse(body);
       if (jsonBody.status == '1') {
         console.log(jsonBody);
         let speech = '';
@@ -319,7 +316,9 @@ async function searchAndPlayArticle(getOptions, req, res) {
       const keysArr = Object.keys(jsonBody.list);
       console.log('keysarr = ', keysArr);
       if (keysArr.length > 0) {
-        const audioUrl = await createAudio(jsonBody.list[keysArr[0]].given_url);
+        const audioUrl = await buildAudioFromUrl(
+          jsonBody.list[keysArr[0]].given_url
+        );
         res.status(200).send(JSON.stringify({ url: audioUrl }));
       } else {
         throw 'NoKeys';
@@ -347,7 +346,7 @@ async function searchAndPlayArticle(getOptions, req, res) {
   }
 }
 
-async function createAudio(url) {
+async function buildAudioFromUrl(url) {
   articleOptions.formData = {
     consumer_key: process.env.POCKET_KEY,
     url,
@@ -357,7 +356,11 @@ async function createAudio(url) {
     output: 'json'
   };
   const articleBody = await rp(articleOptions);
-  const cleanText = texttools.cleanText(JSON.parse(articleBody).article);
+  return buildAudioFromText(JSON.parse(articleBody).article);
+}
+
+async function buildAudioFromText(textString) {
+  const cleanText = texttools.cleanText(textString);
   const chunkText = texttools.chunkText(cleanText);
   console.log('chunkText is: ', chunkText.length, chunkText);
   return polly_tts.getSpeechSynthUrl(chunkText);
