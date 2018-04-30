@@ -1,7 +1,6 @@
 {
   "name": "scout-ua",
-  "scripts": {
-  },
+  "scripts": {},
   "env": {
     "JWT_SECRET": {
       "required": true
@@ -21,6 +20,9 @@
     "POLLY_SECRETACCESSKEY": {
       "required": true
     },
+    "POLLY_VOICE": {
+      "required": true
+    },
     "SM_API_KEY": {
       "required": true
     }
@@ -30,9 +32,7 @@
       "quantity": 1
     }
   },
-  "addons": [
-
-  ],
+  "addons": [],
   "buildpacks": [
     {
       "url": "https://github.com/shunjikonishi/heroku-buildpack-ffmpeg.git"
