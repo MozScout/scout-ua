@@ -37,6 +37,13 @@ var texttools = {
 
   chunkText: function(text, maxLength = 1000) {
     return chunk(text, maxLength);
+  },
+
+  buildSummaryText: function(title, content) {
+    return `Here is a summary of: ${title.replace(
+      '\\',
+      ''
+    )}.  ${content}.replace('\\', '')`;
   }
 };
 

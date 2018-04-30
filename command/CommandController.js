@@ -149,14 +149,14 @@ router.post('/article', VerifyToken, async function(req, res) {
 router.post('/summary', VerifyToken, async function(req, res) {
   try {
     summaryOptions.uri = summaryLink + req.body.url;
-    console.log('Summary uri is: ' + summaryOptions.uri);
     const sumResults = JSON.parse(await rp(summaryOptions));
     if (sumResults.sm_api_character_count) {
-      let title_modified = sumResults.sm_api_title.replace('\\', '');
-      let content_modified = sumResults.sm_api_content.replace('\\', '');
-      const textResponse =
-        'Here is a summary of: ' + title_modified + '.  ' + content_modified;
-      const summaryURL = await buildAudioFromText(textResponse);
+      const summaryURL = await buildAudioFromText(
+        texttools.buildSummaryText(
+          sumResults.sm_api_title,
+          sumResults.sm_api_content
+        )
+      );
       res.status(200).send(JSON.stringify({ url: summaryURL }));
     } else {
       throw 'No summary available';
@@ -205,14 +205,10 @@ function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, res) {
                 // TODO: Right now, some of the pages are not
                 // parseable. Want to change this later to allow
                 // it to get 3 that are parseable.
-                let title_modified = sumBody.sm_api_title.replace('\\', '');
-                let content_modified = sumBody.sm_api_content.replace('\\', '');
-                console.log('title modified: ' + title_modified);
-                textResponse +=
-                  'Here is a summary of: ' +
-                  title_modified +
-                  '.  ' +
-                  content_modified;
+                textResponse += texttools.buildSummaryText(
+                  sumBody.sm_api_title,
+                  sumBody.sm_api_content
+                );
               }
             });
             console.log('Text response is: ' + textResponse);
@@ -362,14 +358,7 @@ async function buildAudioFromText(textString) {
   const cleanText = texttools.cleanText(textString);
   const chunkText = texttools.chunkText(cleanText);
   console.log('chunkText is: ', chunkText.length, chunkText);
-  if (!chunkText.every(isEmpty)) {
-    throw 'No Content';
-  }
   return polly_tts.getSpeechSynthUrl(chunkText);
-}
-
-function isEmpty(strValue) {
-  return !strValue.trim();
 }
 
 module.exports = router;
