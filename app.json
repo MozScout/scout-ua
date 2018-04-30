@@ -15,6 +15,9 @@
     "POLLY_ACCCESSKEYID": {
       "required": true
     },
+    "POLLY_S3_BUCKET": {
+      "required": true
+    },
     "POLLY_SECRETACCESSKEY": {
       "required": true
     },
