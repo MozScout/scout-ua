@@ -278,10 +278,10 @@ function scoutTitles(getBody, res) {
 async function searchAndPlayArticle(getOptions, req, res) {
   try {
     console.log('Search term is: ' + req.body.searchTerms);
-    let body = await rp(getOptions);
-    var jsonBody = JSON.parse(body);
+    const body = await rp(getOptions);
+    const jsonBody = JSON.parse(body);
     if (jsonBody.status == '1') {
-      let keysArr = Object.keys(jsonBody.list);
+      const keysArr = Object.keys(jsonBody.list);
       console.log('keysarr = ', keysArr);
       if (keysArr.length > 0) {
         const audioUrl = await createAudio(jsonBody.list[keysArr[0]].given_url);
@@ -312,13 +312,13 @@ async function searchAndPlayArticle(getOptions, req, res) {
   }
 }
 
-router.post('/article/audio', VerifyToken, async function(req, res) {
+router.post('/article', VerifyToken, async function(req, res) {
   try {
     const audioUrl = await createAudio(req.body.url);
     res.status(200).send(JSON.stringify({ url: audioUrl }));
   } catch (reason) {
     console.log('caught an error: ', reason);
-    let errSpeech = `There was an error finding the article. ${reason}`;
+    const errSpeech = `There was an error finding the article. ${reason}`;
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 });
@@ -333,10 +333,8 @@ async function createAudio(url) {
     output: 'json'
   };
   const articleBody = await rp(articleOptions);
-  console.log('received body', articleBody);
-  var artBody = JSON.parse(articleBody);
-  var cleanText = texttools.cleanText(artBody.article);
-  var chunkText = texttools.chunkText(cleanText);
+  const cleanText = texttools.cleanText(JSON.parse(articleBody).article);
+  const chunkText = texttools.chunkText(cleanText);
   console.log('chunkText is: ', chunkText.length, chunkText);
   return polly_tts.getSpeechSynthUrl(chunkText);
 }
