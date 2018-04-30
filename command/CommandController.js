@@ -10,7 +10,6 @@ var mongoose = require('mongoose');
 var scoutuser = require('../scout_user');
 mongoose.connect(process.env.MONGO_STRING, {});
 var polly_tts = require('./polly_tts');
-var jwt = require('jsonwebtoken');
 const url = require('url');
 
 const pocketRecOptions = {
