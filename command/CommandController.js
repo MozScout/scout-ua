@@ -112,7 +112,7 @@ router.post('/intent', VerifyToken, function(req, res) {
             searchAndPlayArticle(getOptions, req, res);
             break;
           case 'ScoutMyPocketSummary':
-            getBody.count = '3';
+            getBody.count = '1';
             getOptions.body = JSON.stringify(getBody);
             scoutSummaries(getOptions, 'list', 'given_url', res);
             break;
@@ -134,8 +134,46 @@ router.post('/intent', VerifyToken, function(req, res) {
   });
 });
 
+router.post('/article', VerifyToken, async function(req, res) {
+  try {
+    const audioUrl = await createAudio(req.body.url);
+    res.status(200).send(JSON.stringify({ url: audioUrl }));
+  } catch (reason) {
+    console.log('caught an error: ', reason);
+    const errSpeech = `There was an error finding the article. ${reason}`;
+    res.status(404).send(JSON.stringify({ speech: errSpeech }));
+  }
+});
+
+router.post('/summary', VerifyToken, async function(req, res) {
+  try {
+    let summaryURL;
+    summaryOptions.uri = summaryLink + req.body.url;
+    console.log('Summary uri is: ' + summaryOptions.uri);
+    const sumResults = JSON.parse(await rp(summaryOptions));
+    if (sumResults.sm_api_character_count) {
+      let title_modified = sumResults.sm_api_title.replace('\\', '');
+      let content_modified = sumResults.sm_api_content.replace('\\', '');
+      const textResponse =
+        'Here is a summary of: ' + title_modified + '.  ' + content_modified;
+      var cleanText = texttools.cleanText(textResponse);
+      var chunkText = texttools.chunkText(cleanText);
+      summaryURL = await polly_tts.getSpeechSynthUrl(chunkText);
+      res.status(200).send(JSON.stringify({ url: summaryURL }));
+    } else {
+      throw 'No summary available';
+    }
+  } catch (reason) {
+    console.log('Error in /summary ', reason);
+    const errSpeech = `There was an error processing the article. ${reason}`;
+    res.status(404).send(JSON.stringify({ speech: errSpeech }));
+  }
+});
+
 function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, res) {
   // Gets the user's Pocket titles and summarizes first three.
+  console.log('jsonboddyattr=', jsonBodyAttr);
+  console.log('urlattr=', urlAttr);
   rp(getOptions)
     .then(function(body) {
       var jsonBody = JSON.parse(body);
@@ -145,12 +183,10 @@ function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, res) {
           let arrJson = jsonBody[jsonBodyAttr];
           Object.keys(arrJson).forEach(key => {
             summaryOptions.uri = summaryLink + arrJson[key][urlAttr];
-            console.log('Summary link is: ' + summaryLink);
             console.log('Summary uri is: ' + summaryOptions.uri);
             promiseArray.push(
               rp(summaryOptions)
-                .then(function(sumResults) {
-                  console.log(sumResults);
+                .then(sumResults => {
                   return sumResults;
                 })
                 .catch(function(err) {
@@ -161,8 +197,7 @@ function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, res) {
           return Promise.all(promiseArray);
         };
 
-        let sumRes = summLoop();
-        sumRes
+        summLoop()
           .then(function(sumVal) {
             let textResponse = '';
             sumVal.forEach(function(element) {
@@ -311,17 +346,6 @@ async function searchAndPlayArticle(getOptions, req, res) {
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 }
-
-router.post('/article', VerifyToken, async function(req, res) {
-  try {
-    const audioUrl = await createAudio(req.body.url);
-    res.status(200).send(JSON.stringify({ url: audioUrl }));
-  } catch (reason) {
-    console.log('caught an error: ', reason);
-    const errSpeech = `There was an error finding the article. ${reason}`;
-    res.status(404).send(JSON.stringify({ speech: errSpeech }));
-  }
-});
 
 async function createAudio(url) {
   articleOptions.formData = {
