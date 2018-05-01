@@ -25,12 +25,14 @@ const texttools = {
     let strippedHtml = htmlStr.replace(/<[^>]+>/g, ' ');
     // Now replace the quotes and other markups.
     strippedHtml = strippedHtml
+      .replace(/&amp;/g, '&')
       .replace(/&rdquo;/g, '"')
       .replace(/&ldquo;/g, '"')
       .replace(/&rsquo;/g, "'")
       .replace(/&lsquo;/g, "'")
       .replace(/&mdash;/g, '-')
       .replace(/&ndash;/g, '-')
+      .replace(/&nbsp;/g, ' ')
       .replace(/&thinsp;/g, '');
     return strippedHtml;
   },
