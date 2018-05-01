@@ -7,7 +7,6 @@ const texttools = require('./texttools');
 const mongoose = require('mongoose');
 const scoutuser = require('../scout_user');
 const polly_tts = require('./polly_tts');
-const jwt = require('jsonwebtoken');
 
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
@@ -76,63 +75,48 @@ function getAccessToken(userid) {
 router.post('/intent', VerifyToken, function(req, res) {
   console.log(`Command = ${req.body.cmd}`);
 
-  const token = req.headers['x-access-token'];
-  if (!token)
-    return res.status(401).send({
-      auth: false,
-      message: 'No token provided.'
+  // Get the Access Token from the DB.
+  getAccessToken(req.body.userid)
+    .then(theToken => {
+      res.setHeader('Content-Type', 'application/json');
+      var getBody = {
+        consumer_key: process.env.POCKET_KEY,
+        access_token: theToken,
+        detailType: 'complete'
+      };
+
+      switch (req.body.cmd) {
+        case 'ScoutTitles':
+          scoutTitles(getBody, res);
+          break;
+        case 'SearchAndPlayArticle':
+          // Searches for an article with the search term in the request
+          // and returns the text of that article after converting it to
+          // a readable format.
+          getBody.search = req.body.searchTerms;
+          getOptions.body = JSON.stringify(getBody);
+          searchAndPlayArticle(getOptions, req, res);
+          break;
+        case 'ScoutMyPocketSummary':
+          getBody.count = '3';
+          getOptions.body = JSON.stringify(getBody);
+          scoutSummaries(getOptions, 'list', 'given_url', res);
+          break;
+        // Gets the global pocket recommendation and summarizes first three.
+        case 'ScoutHeadlines':
+          console.log('Processing ScoutHeadlines: ' + process.env.POCKET_KEY);
+          scoutSummaries(pocketRecOptions, 'recommendations', 'url', res);
+          break;
+        default:
+          break;
+      }
+    })
+    .catch(reason => {
+      console.log('database err: ', reason);
+      let errSpeech =
+        'Unable to connect to Pocket.' + '  Please relink your account.';
+      res.status(404).send(JSON.stringify({ speech: errSpeech }));
     });
-
-  jwt.verify(token, process.env.JWT_SECRET, function(err) {
-    if (err)
-      return res.status(500).send({
-        auth: false,
-        message: 'Failed to authenticate token.'
-      });
-
-    // Get the Access Token from the DB.
-    getAccessToken(req.body.userid)
-      .then(theToken => {
-        res.setHeader('Content-Type', 'application/json');
-        const getBody = {
-          consumer_key: process.env.POCKET_KEY,
-          access_token: theToken,
-          detailType: 'complete'
-        };
-
-        switch (req.body.cmd) {
-          case 'ScoutTitles':
-            scoutTitles(getBody, res);
-            break;
-          case 'SearchAndPlayArticle':
-            // Searches for an article with the search term in the request
-            // and returns the text of that article after converting it to
-            // a readable format.
-            getBody.search = req.body.searchTerms;
-            getOptions.body = JSON.stringify(getBody);
-            searchAndPlayArticle(getOptions, req, res);
-            break;
-          case 'ScoutMyPocketSummary':
-            getBody.count = '3';
-            getOptions.body = JSON.stringify(getBody);
-            scoutSummaries(getOptions, 'list', 'given_url', res);
-            break;
-          // Gets the global pocket recommendation and summarizes first three.
-          case 'ScoutHeadlines':
-            console.log('Processing ScoutHeadlines: ' + process.env.POCKET_KEY);
-            scoutSummaries(pocketRecOptions, 'recommendations', 'url', res);
-            break;
-          default:
-            break;
-        }
-      })
-      .catch(reason => {
-        console.log('database err: ', reason);
-        let errSpeech =
-          'Unable to connect to Pocket.' + '  Please relink your account.';
-        res.status(404).send(JSON.stringify({ speech: errSpeech }));
-      });
-  });
 });
 
 router.post('/article', VerifyToken, async function(req, res) {
