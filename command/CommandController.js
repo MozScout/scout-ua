@@ -334,8 +334,8 @@ async function buildAudioFromUrl(url) {
     refresh: '0',
     output: 'json'
   };
-  const articleBody = await rp(articleOptions);
-  return buildAudioFromText(JSON.parse(articleBody).article);
+  const article = JSON.parse(await rp(articleOptions));
+  return buildAudioFromText(`${article.title}. ${article.article}`);
 }
 
 async function buildAudioFromText(textString) {
