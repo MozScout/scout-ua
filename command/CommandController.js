@@ -230,7 +230,7 @@ function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, res) {
 
 // Get the user's titles from Pocket and lists out all the titles.
 function scoutTitles(getBody, res) {
-  const wordsPerMinute = 100;
+  const wordsPerMinute = 155;
   getOptions.body = JSON.stringify(getBody);
   rp(getOptions)
     .then(function(body) {
