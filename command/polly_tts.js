@@ -11,7 +11,7 @@ var polly_tts = {
         Text: text,
         OutputFormat: 'mp3',
         SampleRate: '16000',
-        VoiceId: 'Kimberly'
+        VoiceId: process.env.POLLY_VOICE || 'Kimberly'
       };
 
       var polly = new AWS.Polly({

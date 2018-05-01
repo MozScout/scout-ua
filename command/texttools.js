@@ -1,8 +1,8 @@
 /* eslint no-useless-escape: 0 */ // --> OFF
 /* eslint quotes: 0 */ // --> OFF
-var chunk = require('chunk-text');
+const chunk = require('chunk-text');
 
-var texttools = {
+const texttools = {
   truncateArticle: function(str, length, ending) {
     console.log('Truncating article');
     if (length == null) {
@@ -22,7 +22,7 @@ var texttools = {
 
   cleanText: function(htmlStr) {
     // Remove the HTML marks.
-    var strippedHtml = htmlStr.replace(/<[^>]+>/g, '');
+    let strippedHtml = htmlStr.replace(/<[^>]+>/g, ' ');
     // Now replace the quotes and other markups.
     strippedHtml = strippedHtml
       .replace(/&rdquo;/g, '"')
@@ -37,6 +37,13 @@ var texttools = {
 
   chunkText: function(text, maxLength = 1000) {
     return chunk(text, maxLength);
+  },
+
+  buildSummaryText: function(title, content) {
+    return `Here is a summary of: ${title.replace(
+      '\\',
+      ''
+    )}.  ${content}.replace('\\', '')`;
   }
 };
 
