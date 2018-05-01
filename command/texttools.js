@@ -43,7 +43,7 @@ const texttools = {
     return `Here is a summary of: ${title.replace(
       '\\',
       ''
-    )}.  ${content}.replace('\\', '')`;
+    )}.  ${content.replace('\\', '')}`;
   }
 };
 
