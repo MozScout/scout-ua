@@ -90,12 +90,15 @@ router.post('/intent', VerifyToken, function(req, res) {
           scoutTitles(getBody, res);
           break;
         case 'SearchAndPlayArticle':
-          // Searches for an article with the search term in the request
-          // and returns the text of that article after converting it to
-          // a readable format.
+        case 'SearchAndSummarizeArticle':
           getBody.search = req.body.searchTerms;
           getOptions.body = JSON.stringify(getBody);
-          searchAndPlayArticle(getOptions, req, res);
+          searchAndPlayArticle(
+            getOptions,
+            req,
+            res,
+            req.body.cmd === 'SearchAndSummarizeArticle'
+          );
           break;
         case 'ScoutMyPocketSummary':
           getBody.count = '3';
@@ -132,19 +135,8 @@ router.post('/article', VerifyToken, async function(req, res) {
 
 router.post('/summary', VerifyToken, async function(req, res) {
   try {
-    summaryOptions.uri = summaryLink + req.body.url;
-    const sumResults = JSON.parse(await rp(summaryOptions));
-    if (sumResults.sm_api_character_count) {
-      const summaryURL = await buildAudioFromText(
-        texttools.buildSummaryText(
-          sumResults.sm_api_title,
-          sumResults.sm_api_content
-        )
-      );
-      res.status(200).send(JSON.stringify({ url: summaryURL }));
-    } else {
-      throw 'No summary available';
-    }
+    const summaryUrl = await buildSummaryAudioFromUrl(req.body.url);
+    res.status(200).send(JSON.stringify({ url: summaryUrl }));
   } catch (reason) {
     console.log('Error in /summary ', reason);
     const errSpeech = `There was an error processing the article. ${reason}`;
@@ -286,7 +278,7 @@ function scoutTitles(getBody, res) {
     });
 }
 
-async function searchAndPlayArticle(getOptions, req, res) {
+async function searchAndPlayArticle(getOptions, req, res, summaryOnly) {
   try {
     console.log('Search term is: ' + req.body.searchTerms);
     const body = await rp(getOptions);
@@ -295,9 +287,13 @@ async function searchAndPlayArticle(getOptions, req, res) {
       const keysArr = Object.keys(jsonBody.list);
       console.log('keysarr = ', keysArr);
       if (keysArr.length > 0) {
-        const audioUrl = await buildAudioFromUrl(
-          jsonBody.list[keysArr[0]].given_url
-        );
+        const articleUrl = jsonBody.list[keysArr[0]].given_url;
+        let audioUrl;
+        if (summaryOnly) {
+          audioUrl = await buildSummaryAudioFromUrl(articleUrl);
+        } else {
+          audioUrl = await buildAudioFromUrl(articleUrl);
+        }
         res.status(200).send(JSON.stringify({ url: audioUrl }));
       } else {
         throw 'NoKeys';
@@ -336,6 +332,22 @@ async function buildAudioFromUrl(url) {
   };
   const article = JSON.parse(await rp(articleOptions));
   return buildAudioFromText(`${article.title}. ${article.article}`);
+}
+
+async function buildSummaryAudioFromUrl(url) {
+  summaryOptions.uri = summaryLink + url;
+  const sumResults = JSON.parse(await rp(summaryOptions));
+  if (sumResults.sm_api_character_count) {
+    const summaryURL = await buildAudioFromText(
+      texttools.buildSummaryText(
+        sumResults.sm_api_title,
+        sumResults.sm_api_content
+      )
+    );
+    return summaryURL;
+  } else {
+    throw 'No summary available';
+  }
 }
 
 async function buildAudioFromText(textString) {
