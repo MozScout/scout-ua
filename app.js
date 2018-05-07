@@ -2,8 +2,14 @@ require('dotenv').config();
 var express = require('express');
 var app = express();
 
-// app.js
+const dynamoose = require('dynamoose');
+dynamoose.AWS.config.update({
+  region: 'us-east-1',
+  endpoint: 'https://dynamodb.us-east-1.amazonaws.com'
+});
+// dynamoose.local();
 
+// app.js
 app.get('/hello', function(req, res) {
   res.status(200).send(
     `Hello! pocket=${process.env.POCKET_KEY}, 
@@ -22,5 +28,8 @@ app.use('/api/auth/mobile', MobileController);
 
 var CommandController = require('./command/CommandController');
 app.use('/command', CommandController);
+
+const ArticleController = require('./article/ArticleStatusController');
+app.use('/article', ArticleController);
 
 module.exports = app;

@@ -20,6 +20,7 @@
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "dotenv": "^5.0.1",
+    "dynamoose": "^0.8.7",
     "eslint": "^4.18.2",
     "express": "~4.15.5",
     "glob": "^7.1.2",
@@ -42,8 +43,13 @@
   },
   "jest": {
     "coverageDirectory": "./coverage/",
-    "moduleFileExtensions": ["js", "json"],
-    "testMatch": ["**/test/**/*-test.(js)"],
+    "moduleFileExtensions": [
+      "js",
+      "json"
+    ],
+    "testMatch": [
+      "**/test/**/*-test.(js)"
+    ],
     "mapCoverage": true,
     "setupTestFrameworkScriptFile": "<rootDir>/test/common.js",
     "testEnvironment": "node"
