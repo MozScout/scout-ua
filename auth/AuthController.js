@@ -1,19 +1,15 @@
-// AuthController.js
+const express = require('express');
+const router = express.Router();
+const bodyParser = require('body-parser');
+const User = require('../user/User');
+const VerifyToken = require('../VerifyToken');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const APIUser = require('../models/APIUser');
+const uuidgen = require('node-uuid-generator');
 
-var express = require('express');
-var router = express.Router();
-var bodyParser = require('body-parser');
 router.use(bodyParser.urlencoded({ extended: false }));
 router.use(bodyParser.json());
-var User = require('../user/User');
-var VerifyToken = require('../VerifyToken');
-var mongoose = require('mongoose');
-console.log('connecting to mongoose');
-mongoose.connect(process.env.MONGO_STRING, {});
-console.log('after connecting to mongoose');
-
-var jwt = require('jsonwebtoken');
-var bcrypt = require('bcryptjs');
 
 router.post('/register', function(req, res) {
   console.log('STARTING REGISTER');
@@ -44,7 +40,31 @@ router.post('/register', function(req, res) {
   );
 });
 
+router.post('/register-dynamo', async function(req, res) {
+  console.log('STARTING REGISTER dynamo');
+  console.log(req.body.name);
+
+  try {
+    const userid = uuidgen.generate();
+    const token = jwt.sign({ id: userid }, process.env.JWT_SECRET);
+
+    const newApiUser = new APIUser({
+      id: userid,
+      jwt: token,
+      name: req.body.name,
+      email: req.body.email,
+      password: bcrypt.hashSync(req.body.password, 8),
+      active: true
+    });
+    await newApiUser.save();
+    res.status(200).send({ auth: true, token: token });
+  } catch (err) {
+    return res.status(500).send(`Error creating API user: ${err}`);
+  }
+});
+
 router.get('/me', VerifyToken, function(req, res) {
+  console.log(req.userId);
   User.findById(
     req.userId,
     { password: 0 }, // projection
@@ -56,6 +76,18 @@ router.get('/me', VerifyToken, function(req, res) {
       res.status(200).send(user);
     }
   );
+});
+
+router.get('/me-dynamo', VerifyToken, async function(req, res) {
+  console.log(`looking up user ${req.userId}`);
+  const apiuser = await APIUser.get({
+    id: req.userId
+  });
+  if (apiuser) {
+    res.status(200).send(apiuser);
+  } else {
+    return res.status(404).send('No user found.');
+  }
 });
 
 module.exports = router;

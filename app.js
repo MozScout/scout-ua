@@ -1,4 +1,5 @@
 require('dotenv').config();
+var mongoose = require('mongoose');
 var express = require('express');
 var app = express();
 
@@ -10,6 +11,9 @@ dynamoose.AWS.config.update({
   endpoint: 'https://dynamodb.us-east-1.amazonaws.com'
 });
 // dynamoose.local();
+
+console.log('connecting to mongoose');
+mongoose.connect(process.env.MONGO_STRING, {});
 
 // app.js
 app.get('/hello', function(req, res) {
