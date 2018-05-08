@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 const rp = require('request-promise');
 const scoutuser = require('../scout_user');
+const DynamoScout = require('../models/ScoutUser');
 const url = require('url');
 
 var pocketConsumerKey, userAuthKey;
@@ -70,11 +71,12 @@ router.get('/redirecturi', function(req, res) {
     .then(function(body) {
       let jsonBody = JSON.parse(body);
       const pocketUserAccessToken = jsonBody.access_token;
-      const pockerUserId = jsonBody.username;
+      const pocketUserId = jsonBody.username;
 
       // Save to the config to scoutuser data
-      console.log(`Authorized: ${pockerUserId}/${pocketUserAccessToken}`);
-      processScoutUser(pockerUserId, pocketUserAccessToken);
+      console.log(`Authorized: ${pocketUserId}/${pocketUserAccessToken}`);
+      processScoutUser(pocketUserId, pocketUserAccessToken);
+      processScoutUserDynamo(pocketUserId, pocketUserAccessToken);
     })
     .catch(function(err) {
       console.log('Call failed' + err);
@@ -99,6 +101,29 @@ async function processScoutUser(userid, access_token) {
     }
   } catch (err) {
     console.log(`Scoutuser operation failed: ${err}`);
+  }
+}
+
+async function processScoutUserDynamo(userid, access_token) {
+  try {
+    console.error(userid);
+
+    const suser = await DynamoScout.get({ pocket_user_id: userid });
+    if (suser) {
+      console.log('Found existing Dynamo user');
+      suser.pocket_access_token = access_token;
+      // suser.updated_at = Date.now;
+      await suser.save();
+    } else {
+      console.log(`Creating new Dynamo user`);
+      const newuser = new DynamoScout({
+        pocket_user_id: userid,
+        pocket_access_token: access_token
+      });
+      await newuser.save();
+    }
+  } catch (err) {
+    console.log(`Scoutuser DYNAMO operation failed: ${err}`);
   }
 }
 

@@ -4,6 +4,8 @@ var app = express();
 
 const dynamoose = require('dynamoose');
 dynamoose.AWS.config.update({
+  accessKeyId: process.env.DYNAMO_ACCCESSKEYID,
+  secretAccessKey: process.env.DYNAMO_SECRETACCESSKEY,
   region: 'us-east-1',
   endpoint: 'https://dynamodb.us-east-1.amazonaws.com'
 });

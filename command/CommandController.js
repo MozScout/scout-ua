@@ -6,6 +6,7 @@ const rp = require('request-promise');
 const texttools = require('./texttools');
 const mongoose = require('mongoose');
 const scoutuser = require('../scout_user');
+const DynamoScout = require('../models/ScoutUser');
 const polly_tts = require('./polly_tts');
 
 router.use(bodyParser.urlencoded({ extended: true }));
@@ -53,30 +54,33 @@ const summaryOptions = {
   }
 };
 
-function getAccessToken(userid) {
+async function getAccessToken(userid) {
   console.log(`getAccessToken for ${userid}`);
-  return new Promise((resolve, reject) => {
-    scoutuser.findOne({ userid: userid }, function(err, user) {
-      if (err) {
-        reject('query failed:' + err);
-      } else {
-        if (user) {
-          console.log('Got token from db: ' + user.access_token);
-          resolve(user.access_token);
-        } else {
-          console.log('No user token found');
-          reject('No user token');
-        }
-      }
-    });
-  });
+  const user = await scoutuser.findOne({ userid });
+  if (user) {
+    console.log('Got token from db: ' + user.access_token);
+    return user.access_token;
+  } else {
+    throw 'No user token';
+  }
+}
+
+async function getAccessTokenDynamo(userid) {
+  console.log(`getAccessTokenDynamo for ${userid}`);
+  const user = await DynamoScout.get({ pocket_user_id: userid });
+  if (user) {
+    console.log('Got token from dynamodb: ' + user.pocket_access_token);
+    return user.pocket_access_token;
+  } else {
+    throw 'No user token';
+  }
 }
 
 router.post('/intent', VerifyToken, function(req, res) {
   console.log(`Command = ${req.body.cmd}`);
 
   // Get the Access Token from the DB.
-  getAccessToken(req.body.userid)
+  getAccessTokenDynamo(req.body.userid)
     .then(theToken => {
       res.setHeader('Content-Type', 'application/json');
       var getBody = {
