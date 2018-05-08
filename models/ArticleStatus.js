@@ -1,9 +1,17 @@
 const dynamoose = require('dynamoose');
 
-const ArticleStatus = dynamoose.model('ArticleStatus', {
-  article_id: String,
-  pocket_user_id: String,
+const schema = new dynamoose.Schema({
+  article_id: {
+    type: String,
+    hashKey: true
+  },
+  pocket_user_id: {
+    type: String,
+    rangeKey: true
+  },
   offset_ms: Number
 });
+
+const ArticleStatus = dynamoose.model('AStats', schema);
 
 module.exports = ArticleStatus;

@@ -31,9 +31,13 @@ router.post('/', async function(req, res) {
   }
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:aid/:uid', async (req, res) => {
   try {
-    const astat = await ArticleStatus.get(req.params.id);
+    const astat = await ArticleStatus.get({
+      article_id: req.params.aid,
+      pocket_user_id: req.params.uid
+    });
+    console.log(astat);
     res.send(astat);
   } catch (err) {
     console.error(err);
