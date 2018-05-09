@@ -7,10 +7,18 @@ const dynamoose = require('dynamoose');
 dynamoose.AWS.config.update({
   accessKeyId: process.env.DYNAMO_ACCCESSKEYID,
   secretAccessKey: process.env.DYNAMO_SECRETACCESSKEY,
-  region: 'us-east-1',
-  endpoint: 'https://dynamodb.us-east-1.amazonaws.com'
+  region: process.env.AWS_REGION,
+  endpoint: process.env.DYNAMO_ENDPOINT
 });
-// dynamoose.local();
+if (
+  process.env.DYNAMO_LOCAL &&
+  (process.env.DYNAMO_LOCAL === 'true' || process.env.DYNAMO_LOCAL === '1')
+) {
+  console.log(`Using local DynamoDB...`);
+  dynamoose.local();
+} else {
+  console.log(`Using DynamoDB @ ${process.env.DYNAMO_ENDPOINT}...`);
+}
 
 console.log('connecting to mongoose');
 mongoose.connect(process.env.MONGO_STRING, {});
