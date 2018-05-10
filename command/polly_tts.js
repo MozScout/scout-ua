@@ -14,14 +14,8 @@ var polly_tts = {
         VoiceId: process.env.POLLY_VOICE || 'Kimberly'
       };
 
-      console.log('pyak', process.env.POLLY_ACCCESSKEYID);
-      console.log('pysk', process.env.POLLY_SECRETACCESSKEY);
-
       var polly = new AWS.Polly({
-        signatureVersion: 'v4',
-        region: 'us-east-1',
-        accessKeyId: process.env.POLLY_ACCCESSKEYID,
-        secretAccessKey: process.env.POLLY_SECRETACCESSKEY
+        signatureVersion: 'v4'
       });
 
       polly.synthesizeSpeech(params, (err, data) => {
@@ -87,9 +81,7 @@ var polly_tts = {
         .then(function(newAudioFile) {
           console.log('NewAudioFil is: ' + newAudioFile);
           var s3 = new AWS.S3({
-            apiVersion: '2006-03-01',
-            accessKeyId: process.env.POLLY_ACCCESSKEYID,
-            secretAccessKey: process.env.POLLY_SECRETACCESSKEY
+            apiVersion: '2006-03-01'
           });
           var bucketParams = {
             Bucket: process.env.POLLY_S3_BUCKET,
