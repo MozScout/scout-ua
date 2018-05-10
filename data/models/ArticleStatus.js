@@ -12,6 +12,6 @@ const schema = new dynamoose.Schema({
   offset_ms: Number
 });
 
-const ArticleStatus = dynamoose.model('AStats', schema);
+const ArticleStatus = dynamoose.model('ArticleStatus', schema);
 
 module.exports = ArticleStatus;
