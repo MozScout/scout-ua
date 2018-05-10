@@ -100,7 +100,7 @@ router.post('/intent', VerifyToken, function(req, res) {
             req.body.cmd === 'SearchAndSummarizeArticle'
           );
           break;
-        case 'ScoutMyPocketSummary':
+        case 'ScoutMyPocket':
           getBody.count = '3';
           getOptions.body = JSON.stringify(getBody);
           scoutSummaries(getOptions, 'list', 'given_url', res);
