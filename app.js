@@ -1,9 +1,9 @@
 require('dotenv').config();
-var mongoose = require('mongoose');
-var express = require('express');
-var app = express();
-
+const express = require('express');
+const app = express();
 const dynamoose = require('dynamoose');
+
+// DynamoDB connection
 dynamoose.AWS.config.update({
   accessKeyId: process.env.DYNAMO_ACCCESSKEYID,
   secretAccessKey: process.env.DYNAMO_SECRETACCESSKEY,
@@ -19,9 +19,6 @@ if (
 } else {
   console.log(`Using DynamoDB @ ${process.env.DYNAMO_ENDPOINT}...`);
 }
-
-console.log('connecting to mongoose');
-mongoose.connect(process.env.MONGO_STRING, {});
 
 // app.js
 app.get('/hello', function(req, res) {
@@ -44,6 +41,6 @@ var CommandController = require('./command/CommandController');
 app.use('/command', CommandController);
 
 const ArticleController = require('./article/ArticleStatusController');
-app.use('/article', ArticleController);
+app.use('/articles', ArticleController);
 
 module.exports = app;

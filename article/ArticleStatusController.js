@@ -1,6 +1,6 @@
 const express = require('express');
 var bodyParser = require('body-parser');
-const ArticleStatus = require('../models/ArticleStatus');
+const ArticleStatus = require('../data/models/ArticleStatus');
 
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: true }));

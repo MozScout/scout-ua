@@ -4,14 +4,12 @@ const bodyParser = require('body-parser');
 const VerifyToken = require('../VerifyToken');
 const rp = require('request-promise');
 const texttools = require('./texttools');
-const mongoose = require('mongoose');
-const scoutuser = require('../scout_user');
-const DynamoScout = require('../models/ScoutUser');
 const polly_tts = require('./polly_tts');
+const Database = require('../data/database');
+const database = new Database();
 
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
-mongoose.connect(process.env.MONGO_STRING, {});
 
 const pocketRecOptions = {
   uri:
@@ -54,33 +52,12 @@ const summaryOptions = {
   }
 };
 
-async function getAccessToken(userid) {
-  console.log(`getAccessToken for ${userid}`);
-  const user = await scoutuser.findOne({ userid });
-  if (user) {
-    console.log('Got token from db: ' + user.access_token);
-    return user.access_token;
-  } else {
-    throw 'No user token';
-  }
-}
-
-async function getAccessTokenDynamo(userid) {
-  console.log(`getAccessTokenDynamo for ${userid}`);
-  const user = await DynamoScout.get({ pocket_user_id: userid });
-  if (user) {
-    console.log('Got token from dynamodb: ' + user.pocket_access_token);
-    return user.pocket_access_token;
-  } else {
-    throw 'No user token';
-  }
-}
-
 router.post('/intent', VerifyToken, function(req, res) {
   console.log(`Command = ${req.body.cmd}`);
 
   // Get the Access Token from the DB.
-  getAccessTokenDynamo(req.body.userid)
+  database
+    .getAccessToken(req.body.userid)
     .then(theToken => {
       res.setHeader('Content-Type', 'application/json');
       var getBody = {
