@@ -3,25 +3,31 @@ const express = require('express');
 const app = express();
 const dynamoose = require('dynamoose');
 
-// DynamoDB connection
-dynamoose.AWS.config.update({
-  accessKeyId: process.env.DYNAMO_ACCCESSKEYID,
-  secretAccessKey: process.env.DYNAMO_SECRETACCESSKEY,
-  region: process.env.AWS_REGION,
-  endpoint: process.env.DYNAMO_ENDPOINT
-});
-if (
-  process.env.DYNAMO_LOCAL &&
-  (process.env.DYNAMO_LOCAL === 'true' || process.env.DYNAMO_LOCAL === '1')
-) {
-  console.log(`Using local DynamoDB...`);
-  dynamoose.local();
-} else {
-  console.log(`Using DynamoDB @ ${process.env.DYNAMO_ENDPOINT}...`);
+console.log('dyak', process.env.DYNAMO_ACCCESSKEYID);
+console.log('dysk', process.env.DYNAMO_SECRETACCESSKEY);
+
+function dynamoConnect() {
+  // DynamoDB connection
+  dynamoose.AWS.config.update({
+    accessKeyId: process.env.DYNAMO_ACCCESSKEYID,
+    secretAccessKey: process.env.DYNAMO_SECRETACCESSKEY,
+    region: process.env.AWS_REGION,
+    endpoint: process.env.DYNAMO_ENDPOINT
+  });
+  if (
+    process.env.DYNAMO_LOCAL &&
+    (process.env.DYNAMO_LOCAL === 'true' || process.env.DYNAMO_LOCAL === '1')
+  ) {
+    console.log(`Using local DynamoDB...`);
+    dynamoose.local();
+  } else {
+    console.log(`Using DynamoDB @ ${process.env.DYNAMO_ENDPOINT}...`);
+  }
 }
 
 // app.js
 app.get('/hello', function(req, res) {
+  dynamoConnect();
   res.status(200).send(
     `Hello! pocket=${process.env.POCKET_KEY}, 
       pollybucket=${process.env.POLLY_S3_BUCKET}`

@@ -14,6 +14,9 @@ var polly_tts = {
         VoiceId: process.env.POLLY_VOICE || 'Kimberly'
       };
 
+      console.log('pyak', process.env.POLLY_ACCCESSKEYID);
+      console.log('pysk', process.env.POLLY_SECRETACCESSKEY);
+
       var polly = new AWS.Polly({
         signatureVersion: 'v4',
         region: 'us-east-1',
@@ -23,8 +26,9 @@ var polly_tts = {
 
       polly.synthesizeSpeech(params, (err, data) => {
         console.log('FirstSpeech: ' + Date.now());
+        console.log(params);
         if (err) {
-          console.log(err.code);
+          console.log(`ERROR: ${err.code}`);
           reject(err);
         } else if (data) {
           if (data.AudioStream instanceof Buffer) {
