@@ -1,12 +1,13 @@
 const express = require('express');
 var bodyParser = require('body-parser');
 const ArticleStatus = require('../data/models/ArticleStatus');
+const VerifyToken = require('../VerifyToken');
 
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
-router.get('/', async function(req, res) {
+router.get('/', VerifyToken, async function(req, res) {
   try {
     const articles = await ArticleStatus.scan().exec();
     res.send(articles);
@@ -16,7 +17,7 @@ router.get('/', async function(req, res) {
   }
 });
 
-router.post('/', async function(req, res) {
+router.post('/', VerifyToken, async function(req, res) {
   try {
     const astat = new ArticleStatus({
       article_id: req.body.article_id,
@@ -31,7 +32,7 @@ router.post('/', async function(req, res) {
   }
 });
 
-router.get('/:articleid/:userid', async (req, res) => {
+router.get('/:articleid/:userid', VerifyToken, async (req, res) => {
   try {
     const astat = await ArticleStatus.get({
       article_id: req.params.articleid,
