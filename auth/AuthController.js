@@ -1,61 +1,46 @@
-// AuthController.js
+const express = require('express');
+const bodyParser = require('body-parser');
+const VerifyToken = require('../VerifyToken');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const uuidgen = require('node-uuid-generator');
+const APIUser = require('../data/models/APIUser');
 
-var express = require('express');
-var router = express.Router();
-var bodyParser = require('body-parser');
+const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: false }));
 router.use(bodyParser.json());
-var User = require('../user/User');
-var VerifyToken = require('../VerifyToken');
-var mongoose = require('mongoose');
-console.log('connecting to mongoose');
-mongoose.connect(process.env.MONGO_STRING, {});
-console.log('after connecting to mongoose');
 
-var jwt = require('jsonwebtoken');
-var bcrypt = require('bcryptjs');
+router.post('/register', async function(req, res) {
+  try {
+    console.log(`/register ${req.body.name}`);
+    const userid = uuidgen.generate();
+    const token = jwt.sign({ id: userid }, process.env.JWT_SECRET);
 
-router.post('/register', function(req, res) {
-  console.log('STARTING REGISTER');
-  var hashedPassword = bcrypt.hashSync(req.body.password, 8);
-  console.log('AFTER HASH');
-  console.log(req.body.name);
-
-  User.create(
-    {
+    const newApiUser = new APIUser({
+      id: userid,
+      jwt: token,
       name: req.body.name,
       email: req.body.email,
-      password: hashedPassword
-    },
-    function(err, user) {
-      if (err) {
-        console.log('There was a problem registering the user');
-        return res
-          .status(500)
-          .send('There was a problem registering the user.');
-      }
-
-      console.log('before jwt signing');
-      // create a token
-      var token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
-
-      res.status(200).send({ auth: true, token: token });
-    }
-  );
+      password: bcrypt.hashSync(req.body.password, 8),
+      active: true
+    });
+    await newApiUser.save();
+    res.status(200).send({ auth: true, token: token });
+  } catch (err) {
+    return res.status(500).send(`Error creating API user: ${err}`);
+  }
 });
 
-router.get('/me', VerifyToken, function(req, res) {
-  User.findById(
-    req.userId,
-    { password: 0 }, // projection
-    function(err, user) {
-      if (err)
-        return res.status(500).send('There was a problem finding the user.');
-      if (!user) return res.status(404).send('No user found.');
-
-      res.status(200).send(user);
-    }
-  );
+router.get('/me', VerifyToken, async function(req, res) {
+  console.log(`looking up user ${req.userId}`);
+  const apiuser = await APIUser.get({
+    id: req.userId
+  });
+  if (apiuser) {
+    res.status(200).send(apiuser);
+  } else {
+    return res.status(404).send('No user found.');
+  }
 });
 
 module.exports = router;

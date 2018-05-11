@@ -4,13 +4,12 @@ const bodyParser = require('body-parser');
 const VerifyToken = require('../VerifyToken');
 const rp = require('request-promise');
 const texttools = require('./texttools');
-const mongoose = require('mongoose');
-const scoutuser = require('../scout_user');
 const polly_tts = require('./polly_tts');
+const Database = require('../data/database');
+const database = new Database();
 
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
-mongoose.connect(process.env.MONGO_STRING, {});
 
 const pocketRecOptions = {
   uri:
@@ -53,30 +52,12 @@ const summaryOptions = {
   }
 };
 
-function getAccessToken(userid) {
-  console.log(`getAccessToken for ${userid}`);
-  return new Promise((resolve, reject) => {
-    scoutuser.findOne({ userid: userid }, function(err, user) {
-      if (err) {
-        reject('query failed:' + err);
-      } else {
-        if (user) {
-          console.log('Got token from db: ' + user.access_token);
-          resolve(user.access_token);
-        } else {
-          console.log('No user token found');
-          reject('No user token');
-        }
-      }
-    });
-  });
-}
-
 router.post('/intent', VerifyToken, function(req, res) {
   console.log(`Command = ${req.body.cmd}`);
 
   // Get the Access Token from the DB.
-  getAccessToken(req.body.userid)
+  database
+    .getAccessToken(req.body.userid)
     .then(theToken => {
       res.setHeader('Content-Type', 'application/json');
       var getBody = {

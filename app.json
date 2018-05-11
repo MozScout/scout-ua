@@ -2,22 +2,22 @@
   "name": "scout-ua",
   "scripts": {},
   "env": {
-    "JWT_SECRET": {
+    "AWS_REGION": {
       "required": true
     },
-    "MONGO_STRING": {
+    "AWS_ACCESS_KEY_ID": {
+      "required": true
+    },
+    "AWS_SECRET_ACCESS_KEY": {
+      "required": true
+    },
+    "JWT_SECRET": {
       "required": true
     },
     "POCKET_KEY": {
       "required": true
     },
-    "POLLY_ACCCESSKEYID": {
-      "required": true
-    },
     "POLLY_S3_BUCKET": {
-      "required": true
-    },
-    "POLLY_SECRETACCESSKEY": {
       "required": true
     },
     "POLLY_VOICE": {

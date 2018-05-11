@@ -1,10 +1,9 @@
-'use strict';
-
 const express = require('express');
 const router = express.Router();
 const rp = require('request-promise');
-const scoutuser = require('../scout_user');
 const url = require('url');
+const Database = require('../data/database');
+const database = new Database();
 
 var pocketConsumerKey, userAuthKey;
 
@@ -67,39 +66,19 @@ router.get('/redirecturi', function(req, res) {
   console.log('calling redirect');
 
   rp(finalAuthorizeOptions)
-    .then(function(body) {
+    .then(async function(body) {
       let jsonBody = JSON.parse(body);
       const pocketUserAccessToken = jsonBody.access_token;
-      const pockerUserId = jsonBody.username;
+      const pocketUserId = jsonBody.username;
 
       // Save to the config to scoutuser data
-      console.log(`Authorized: ${pockerUserId}/${pocketUserAccessToken}`);
-      processScoutUser(pockerUserId, pocketUserAccessToken);
+      console.log(`Authorized: ${pocketUserId}/${pocketUserAccessToken}`);
+      await database.processScoutUser(pocketUserId, pocketUserAccessToken);
     })
     .catch(function(err) {
       console.log('Call failed' + err);
     });
   res.status(200).send('OK');
 });
-
-async function processScoutUser(userid, access_token) {
-  try {
-    let existingScoutuser = await scoutuser.findOne({ userid });
-    if (existingScoutuser) {
-      console.log('Updating existing Scoutuser');
-      existingScoutuser.access_token = access_token;
-      await existingScoutuser.save();
-    } else {
-      console.log(`Creating new Scoutuser`);
-      let newScoutuser = await scoutuser.create({
-        userid,
-        access_token
-      });
-      console.log(`Created ScoutUser in DB: ${newScoutuser}`);
-    }
-  } catch (err) {
-    console.log(`Scoutuser operation failed: ${err}`);
-  }
-}
 
 module.exports = router;
