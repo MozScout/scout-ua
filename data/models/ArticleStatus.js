@@ -1,11 +1,11 @@
 const dynamoose = require('dynamoose');
 
 const schema = new dynamoose.Schema({
-  article_id: {
+  pocket_user_id: {
     type: String,
     hashKey: true
   },
-  pocket_user_id: {
+  article_id: {
     type: String,
     rangeKey: true
   },

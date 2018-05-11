@@ -7,21 +7,12 @@ const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
-router.get('/', VerifyToken, async function(req, res) {
-  try {
-    const articles = await ArticleStatus.scan().exec();
-    res.send(articles);
-  } catch (err) {
-    console.error(err);
-    res.sendStatus(500);
-  }
-});
-
+// Create/update article status
 router.post('/', VerifyToken, async function(req, res) {
   try {
     const astat = new ArticleStatus({
-      article_id: req.body.article_id,
       pocket_user_id: req.body.pocket_user_id,
+      article_id: req.body.article_id,
       offset_ms: req.body.offset_ms
     });
     await astat.save();
@@ -32,11 +23,25 @@ router.post('/', VerifyToken, async function(req, res) {
   }
 });
 
-router.get('/:articleid/:userid', VerifyToken, async (req, res) => {
+// GET all statuses for userid
+router.get('/:userid', VerifyToken, async function(req, res) {
+  try {
+    const articles = await ArticleStatus.query({
+      pocket_user_id: req.params.userid
+    }).exec();
+    res.send(articles);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
+});
+
+// GET status for user/article combo
+router.get('/:userid/:articleid', VerifyToken, async (req, res) => {
   try {
     const astat = await ArticleStatus.get({
-      article_id: req.params.articleid,
-      pocket_user_id: req.params.userid
+      pocket_user_id: req.params.userid,
+      article_id: req.params.articleid
     });
     console.log(astat);
     res.send(astat);
