@@ -20,6 +20,7 @@ router.get('/scoutusers', async function(req, res) {
 
 router.post('/scoutusers', async function(req, res) {
   try {
+    console.log(req.body);
     await database.processScoutUser(req.body.userid, req.body.access_token);
     res.send('ok');
   } catch (err) {
