@@ -21,19 +21,19 @@ app.get('/hello', function(req, res) {
   );
 });
 
-var UserController = require('./user/UserController');
+const UserController = require('./user/UserController');
 app.use('/api/users', UserController);
 
-var AuthController = require('./auth/AuthController');
+const AuthController = require('./auth/AuthController');
 app.use('/api/auth', AuthController);
 
-var MobileController = require('./auth/MobileController');
+const MobileController = require('./auth/MobileController');
 app.use('/api/auth/mobile', MobileController);
 
-var CommandController = require('./command/CommandController');
+const CommandController = require('./command/CommandController');
 app.use('/command', CommandController);
 
-const ArticleController = require('./article/ArticleStatusController');
-app.use('/articles', ArticleController);
+const StatusController = require('./articlestatus/ArticleStatusController');
+app.use('/article-status', StatusController);
 
 module.exports = app;

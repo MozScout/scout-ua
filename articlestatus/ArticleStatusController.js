@@ -31,11 +31,11 @@ router.post('/', async function(req, res) {
   }
 });
 
-router.get('/:aid/:uid', async (req, res) => {
+router.get('/:articleid/:userid', async (req, res) => {
   try {
     const astat = await ArticleStatus.get({
-      article_id: req.params.aid,
-      pocket_user_id: req.params.uid
+      article_id: req.params.articleid,
+      pocket_user_id: req.params.userid
     });
     console.log(astat);
     res.send(astat);
