@@ -74,11 +74,14 @@ router.get('/redirecturi', function(req, res) {
       // Save to the config to scoutuser data
       console.log(`Authorized: ${pocketUserId}/${pocketUserAccessToken}`);
       await database.processScoutUser(pocketUserId, pocketUserAccessToken);
+      const result = {
+        userid: pocketUserId
+      };
+      res.status(200).send(JSON.stringify(result));
     })
     .catch(function(err) {
       console.log('Call failed' + err);
     });
-  res.status(200).send('OK');
 });
 
 module.exports = router;
