@@ -46,6 +46,7 @@ const summaryOptions = {
   uri: '',
   method: 'GET',
   body: '',
+  timeout: 3000,
   headers: {
     'Content-Type': 'application/json; charset=UTF-8',
     'X-Accept': 'application/json'
@@ -84,12 +85,18 @@ router.post('/intent', VerifyToken, function(req, res) {
         case 'ScoutMyPocket':
           getBody.count = '3';
           getOptions.body = JSON.stringify(getBody);
-          scoutSummaries(getOptions, 'list', 'given_url', res);
+          scoutSummaries(getOptions, 'list', 'given_url', 'given_title', res);
           break;
         // Gets the global pocket recommendation and summarizes first three.
         case 'ScoutHeadlines':
           console.log('Processing ScoutHeadlines: ' + process.env.POCKET_KEY);
-          scoutSummaries(pocketRecOptions, 'recommendations', 'url', res);
+          scoutSummaries(
+            pocketRecOptions,
+            'recommendations',
+            'url',
+            'title',
+            res
+          );
           break;
         default:
           break;
@@ -125,7 +132,7 @@ router.post('/summary', VerifyToken, async function(req, res) {
   }
 });
 
-function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, res) {
+function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, titleAttr, res) {
   // Gets the user's Pocket titles and summarizes first three.
   console.log('jsonboddyattr=', jsonBodyAttr);
   console.log('urlattr=', urlAttr);
@@ -142,13 +149,17 @@ function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, res) {
             promiseArray.push(
               rp(summaryOptions)
                 .then(sumResults => {
-                  return sumResults;
+                  let sumResultsJson = JSON.parse(sumResults);
+                  sumResultsJson['title'] = arrJson[key][titleAttr];
+                  return sumResultsJson;
                 })
                 .catch(function(err) {
                   console.log('Caught an error: ' + err);
+                  return JSON.stringify({});
                 })
             );
           });
+          console.log('RETURNING PROMISE.ALL ' + Date.now());
           return Promise.all(promiseArray);
         };
 
@@ -156,22 +167,25 @@ function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, res) {
           .then(function(sumVal) {
             let textResponse = '';
             sumVal.forEach(function(element) {
-              const sumBody = JSON.parse(element);
               // Link up the response text for all summaries
-              if (sumBody.sm_api_character_count) {
+              if (element.sm_api_character_count) {
                 // TODO: Right now, some of the pages are not
                 // parseable. Want to change this later to allow
                 // it to get 3 that are parseable.
                 textResponse += texttools.buildSummaryText(
-                  sumBody.sm_api_title,
-                  sumBody.sm_api_content
+                  element.title,
+                  element.sm_api_content
                 );
+              } else {
+                console.log('no data.  Summary must have failed.');
               }
             });
             console.log('Text response is: ' + textResponse);
+            console.log('Time to get summaries: ' + Date.now());
             return buildAudioFromText(textResponse);
           })
           .then(function(url) {
+            console.log('Time to buildAudioFromText ' + Date.now());
             res.status(200).send(JSON.stringify({ url: url }));
           })
           .catch(function(err) {
