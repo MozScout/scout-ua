@@ -64,7 +64,8 @@ router.post('/intent', VerifyToken, function(req, res) {
       var getBody = {
         consumer_key: process.env.POCKET_KEY,
         access_token: theToken,
-        detailType: 'complete'
+        detailType: 'complete',
+        sort: 'newest'
       };
 
       switch (req.body.cmd) {
@@ -224,7 +225,6 @@ function scoutTitles(getBody, res) {
       const jsonBody = JSON.parse(body);
       if (jsonBody.status == '1') {
         console.log(jsonBody);
-        let speech = '';
         let articles = [];
 
         // process list of articles
@@ -252,18 +252,21 @@ function scoutTitles(getBody, res) {
 
             articles.push({
               item_id: jsonBody.list[key].item_id,
+              sort_id: jsonBody.list[key].sort_id,
               resolved_url,
               title,
               author,
               lengthMinutes,
               imageURL
             });
-            speech = `${speech} ${articles.length}. ${title}. `;
           }
         });
 
-        const result = { speech, articles };
-        res.status(200).send(JSON.stringify(result));
+        articles.sort((a, b) => {
+          return a.sort_id - b.sort_id;
+        });
+
+        res.status(200).send(JSON.stringify({ articles }));
       }
     })
     .catch(function(err) {
