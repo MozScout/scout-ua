@@ -223,7 +223,7 @@ function scoutTitles(getBody, res) {
   rp(getOptions)
     .then(function(body) {
       const jsonBody = JSON.parse(body);
-      if (jsonBody.status == '1') {
+      if (jsonBody.status === 1 || jsonBody.status === 2) {
         console.log(jsonBody);
         let articles = [];
 
@@ -267,6 +267,12 @@ function scoutTitles(getBody, res) {
         });
 
         res.status(200).send(JSON.stringify({ articles }));
+      } else {
+        res.status(500).send(
+          JSON.stringify({
+            error: `Unknown status from Pocket: ${jsonBody.status}`
+          })
+        );
       }
     })
     .catch(function(err) {
