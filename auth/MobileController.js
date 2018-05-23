@@ -39,8 +39,6 @@ router.get('/login', function(req, res) {
     host: req.get('host')
   });
   const redirUri = `${requrl}/api/auth/mobile/redirecturi`;
-  console.log(`redirUri = ${redirUri}`);
-
   var oauthBody = {
     consumer_key: pocketConsumerKey,
     redirect_uri: redirUri
@@ -53,6 +51,7 @@ router.get('/login', function(req, res) {
     var redir =
       `https://getpocket.com/auth/authorize` +
       `?request_token=${userAuthKey}&redirect_uri=${redirUri}`;
+    console.log(`redirecting to ${redir}...`);
     return res.redirect(redir);
   });
 });
@@ -74,10 +73,15 @@ router.get('/redirecturi', function(req, res) {
       // Save to the config to scoutuser data
       console.log(`Authorized: ${pocketUserId}/${pocketUserAccessToken}`);
       await database.processScoutUser(pocketUserId, pocketUserAccessToken);
-      const result = {
-        userid: pocketUserId
-      };
-      res.status(200).send(JSON.stringify(result));
+
+      // Send custom protocol redirect for use by Scout mobile app
+      const location = `mozilla-skout://user/${pocketUserId}`;
+      console.log(`Redirecting to ${location}`);
+      res.status(200).send(`
+      <script>
+        console.log('redirecting to ${location}')
+        window.location.replace('${location}')
+      </script>`);
     })
     .catch(function(err) {
       console.log('Call failed' + err);
