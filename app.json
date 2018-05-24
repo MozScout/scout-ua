@@ -25,6 +25,12 @@
     },
     "SM_API_KEY": {
       "required": true
+    },
+    "PROSODY_RATE": {
+      "required": true
+    },
+    "PROSODY_VOLUME": {
+      "required": true
     }
   },
   "formation": {
