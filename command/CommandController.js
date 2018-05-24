@@ -65,7 +65,8 @@ router.post('/intent', VerifyToken, function(req, res) {
         consumer_key: process.env.POCKET_KEY,
         access_token: theToken,
         detailType: 'complete',
-        sort: 'newest'
+        sort: 'newest',
+        count: '50'
       };
 
       switch (req.body.cmd) {
