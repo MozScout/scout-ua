@@ -132,10 +132,10 @@ router.post('/summary', VerifyToken, async function(req, res) {
   }
 });
 
-async function processArticleRequest(req, audioBuildFn) {
+async function processArticleRequest(req, audioBuildFunction) {
   const getBody = await buildPocketRequestBody(req.body.userid);
   let result = await searchForPocketArticle(getBody, req.body.url);
-  const audioUrl = await audioBuildFn(req.body.url);
+  const audioUrl = await audioBuildFunction(req.body.url);
   if (result) {
     result.url = audioUrl;
   } else {
@@ -227,11 +227,6 @@ function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, titleAttr, res) {
     });
 }
 
-/**
- * Get the user's titles from Pocket and lists out all the titles.
- * @param {*} getBody - object with properties for the Pocket /get API request
- * @param {*} res - HTTP response
- */
 function scoutTitles(getBody, res) {
   getOptions.body = JSON.stringify(getBody);
   rp(getOptions)
@@ -269,10 +264,8 @@ function scoutTitles(getBody, res) {
 }
 
 /**
- * Takes a full Pocket article object retrieved from the /get API and
+ * Takes a full article object retrieved from Pocket's /get API and
  * extracts the fields we use.
- *
- * @param {} pocketArticle
  */
 function getArticleMetadata(pocketArticle) {
   const wordsPerMinute = 155;
@@ -302,8 +295,6 @@ function getArticleMetadata(pocketArticle) {
 /**
  * Looks for an article in user's account that matches the searchTerm,
  * and if found, returns metadata for it. Otherwise undefined.
- * @param {} getBody
- * @param String searchTerm
  */
 async function searchForPocketArticle(getBody, searchTerm) {
   console.log('Search term is: ', searchTerm);
