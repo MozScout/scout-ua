@@ -23,9 +23,10 @@ const texttools = {
   cleanText: function(htmlStr) {
     // Remove the HTML marks.
     let strippedHtml = htmlStr.replace(/<[^>]+>/g, ' ');
+
     // Now replace the quotes and other markups.
     strippedHtml = strippedHtml
-      .replace(/&amp;/g, '&')
+      .replace(/&amp;/g, ' and ')
       .replace(/&rdquo;/g, '"')
       .replace(/&ldquo;/g, '"')
       .replace(/&rsquo;/g, "'")
@@ -34,6 +35,11 @@ const texttools = {
       .replace(/&ndash;/g, '-')
       .replace(/&nbsp;/g, ' ')
       .replace(/&thinsp;/g, '');
+
+    //Clean up any last html codes and diacriticals that
+    //contain & so it doesn't choke ssml.
+    strippedHtml = strippedHtml.replace(/&[^\s]*/g, '');
+
     return strippedHtml;
   },
 
