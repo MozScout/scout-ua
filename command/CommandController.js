@@ -11,14 +11,6 @@ const database = new Database();
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
-const pocketRecOptions = {
-  uri:
-    'https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?' +
-    'count=3&version=3&consumer_key=' +
-    process.env.POCKET_KEY,
-  method: 'GET'
-};
-
 const getOptions = {
   uri: 'https://getpocket.com/v3/get',
   method: 'POST',
@@ -86,17 +78,6 @@ router.post('/intent', VerifyToken, async function(req, res) {
         getBody.count = '3';
         getOptions.body = JSON.stringify(getBody);
         scoutSummaries(getOptions, 'list', 'given_url', 'given_title', res);
-        break;
-      // Gets the global pocket recommendation and summarizes first three.
-      case 'ScoutHeadlines':
-        console.log('Processing ScoutHeadlines: ' + process.env.POCKET_KEY);
-        scoutSummaries(
-          pocketRecOptions,
-          'recommendations',
-          'url',
-          'title',
-          res
-        );
         break;
       default:
         break;

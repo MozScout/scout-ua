@@ -7,11 +7,23 @@ var glob = require('glob');
 var polly_tts = {
   getPollyChunk: function(text, filenameIndex, audio_file) {
     return new Promise(function(resolve, reject) {
+      let rate = process.env.PROSODY_RATE || 'medium';
+      let vol = process.env.PROSODY_VOLUME || 'medium';
+      var ssmlText =
+        '<speak><prosody rate="' +
+        rate +
+        '" volume="' +
+        vol +
+        '">' +
+        text +
+        '</prosody></speak>';
+
       let params = {
-        Text: text,
+        Text: ssmlText,
         OutputFormat: 'mp3',
         SampleRate: '16000',
-        VoiceId: process.env.POLLY_VOICE || 'Kimberly'
+        VoiceId: process.env.POLLY_VOICE || 'Salli',
+        TextType: 'ssml'
       };
 
       var polly = new AWS.Polly({
@@ -19,7 +31,6 @@ var polly_tts = {
       });
 
       polly.synthesizeSpeech(params, (err, data) => {
-        console.log('FirstSpeech: ' + Date.now());
         console.log(params);
         if (err) {
           console.log(`ERROR: ${err.code}`);
