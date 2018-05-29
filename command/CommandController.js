@@ -45,75 +45,87 @@ const summaryOptions = {
   }
 };
 
-router.post('/intent', VerifyToken, function(req, res) {
-  console.log(`Command = ${req.body.cmd}`);
+async function buildPocketRequestBody(pocketUserId) {
+  const pocketToken = await database.getAccessToken(pocketUserId);
+  return {
+    consumer_key: process.env.POCKET_KEY,
+    access_token: pocketToken,
+    detailType: 'complete',
+    sort: 'newest',
+    count: 50
+  };
+}
 
-  // Get the Access Token from the DB.
-  database
-    .getAccessToken(req.body.userid)
-    .then(theToken => {
-      res.setHeader('Content-Type', 'application/json');
-      var getBody = {
-        consumer_key: process.env.POCKET_KEY,
-        access_token: theToken,
-        detailType: 'complete',
-        sort: 'newest',
-        count: '50'
-      };
-
-      switch (req.body.cmd) {
-        case 'ScoutTitles':
-          scoutTitles(getBody, res);
-          break;
-        case 'SearchAndPlayArticle':
-        case 'SearchAndSummarizeArticle':
-          getBody.search = req.body.searchTerms;
-          getOptions.body = JSON.stringify(getBody);
-          searchAndPlayArticle(
-            getOptions,
-            req,
-            res,
-            req.body.cmd === 'SearchAndSummarizeArticle'
-          );
-          break;
-        case 'ScoutMyPocket':
-          getBody.count = '3';
-          getOptions.body = JSON.stringify(getBody);
-          scoutSummaries(getOptions, 'list', 'given_url', 'given_title', res);
-          break;
-        default:
-          break;
-      }
-    })
-    .catch(reason => {
-      console.log('database err: ', reason);
-      let errSpeech =
-        'Unable to connect to Pocket.' + '  Please relink your account.';
-      res.status(404).send(JSON.stringify({ speech: errSpeech }));
-    });
+router.post('/intent', VerifyToken, async function(req, res) {
+  try {
+    console.log(`Command = ${req.body.cmd}`);
+    res.setHeader('Content-Type', 'application/json');
+    const getBody = await buildPocketRequestBody(req.body.userid);
+    switch (req.body.cmd) {
+      case 'ScoutTitles':
+        scoutTitles(getBody, res);
+        break;
+      case 'SearchAndPlayArticle':
+      case 'SearchAndSummarizeArticle':
+        searchAndPlayArticle(
+          res,
+          getBody,
+          req.body.searchTerms,
+          req.body.cmd === 'SearchAndSummarizeArticle'
+        );
+        break;
+      case 'ScoutMyPocket':
+        getBody.count = '3';
+        getOptions.body = JSON.stringify(getBody);
+        scoutSummaries(getOptions, 'list', 'given_url', 'given_title', res);
+        break;
+      default:
+        break;
+    }
+  } catch (reason) {
+    console.log('database err: ', reason);
+    let errSpeech = 'Unable to connect to Pocket. Please relink your account.';
+    res.status(404).send(JSON.stringify({ speech: errSpeech }));
+  }
 });
 
 router.post('/article', VerifyToken, async function(req, res) {
+  console.log(`GET /article: ${req.body.url}`);
   try {
-    const audioUrl = await buildAudioFromUrl(req.body.url);
-    res.status(200).send(JSON.stringify({ url: audioUrl }));
+    res.setHeader('Content-Type', 'application/json');
+    const result = await processArticleRequest(req, buildAudioFromUrl);
+    res.status(200).send(JSON.stringify(result));
   } catch (reason) {
-    console.log('caught an error: ', reason);
-    const errSpeech = `There was an error finding the article. ${reason}`;
+    console.log('Error in /article ', reason);
+    const errSpeech = `There was an error processing the article. ${reason}`;
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 });
 
 router.post('/summary', VerifyToken, async function(req, res) {
+  console.log(`GET /summary: ${req.body.url}`);
   try {
-    const summaryUrl = await buildSummaryAudioFromUrl(req.body.url);
-    res.status(200).send(JSON.stringify({ url: summaryUrl }));
+    res.setHeader('Content-Type', 'application/json');
+    const result = await processArticleRequest(req, buildSummaryAudioFromUrl);
+    res.status(200).send(JSON.stringify(result));
   } catch (reason) {
     console.log('Error in /summary ', reason);
     const errSpeech = `There was an error processing the article. ${reason}`;
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 });
+
+async function processArticleRequest(req, audioBuildFunction) {
+  const getBody = await buildPocketRequestBody(req.body.userid);
+  let result = await searchForPocketArticle(getBody, req.body.url);
+  const audioUrl = await audioBuildFunction(req.body.url);
+  if (result) {
+    result.url = audioUrl;
+  } else {
+    result = { url: audioUrl };
+  }
+  return result;
+}
 
 function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, titleAttr, res) {
   // Gets the user's Pocket titles and summarizes first three.
@@ -198,9 +210,7 @@ function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, titleAttr, res) {
     });
 }
 
-// Get the user's titles from Pocket and lists out all the titles.
 function scoutTitles(getBody, res) {
-  const wordsPerMinute = 155;
   getOptions.body = JSON.stringify(getBody);
   rp(getOptions)
     .then(function(body) {
@@ -212,35 +222,7 @@ function scoutTitles(getBody, res) {
         // process list of articles
         Object.keys(jsonBody.list).forEach(key => {
           if (jsonBody.list[key].resolved_title) {
-            const title = jsonBody.list[key].resolved_title;
-            const imageURL = jsonBody.list[key].top_image_url;
-            const resolved_url = jsonBody.list[key].resolved_url;
-
-            let lengthMinutes;
-            const wordCount = jsonBody.list[key].word_count;
-            if (wordCount) {
-              lengthMinutes = Math.floor(
-                parseInt(wordCount, 10) / wordsPerMinute
-              );
-            }
-
-            let author;
-            const authors = jsonBody.list[key].authors;
-            for (const auth in authors) {
-              author = author
-                ? `${author}, ${authors[auth].name}`
-                : authors[auth].name;
-            }
-
-            articles.push({
-              item_id: jsonBody.list[key].item_id,
-              sort_id: jsonBody.list[key].sort_id,
-              resolved_url,
-              title,
-              author,
-              lengthMinutes,
-              imageURL
-            });
+            articles.push(getArticleMetadata(jsonBody.list[key]));
           }
         });
 
@@ -264,32 +246,74 @@ function scoutTitles(getBody, res) {
     });
 }
 
-async function searchAndPlayArticle(getOptions, req, res, summaryOnly) {
+/**
+ * Takes a full article object retrieved from Pocket's /get API and
+ * extracts the fields we use.
+ */
+function getArticleMetadata(pocketArticle) {
+  const wordsPerMinute = 155;
+  let lengthMinutes;
+  const wordCount = pocketArticle.word_count;
+  if (wordCount) {
+    lengthMinutes = Math.floor(parseInt(wordCount, 10) / wordsPerMinute);
+  }
+
+  let author;
+  const authors = pocketArticle.authors;
+  for (const auth in authors) {
+    author = author ? `${author}, ${authors[auth].name}` : authors[auth].name;
+  }
+
+  return {
+    item_id: pocketArticle.item_id,
+    sort_id: pocketArticle.sort_id,
+    resolved_url: pocketArticle.resolved_url,
+    title: pocketArticle.resolved_title,
+    author,
+    lengthMinutes,
+    imageURL: pocketArticle.top_image_url
+  };
+}
+
+/**
+ * Looks for an article in user's account that matches the searchTerm,
+ * and if found, returns metadata for it. Otherwise undefined.
+ */
+async function searchForPocketArticle(getBody, searchTerm) {
+  console.log('Search term is: ', searchTerm);
+  getBody.search = searchTerm;
+  getOptions.body = JSON.stringify(getBody);
+  const body = await rp(getOptions);
+  const jsonBody = JSON.parse(body);
+  let result;
+  if (jsonBody.status == '1') {
+    const keysArr = Object.keys(jsonBody.list);
+    console.log('keysarr = ', keysArr);
+    if (keysArr.length > 0) {
+      result = getArticleMetadata(jsonBody.list[keysArr[0]]);
+    }
+  } else {
+    console.log(
+      `Searching for '${searchTerm}' failed to find a matching article.`
+    );
+  }
+  return result;
+}
+
+async function searchAndPlayArticle(res, getBody, searchTerm, summaryOnly) {
   try {
-    console.log('Search term is: ' + req.body.searchTerms);
-    const body = await rp(getOptions);
-    const jsonBody = JSON.parse(body);
-    if (jsonBody.status == '1') {
-      const keysArr = Object.keys(jsonBody.list);
-      console.log('keysarr = ', keysArr);
-      if (keysArr.length > 0) {
-        const articleUrl = jsonBody.list[keysArr[0]].given_url;
-        let audioUrl;
-        if (summaryOnly) {
-          audioUrl = await buildSummaryAudioFromUrl(articleUrl);
-        } else {
-          audioUrl = await buildAudioFromUrl(articleUrl);
-        }
-        res.status(200).send(JSON.stringify({ url: audioUrl }));
+    const articleInfo = await searchForPocketArticle(getBody, searchTerm);
+    if (articleInfo) {
+      console.log(articleInfo);
+      let audioUrl;
+      if (summaryOnly) {
+        audioUrl = await buildSummaryAudioFromUrl(articleInfo.resolved_url);
       } else {
-        throw 'NoKeys';
+        audioUrl = await buildAudioFromUrl(articleInfo.resolved_url);
       }
+      articleInfo.url = audioUrl;
+      res.status(200).send(JSON.stringify(articleInfo));
     } else {
-      console.log(
-        `Searching for '${
-          req.body.searchTerms
-        }' failed to find a matching article.`
-      );
       throw 'NoSearchMatch';
     }
   } catch (reason) {
