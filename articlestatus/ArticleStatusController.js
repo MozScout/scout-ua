@@ -16,7 +16,10 @@ router.post('/', VerifyToken, async function(req, res) {
       offset_ms: req.body.offset_ms
     });
     await astat.save();
-    res.send('ok');
+    res.location(
+      `${req.originalUrl}/${req.body.pocket_user_id}/${req.body.article_id}`
+    );
+    res.sendStatus(201);
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
@@ -43,8 +46,11 @@ router.get('/:userid/:articleid', VerifyToken, async (req, res) => {
       pocket_user_id: req.params.userid,
       article_id: req.params.articleid
     });
-    console.log(astat);
-    res.send(astat);
+    if (astat) {
+      res.send(astat);
+    } else {
+      res.sendStatus(404);
+    }
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
