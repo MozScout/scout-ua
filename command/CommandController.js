@@ -1,13 +1,15 @@
 const express = require('express');
-const router = express.Router();
 const bodyParser = require('body-parser');
-const VerifyToken = require('../VerifyToken');
+const natural = require('natural');
 const rp = require('request-promise');
+const VerifyToken = require('../VerifyToken');
 const texttools = require('./texttools');
 const polly_tts = require('./polly_tts');
 const AudioFileHelper = require('./AudioFileHelper');
 const audioHelper = new AudioFileHelper();
 const Database = require('../data/database');
+
+const router = express.Router();
 const database = new Database();
 
 router.use(bodyParser.urlencoded({ extended: true }));
@@ -65,13 +67,13 @@ router.post('/intent', VerifyToken, async function(req, res) {
     const getBody = await buildPocketRequestBody(req.body.userid);
     switch (req.body.cmd) {
       case 'ScoutTitles':
-        scoutTitles(getBody, res);
+        scoutTitles(req.body.userid, res);
         break;
       case 'SearchAndPlayArticle':
       case 'SearchAndSummarizeArticle':
         searchAndPlayArticle(
           res,
-          getBody,
+          req.body.userid,
           req.body.searchTerms,
           req.body.cmd === 'SearchAndSummarizeArticle'
         );
@@ -114,6 +116,19 @@ router.post('/summary', VerifyToken, async function(req, res) {
     console.log('Error in /summary ', reason);
     const errSpeech = `There was an error processing the article. ${reason}`;
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
+  }
+});
+
+router.get('/search', VerifyToken, async function(req, res) {
+  try {
+    const titles = await getTitlesFromPocket(req.query.userid);
+    const article = await findBestScoringTitle(req.query.q, titles.articles);
+    const result = `Search for: ${req.query.q}, identified article: ${
+      article.title
+    }`;
+    res.send(result);
+  } catch (err) {
+    res.sendStatus(404);
   }
 });
 
@@ -238,40 +253,54 @@ function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, titleAttr, res) {
     });
 }
 
-function scoutTitles(getBody, res) {
-  getOptions.body = JSON.stringify(getBody);
-  rp(getOptions)
-    .then(function(body) {
-      const jsonBody = JSON.parse(body);
-      if (jsonBody.status === 1 || jsonBody.status === 2) {
-        console.log(jsonBody);
-        let articles = [];
+async function getTitlesFromPocket(userid) {
+  try {
+    const getBody = await buildPocketRequestBody(userid);
 
-        // process list of articles
-        Object.keys(jsonBody.list).forEach(key => {
-          if (jsonBody.list[key].resolved_title) {
-            articles.push(getArticleMetadata(jsonBody.list[key]));
-          }
-        });
+    getOptions.body = JSON.stringify(getBody);
+    const body = await rp(getOptions);
+    const jsonBody = JSON.parse(body);
+    const result = { status: jsonBody.status };
+    if (jsonBody.status === 1 || jsonBody.status === 2) {
+      let articles = [];
 
-        articles.sort((a, b) => {
-          return a.sort_id - b.sort_id;
-        });
+      // process list of articles
+      Object.keys(jsonBody.list).forEach(key => {
+        if (jsonBody.list[key].resolved_title) {
+          articles.push(getArticleMetadata(jsonBody.list[key]));
+        }
+      });
 
-        res.status(200).send(JSON.stringify({ articles }));
-      } else {
-        res.status(500).send(
-          JSON.stringify({
-            error: `Unknown status from Pocket: ${jsonBody.status}`
-          })
-        );
-      }
-    })
-    .catch(function(err) {
-      res.status(404).send(JSON.stringify({ speech: 'Wow.  Amazing.' }));
-      console.log('Failed to get to pocket');
-      console.log(err);
-    });
+      articles.sort((a, b) => {
+        return a.sort_id - b.sort_id;
+      });
+      result.articles = articles;
+    }
+    return result;
+  } catch (err) {
+    if (err.statusCode === 401) throw 'Unauthorized -- re-link Pocket account';
+    else throw err;
+  }
+}
+
+async function scoutTitles(userid, res) {
+  try {
+    const titleObj = await getTitlesFromPocket(userid);
+    if (titleObj && titleObj.articles) {
+      res.status(200).send(JSON.stringify({ articles: titleObj.articles }));
+    } else {
+      res.status(500).send(
+        JSON.stringify({
+          error: `Unknown status from Pocket: ${titleObj.status}`
+        })
+      );
+    }
+  } catch (err) {
+    res
+      .status(404)
+      .send(JSON.stringify({ speech: `Error getting titles: ${err}` }));
+    console.log(`Error getting titles: ${err}`);
+  }
 }
 
 /**
@@ -328,9 +357,17 @@ async function searchForPocketArticle(getBody, searchTerm) {
   return result;
 }
 
-async function searchAndPlayArticle(res, getBody, searchTerm, summaryOnly) {
+async function searchAndPlayArticle(
+  res,
+  pocketuserid,
+  searchTerm,
+  summaryOnly
+) {
   try {
-    const articleInfo = await searchForPocketArticle(getBody, searchTerm);
+    console.log('Search term is: ', searchTerm);
+    const titles = await getTitlesFromPocket(pocketuserid);
+    const articleInfo = await findBestScoringTitle(searchTerm, titles.articles);
+
     if (articleInfo) {
       console.log(articleInfo);
 
@@ -408,6 +445,43 @@ async function buildAudioFromText(textString) {
   const chunkText = texttools.chunkText(cleanText);
   console.log('chunkText is: ', chunkText.length, chunkText);
   return polly_tts.getSpeechSynthUrl(chunkText);
+}
+
+function findBestScoringTitle(searchPhrase, articleMetadataArray) {
+  return new Promise((resolve, reject) => {
+    natural.PorterStemmer.attach();
+    //tokenize and stem the search utterance that user said
+    let wordsStem = searchPhrase.tokenizeAndStem();
+
+    let tfidf = new natural.TfIdf();
+    //tokenize and Stem each title and then add to our dataset
+    for (var i = 0; i < articleMetadataArray.length; i++) {
+      console.log(articleMetadataArray[i].title);
+      let stemmed = articleMetadataArray[i].title.tokenizeAndStem();
+      tfidf.addDocument(stemmed);
+    }
+
+    let maxValue = 0;
+    let curMaxIndex = 0;
+    let iCount = 0;
+    tfidf.tfidfs(wordsStem, function(i, measure) {
+      console.log('document #' + i + ' is ' + measure);
+      if (measure > maxValue) {
+        maxValue = measure;
+        curMaxIndex = i;
+      }
+      iCount++;
+      if (iCount >= articleMetadataArray.length) {
+        console.log('Done getting results.');
+        console.log('Max Score is: ' + maxValue);
+        console.log('Article is: ' + articleMetadataArray[curMaxIndex].title);
+        if (maxValue === 0) {
+          reject('NoMatchFound');
+        }
+        resolve(articleMetadataArray[curMaxIndex]);
+      }
+    });
+  });
 }
 
 module.exports = router;
