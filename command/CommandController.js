@@ -5,8 +5,8 @@ const VerifyToken = require('../VerifyToken');
 const rp = require('request-promise');
 const texttools = require('./texttools');
 const polly_tts = require('./polly_tts');
-const Helper = require('./CommandHelper');
-const helper = new Helper();
+const CommandHelper = require('./CommandHelper');
+const helper = new CommandHelper();
 const Database = require('../data/database');
 const database = new Database();
 
@@ -135,7 +135,6 @@ async function processArticleRequest(req, summaryOnly) {
       audioUrl = await buildAudioFromUrl(req.body.url);
     }
 
-    // save location if this is a pocket item
     if (result) {
       await helper.storeAudioFileLocation(
         result.item_id,
@@ -144,7 +143,6 @@ async function processArticleRequest(req, summaryOnly) {
       );
     }
   }
-  console.log(`audiourl = ${audioUrl}`);
 
   if (result) {
     result.url = audioUrl;
@@ -333,13 +331,13 @@ async function searchAndPlayArticle(res, getBody, searchTerm, summaryOnly) {
     if (articleInfo) {
       console.log(articleInfo);
 
-      // first look for article url in audio DB
+      // do we already have the audio file?
       let audioUrl = await helper.getAudioFileLocation(
         articleInfo.item_id,
         summaryOnly
       );
 
-      // then synthesize if we don't already have it
+      // if we didn't find it in the DB, create the audio file
       if (!audioUrl) {
         if (summaryOnly) {
           audioUrl = await buildSummaryAudioFromUrl(articleInfo.resolved_url);
@@ -347,7 +345,6 @@ async function searchAndPlayArticle(res, getBody, searchTerm, summaryOnly) {
           audioUrl = await buildAudioFromUrl(articleInfo.resolved_url);
         }
 
-        // and store the resulting location
         await helper.storeAudioFileLocation(
           articleInfo.item_id,
           summaryOnly,
@@ -409,25 +406,5 @@ async function buildAudioFromText(textString) {
   console.log('chunkText is: ', chunkText.length, chunkText);
   return polly_tts.getSpeechSynthUrl(chunkText);
 }
-
-router.get('/location', VerifyToken, async function(req, res) {
-  try {
-    const itemid = req.query.itemid;
-    const audiotype = req.query.type;
-    const location = req.query.loc;
-    const action = req.query.action;
-    const result = `${action} ${itemid}/${audiotype} @ ${location}`;
-    console.log(result);
-
-    await database.storeAudioFileLocation(itemid, audiotype, location);
-
-    const afloc = await database.getAudioFileLocation(itemid, audiotype);
-    console.log(`loc = ${afloc}`);
-
-    res.send(result);
-  } catch (err) {
-    res.sendStatus(404);
-  }
-});
 
 module.exports = router;
