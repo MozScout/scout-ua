@@ -23,7 +23,9 @@
     "dynamoose": "^0.8.7",
     "eslint": "^4.18.2",
     "express": "~4.15.5",
+    "get-website-favicon": "0.0.7",
     "glob": "^7.1.2",
+    "html-metadata": "^1.7.0",
     "jade": "~1.11.0",
     "jest": "^22.4.2",
     "jsonwebtoken": "^8.2.0",
@@ -41,8 +43,13 @@
   },
   "jest": {
     "coverageDirectory": "./coverage/",
-    "moduleFileExtensions": ["js", "json"],
-    "testMatch": ["**/test/**/*-test.(js)"],
+    "moduleFileExtensions": [
+      "js",
+      "json"
+    ],
+    "testMatch": [
+      "**/test/**/*-test.(js)"
+    ],
     "mapCoverage": true,
     "setupTestFrameworkScriptFile": "<rootDir>/test/common.js",
     "testEnvironment": "node"

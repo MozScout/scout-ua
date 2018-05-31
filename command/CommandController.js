@@ -1,4 +1,5 @@
 const express = require('express');
+const url = require('url');
 const router = express.Router();
 const bodyParser = require('body-parser');
 const VerifyToken = require('../VerifyToken');
@@ -7,6 +8,8 @@ const texttools = require('./texttools');
 const polly_tts = require('./polly_tts');
 const Database = require('../data/database');
 const database = new Database();
+const getFavicons = require('get-website-favicon');
+const scrape = require('html-metadata');
 
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
@@ -217,20 +220,28 @@ function scoutTitles(getBody, res) {
       const jsonBody = JSON.parse(body);
       if (jsonBody.status === 1 || jsonBody.status === 2) {
         console.log(jsonBody);
-        let articles = [];
+        let articlesPromises = [];
 
         // process list of articles
         Object.keys(jsonBody.list).forEach(key => {
           if (jsonBody.list[key].resolved_title) {
-            articles.push(getArticleMetadata(jsonBody.list[key]));
+            articlesPromises.push(getArticleMetadata(jsonBody.list[key]));
           }
         });
 
-        articles.sort((a, b) => {
-          return a.sort_id - b.sort_id;
-        });
+        Promise.all(articlesPromises).then(function(values) {
+          let articles = [];
 
-        res.status(200).send(JSON.stringify({ articles }));
+          values.forEach(function(value) {
+            articles.push(value);
+          });
+
+          articles.sort((a, b) => {
+            return a.sort_id - b.sort_id;
+          });
+
+          res.status(200).send(JSON.stringify({ articles }));
+        });
       } else {
         res.status(500).send(
           JSON.stringify({
@@ -264,15 +275,42 @@ function getArticleMetadata(pocketArticle) {
     author = author ? `${author}, ${authors[auth].name}` : authors[auth].name;
   }
 
-  return {
-    item_id: pocketArticle.item_id,
-    sort_id: pocketArticle.sort_id,
-    resolved_url: pocketArticle.resolved_url,
-    title: pocketArticle.resolved_title,
-    author,
-    lengthMinutes,
-    imageURL: pocketArticle.top_image_url
-  };
+  let faviconPromise = getFavicons(pocketArticle.resolved_url);
+  let metadataPromise = scrape(pocketArticle.resolved_url);
+
+  return Promise.all([faviconPromise, metadataPromise]).then(function(values) {
+    let publisherName = '';
+    let icon_url = '';
+
+    if (values[0].icons[0] && values[0].icons[0].src) {
+      icon_url = values[0].icons[0].src;
+    }
+
+    // Picks by order of priority: jsonLd name, openGraph publisher, hostname
+    if (
+      values[1].jsonLd &&
+      values[1].jsonLd.publisher &&
+      values[1].jsonLd.publisher.name
+    ) {
+      publisherName = values[1].jsonLd.publisher.name;
+    } else if (values[1].openGraph && values[1].openGraph.site_name) {
+      publisherName = values[1].openGraph.site_name;
+    } else {
+      publisherName = url.parse(pocketArticle.resolved_url).hostname;
+    }
+
+    return {
+      item_id: pocketArticle.item_id,
+      sort_id: pocketArticle.sort_id,
+      resolved_url: pocketArticle.resolved_url,
+      title: pocketArticle.resolved_title,
+      author,
+      publisher: publisherName,
+      lengthMinutes,
+      imageURL: pocketArticle.top_image_url,
+      icon_url: icon_url
+    };
+  });
 }
 
 /**
