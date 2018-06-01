@@ -5,8 +5,8 @@ const VerifyToken = require('../VerifyToken');
 const rp = require('request-promise');
 const texttools = require('./texttools');
 const polly_tts = require('./polly_tts');
-const CommandHelper = require('./CommandHelper');
-const helper = new CommandHelper();
+const AudioFileHelper = require('./AudioFileHelper');
+const audioHelper = new AudioFileHelper();
 const Database = require('../data/database');
 const database = new Database();
 
@@ -124,7 +124,10 @@ async function processArticleRequest(req, summaryOnly) {
   let audioUrl;
   if (result && result.item_id) {
     // we have a matching pocket item. do we already have the audio file?
-    audioUrl = await helper.getAudioFileLocation(result.item_id, summaryOnly);
+    audioUrl = await audioHelper.getAudioFileLocation(
+      result.item_id,
+      summaryOnly
+    );
   }
 
   // if we didn't find it in the DB, create the audio file
@@ -136,7 +139,7 @@ async function processArticleRequest(req, summaryOnly) {
     }
 
     if (result) {
-      await helper.storeAudioFileLocation(
+      await audioHelper.storeAudioFileLocation(
         result.item_id,
         summaryOnly,
         audioUrl
@@ -332,7 +335,7 @@ async function searchAndPlayArticle(res, getBody, searchTerm, summaryOnly) {
       console.log(articleInfo);
 
       // do we already have the audio file?
-      let audioUrl = await helper.getAudioFileLocation(
+      let audioUrl = await audioHelper.getAudioFileLocation(
         articleInfo.item_id,
         summaryOnly
       );
@@ -345,7 +348,7 @@ async function searchAndPlayArticle(res, getBody, searchTerm, summaryOnly) {
           audioUrl = await buildAudioFromUrl(articleInfo.resolved_url);
         }
 
-        await helper.storeAudioFileLocation(
+        await audioHelper.storeAudioFileLocation(
           articleInfo.item_id,
           summaryOnly,
           audioUrl
