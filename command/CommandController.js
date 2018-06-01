@@ -6,6 +6,8 @@ const VerifyToken = require('../VerifyToken');
 const rp = require('request-promise');
 const texttools = require('./texttools');
 const polly_tts = require('./polly_tts');
+const AudioFileHelper = require('./AudioFileHelper');
+const audioHelper = new AudioFileHelper();
 const Database = require('../data/database');
 const database = new Database();
 const getFavicons = require('get-website-favicon');
@@ -96,7 +98,7 @@ router.post('/article', VerifyToken, async function(req, res) {
   console.log(`GET /article: ${req.body.url}`);
   try {
     res.setHeader('Content-Type', 'application/json');
-    const result = await processArticleRequest(req, buildAudioFromUrl);
+    const result = await processArticleRequest(req, false);
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
     console.log('Error in /article ', reason);
@@ -109,7 +111,7 @@ router.post('/summary', VerifyToken, async function(req, res) {
   console.log(`GET /summary: ${req.body.url}`);
   try {
     res.setHeader('Content-Type', 'application/json');
-    const result = await processArticleRequest(req, buildSummaryAudioFromUrl);
+    const result = await processArticleRequest(req, true);
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
     console.log('Error in /summary ', reason);
@@ -118,10 +120,36 @@ router.post('/summary', VerifyToken, async function(req, res) {
   }
 });
 
-async function processArticleRequest(req, audioBuildFunction) {
+async function processArticleRequest(req, summaryOnly) {
   const getBody = await buildPocketRequestBody(req.body.userid);
   let result = await searchForPocketArticle(getBody, req.body.url);
-  const audioUrl = await audioBuildFunction(req.body.url);
+
+  let audioUrl;
+  if (result && result.item_id) {
+    // we have a matching pocket item. do we already have the audio file?
+    audioUrl = await audioHelper.getAudioFileLocation(
+      result.item_id,
+      summaryOnly
+    );
+  }
+
+  // if we didn't find it in the DB, create the audio file
+  if (!audioUrl) {
+    if (summaryOnly) {
+      audioUrl = await buildSummaryAudioFromUrl(req.body.url);
+    } else {
+      audioUrl = await buildAudioFromUrl(req.body.url);
+    }
+
+    if (result) {
+      await audioHelper.storeAudioFileLocation(
+        result.item_id,
+        summaryOnly,
+        audioUrl
+      );
+    }
+  }
+
   if (result) {
     result.url = audioUrl;
   } else {
@@ -343,11 +371,26 @@ async function searchAndPlayArticle(res, getBody, searchTerm, summaryOnly) {
     const articleInfo = await searchForPocketArticle(getBody, searchTerm);
     if (articleInfo) {
       console.log(articleInfo);
-      let audioUrl;
-      if (summaryOnly) {
-        audioUrl = await buildSummaryAudioFromUrl(articleInfo.resolved_url);
-      } else {
-        audioUrl = await buildAudioFromUrl(articleInfo.resolved_url);
+
+      // do we already have the audio file?
+      let audioUrl = await audioHelper.getAudioFileLocation(
+        articleInfo.item_id,
+        summaryOnly
+      );
+
+      // if we didn't find it in the DB, create the audio file
+      if (!audioUrl) {
+        if (summaryOnly) {
+          audioUrl = await buildSummaryAudioFromUrl(articleInfo.resolved_url);
+        } else {
+          audioUrl = await buildAudioFromUrl(articleInfo.resolved_url);
+        }
+
+        await audioHelper.storeAudioFileLocation(
+          articleInfo.item_id,
+          summaryOnly,
+          audioUrl
+        );
       }
       articleInfo.url = audioUrl;
       res.status(200).send(JSON.stringify(articleInfo));
