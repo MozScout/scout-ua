@@ -1,4 +1,5 @@
 const ScoutUser = require('./models/ScoutUser');
+const AudioFileLocation = require('./models/AudioFileLocation');
 
 class Database {
   async processScoutUser(userid, access_token) {
@@ -32,6 +33,42 @@ class Database {
     } else {
       throw 'No user token';
     }
+  }
+
+  async getAudioFileLocation(articleId, audioType) {
+    console.log(`getAudioFileLocation for ${articleId}/${audioType}`);
+    const fileLocation = await AudioFileLocation.get({ item_id: articleId });
+    if (fileLocation) {
+      if (audioType === 'full' && fileLocation.full_audio_location) {
+        return fileLocation.full_audio_location;
+      } else if (
+        audioType === 'summary' &&
+        fileLocation.summary_audio_location
+      ) {
+        return fileLocation.summary_audio_location;
+      }
+    }
+    return '';
+  }
+
+  async storeAudioFileLocation(articleId, audioType, location) {
+    console.log(
+      `storeAudioFileLocation for ${articleId}/${audioType}: ${location}`
+    );
+    let fileLocation = await AudioFileLocation.get({ item_id: articleId });
+    if (!fileLocation) {
+      fileLocation = new AudioFileLocation({
+        item_id: articleId
+      });
+    }
+    if (audioType === 'full') {
+      fileLocation.full_audio_location = location;
+      fileLocation.full_audio_date = Date.now();
+    } else if (audioType === 'summary') {
+      fileLocation.summary_audio_location = location;
+      fileLocation.summary_audio_date = Date.now();
+    }
+    await fileLocation.save();
   }
 }
 
