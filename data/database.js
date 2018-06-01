@@ -1,5 +1,6 @@
 const ScoutUser = require('./models/ScoutUser');
 const AudioFileLocation = require('./models/AudioFileLocation');
+const WebsiteFavicon = require('./models/WebsiteFavicon');
 
 class Database {
   async processScoutUser(userid, access_token) {
@@ -69,6 +70,26 @@ class Database {
       fileLocation.summary_audio_date = Date.now();
     }
     await fileLocation.save();
+  }
+
+  async getWebsiteFavicon(hostname) {
+    console.log(`getWebsiteFavicon for ${hostname}`);
+    const data = await WebsiteFavicon.get({ hostname: hostname });
+    return data;
+  }
+
+  async storeWebsiteFavicon(hostname, favicon_url, name) {
+    console.log(`storeWebsiteFavicon for ${hostname}: ${favicon_url}, ${name}`);
+    let data = await WebsiteFavicon.get({ hostname: hostname });
+    if (!data) {
+      data = new WebsiteFavicon({ hostname: hostname });
+    }
+    data.favicon_url = favicon_url;
+    data.website_name = name;
+    data.updated_on = Date.now();
+
+    await data.save();
+    return data;
   }
 }
 

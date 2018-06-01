@@ -1,5 +1,4 @@
 const express = require('express');
-const url = require('url');
 const router = express.Router();
 const bodyParser = require('body-parser');
 const VerifyToken = require('../VerifyToken');
@@ -10,8 +9,8 @@ const AudioFileHelper = require('./AudioFileHelper');
 const audioHelper = new AudioFileHelper();
 const Database = require('../data/database');
 const database = new Database();
-const getFavicons = require('get-website-favicon');
-const scrape = require('html-metadata');
+const FaviconHelper = require('./FaviconHelper.js');
+const faviconHelper = new FaviconHelper();
 
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
@@ -68,7 +67,7 @@ router.post('/intent', VerifyToken, async function(req, res) {
     const getBody = await buildPocketRequestBody(req.body.userid);
     switch (req.body.cmd) {
       case 'ScoutTitles':
-        scoutTitles(getBody, res);
+        scoutTitles(getBody, res, req.body.extendedData == true);
         break;
       case 'SearchAndPlayArticle':
       case 'SearchAndSummarizeArticle':
@@ -76,7 +75,8 @@ router.post('/intent', VerifyToken, async function(req, res) {
           res,
           getBody,
           req.body.searchTerms,
-          req.body.cmd === 'SearchAndSummarizeArticle'
+          req.body.cmd === 'SearchAndSummarizeArticle',
+          req.body.extendedData == true
         );
         break;
       case 'ScoutMyPocket':
@@ -98,7 +98,11 @@ router.post('/article', VerifyToken, async function(req, res) {
   console.log(`GET /article: ${req.body.url}`);
   try {
     res.setHeader('Content-Type', 'application/json');
-    const result = await processArticleRequest(req, false);
+    const result = await processArticleRequest(
+      req,
+      false,
+      req.body.extendedData == true
+    );
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
     console.log('Error in /article ', reason);
@@ -111,7 +115,11 @@ router.post('/summary', VerifyToken, async function(req, res) {
   console.log(`GET /summary: ${req.body.url}`);
   try {
     res.setHeader('Content-Type', 'application/json');
-    const result = await processArticleRequest(req, true);
+    const result = await processArticleRequest(
+      req,
+      true,
+      req.body.extendedData == true
+    );
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
     console.log('Error in /summary ', reason);
@@ -120,9 +128,13 @@ router.post('/summary', VerifyToken, async function(req, res) {
   }
 });
 
-async function processArticleRequest(req, summaryOnly) {
+async function processArticleRequest(req, summaryOnly, extendedData) {
   const getBody = await buildPocketRequestBody(req.body.userid);
-  let result = await searchForPocketArticle(getBody, req.body.url);
+  let result = await searchForPocketArticle(
+    getBody,
+    req.body.url,
+    extendedData
+  );
 
   let audioUrl;
   if (result && result.item_id) {
@@ -241,7 +253,7 @@ function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, titleAttr, res) {
     });
 }
 
-function scoutTitles(getBody, res) {
+function scoutTitles(getBody, res, extendedData) {
   getOptions.body = JSON.stringify(getBody);
   rp(getOptions)
     .then(function(body) {
@@ -253,11 +265,14 @@ function scoutTitles(getBody, res) {
         // process list of articles
         Object.keys(jsonBody.list).forEach(key => {
           if (jsonBody.list[key].resolved_title) {
-            articlesPromises.push(getArticleMetadata(jsonBody.list[key]));
+            articlesPromises.push(
+              getArticleMetadata(jsonBody.list[key], extendedData)
+            );
           }
         });
 
         Promise.all(articlesPromises).then(function(values) {
+          faviconHelper.clearCurrentRequests();
           let articles = [];
 
           values.forEach(function(value) {
@@ -289,7 +304,7 @@ function scoutTitles(getBody, res) {
  * Takes a full article object retrieved from Pocket's /get API and
  * extracts the fields we use.
  */
-function getArticleMetadata(pocketArticle) {
+function getArticleMetadata(pocketArticle, extendedData) {
   const wordsPerMinute = 155;
   let lengthMinutes;
   const wordCount = pocketArticle.word_count;
@@ -302,50 +317,56 @@ function getArticleMetadata(pocketArticle) {
   for (const auth in authors) {
     author = author ? `${author}, ${authors[auth].name}` : authors[auth].name;
   }
+  if (extendedData) {
+    let faviconPromise = faviconHelper.getWebsiteFavicon(
+      pocketArticle.resolved_url
+    );
 
-  let faviconPromise = getFavicons(pocketArticle.resolved_url);
-  let metadataPromise = scrape(pocketArticle.resolved_url);
-
-  return Promise.all([faviconPromise, metadataPromise]).then(function(values) {
-    let publisherName = '';
-    let icon_url = '';
-
-    if (values[0].icons[0] && values[0].icons[0].src) {
-      icon_url = values[0].icons[0].src;
-    }
-
-    // Picks by order of priority: jsonLd name, openGraph publisher, hostname
-    if (
-      values[1].jsonLd &&
-      values[1].jsonLd.publisher &&
-      values[1].jsonLd.publisher.name
-    ) {
-      publisherName = values[1].jsonLd.publisher.name;
-    } else if (values[1].openGraph && values[1].openGraph.site_name) {
-      publisherName = values[1].openGraph.site_name;
-    } else {
-      publisherName = url.parse(pocketArticle.resolved_url).hostname;
-    }
-
+    return faviconPromise
+      .then(function(faviconData) {
+        return {
+          item_id: pocketArticle.item_id,
+          sort_id: pocketArticle.sort_id,
+          resolved_url: pocketArticle.resolved_url,
+          title: pocketArticle.resolved_title,
+          author,
+          publisher: faviconData.website_name,
+          lengthMinutes,
+          imageURL: pocketArticle.top_image_url,
+          icon_url: faviconData.favicon_url
+        };
+      })
+      .catch(function() {
+        return {
+          item_id: pocketArticle.item_id,
+          sort_id: pocketArticle.sort_id,
+          resolved_url: pocketArticle.resolved_url,
+          title: pocketArticle.resolved_title,
+          author,
+          publisher: faviconHelper.getHostname(pocketArticle.resolved_url),
+          lengthMinutes,
+          imageURL: pocketArticle.top_image_url,
+          icon_url: ''
+        };
+      });
+  } else {
     return {
       item_id: pocketArticle.item_id,
       sort_id: pocketArticle.sort_id,
       resolved_url: pocketArticle.resolved_url,
       title: pocketArticle.resolved_title,
       author,
-      publisher: publisherName,
       lengthMinutes,
-      imageURL: pocketArticle.top_image_url,
-      icon_url: icon_url
+      imageURL: pocketArticle.top_image_url
     };
-  });
+  }
 }
 
 /**
  * Looks for an article in user's account that matches the searchTerm,
  * and if found, returns metadata for it. Otherwise undefined.
  */
-async function searchForPocketArticle(getBody, searchTerm) {
+async function searchForPocketArticle(getBody, searchTerm, extendedData) {
   console.log('Search term is: ', searchTerm);
   getBody.search = searchTerm;
   getOptions.body = JSON.stringify(getBody);
@@ -356,7 +377,10 @@ async function searchForPocketArticle(getBody, searchTerm) {
     const keysArr = Object.keys(jsonBody.list);
     console.log('keysarr = ', keysArr);
     if (keysArr.length > 0) {
-      result = getArticleMetadata(jsonBody.list[keysArr[0]]);
+      result = await getArticleMetadata(
+        jsonBody.list[keysArr[0]],
+        extendedData
+      );
     }
   } else {
     console.log(
@@ -366,9 +390,19 @@ async function searchForPocketArticle(getBody, searchTerm) {
   return result;
 }
 
-async function searchAndPlayArticle(res, getBody, searchTerm, summaryOnly) {
+async function searchAndPlayArticle(
+  res,
+  getBody,
+  searchTerm,
+  summaryOnly,
+  extendedData
+) {
   try {
-    const articleInfo = await searchForPocketArticle(getBody, searchTerm);
+    const articleInfo = await searchForPocketArticle(
+      getBody,
+      searchTerm,
+      extendedData
+    );
     if (articleInfo) {
       console.log(articleInfo);
 
