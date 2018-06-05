@@ -7,10 +7,11 @@ const schema = new dynamoose.Schema({
     hashKey: true
   },
   favicon_url: String,
-  website_name: String,
-  updated_on: Date
+  favicon_updated_on: Date,
+  publisher_name: String,
+  publisher_updated_on: Date
 });
 
-const WebsiteFavicon = dynamoose.model('WebsiteFavicon', schema);
+const Hostname = dynamoose.model('Hostname', schema);
 
-module.exports = WebsiteFavicon;
+module.exports = Hostname;

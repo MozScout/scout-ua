@@ -9,8 +9,8 @@ const AudioFileHelper = require('./AudioFileHelper');
 const audioHelper = new AudioFileHelper();
 const Database = require('../data/database');
 const database = new Database();
-const FaviconHelper = require('./FaviconHelper.js');
-const faviconHelper = new FaviconHelper();
+const HostnameHelper = require('./HostnameHelper.js');
+const hostnameHelper = new HostnameHelper();
 
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
@@ -259,7 +259,7 @@ function scoutTitles(getBody, res, extendedData) {
     .then(function(body) {
       const jsonBody = JSON.parse(body);
       if (jsonBody.status === 1 || jsonBody.status === 2) {
-        console.log(jsonBody);
+        //console.log(jsonBody);
         let articlesPromises = [];
 
         // process list of articles
@@ -272,7 +272,7 @@ function scoutTitles(getBody, res, extendedData) {
         });
 
         Promise.all(articlesPromises).then(function(values) {
-          faviconHelper.clearCurrentRequests();
+          hostnameHelper.clearCurrentRequests();
           let articles = [];
 
           values.forEach(function(value) {
@@ -330,13 +330,13 @@ async function getArticleMetadata(pocketArticle, extendedData) {
 
   if (extendedData) {
     try {
-      const faviconData = await faviconHelper.getWebsiteFavicon(
+      const faviconData = await hostnameHelper.getHostnameData(
         pocketArticle.resolved_url
       );
-      result.publisher = faviconData.website_name;
+      result.publisher = faviconData.publisher_name;
       result.icon_url = faviconData.favicon_url;
     } catch (err) {
-      result.publisher = faviconHelper.getHostname(pocketArticle.resolved_url);
+      result.publisher = hostnameHelper.getHostname(pocketArticle.resolved_url);
       result.icon_url = '';
     }
   }
