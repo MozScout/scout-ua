@@ -304,7 +304,7 @@ function scoutTitles(getBody, res, extendedData) {
  * Takes a full article object retrieved from Pocket's /get API and
  * extracts the fields we use.
  */
-function getArticleMetadata(pocketArticle, extendedData) {
+async function getArticleMetadata(pocketArticle, extendedData) {
   const wordsPerMinute = 155;
   let lengthMinutes;
   const wordCount = pocketArticle.word_count;
@@ -317,49 +317,30 @@ function getArticleMetadata(pocketArticle, extendedData) {
   for (const auth in authors) {
     author = author ? `${author}, ${authors[auth].name}` : authors[auth].name;
   }
-  if (extendedData) {
-    let faviconPromise = faviconHelper.getWebsiteFavicon(
-      pocketArticle.resolved_url
-    );
 
-    return faviconPromise
-      .then(function(faviconData) {
-        return {
-          item_id: pocketArticle.item_id,
-          sort_id: pocketArticle.sort_id,
-          resolved_url: pocketArticle.resolved_url,
-          title: pocketArticle.resolved_title,
-          author,
-          publisher: faviconData.website_name,
-          lengthMinutes,
-          imageURL: pocketArticle.top_image_url,
-          icon_url: faviconData.favicon_url
-        };
-      })
-      .catch(function() {
-        return {
-          item_id: pocketArticle.item_id,
-          sort_id: pocketArticle.sort_id,
-          resolved_url: pocketArticle.resolved_url,
-          title: pocketArticle.resolved_title,
-          author,
-          publisher: faviconHelper.getHostname(pocketArticle.resolved_url),
-          lengthMinutes,
-          imageURL: pocketArticle.top_image_url,
-          icon_url: ''
-        };
-      });
-  } else {
-    return {
-      item_id: pocketArticle.item_id,
-      sort_id: pocketArticle.sort_id,
-      resolved_url: pocketArticle.resolved_url,
-      title: pocketArticle.resolved_title,
-      author,
-      lengthMinutes,
-      imageURL: pocketArticle.top_image_url
-    };
+  const result = {
+    item_id: pocketArticle.item_id,
+    sort_id: pocketArticle.sort_id,
+    resolved_url: pocketArticle.resolved_url,
+    title: pocketArticle.resolved_title,
+    author,
+    lengthMinutes,
+    imageURL: pocketArticle.top_image_url
+  };
+
+  if (extendedData) {
+    try {
+      const faviconData = await faviconHelper.getWebsiteFavicon(
+        pocketArticle.resolved_url
+      );
+      result.publisher = faviconData.website_name;
+      result.icon_url = faviconData.favicon_url;
+    } catch (err) {
+      result.publisher = faviconHelper.getHostname(pocketArticle.resolved_url);
+      result.icon_url = '';
+    }
   }
+  return result;
 }
 
 /**
