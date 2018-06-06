@@ -1,13 +1,15 @@
 const express = require('express');
-const router = express.Router();
 const bodyParser = require('body-parser');
-const VerifyToken = require('../VerifyToken');
+const natural = require('natural');
 const rp = require('request-promise');
+const VerifyToken = require('../VerifyToken');
 const texttools = require('./texttools');
 const polly_tts = require('./polly_tts');
 const AudioFileHelper = require('./AudioFileHelper');
 const audioHelper = new AudioFileHelper();
 const Database = require('../data/database');
+
+const router = express.Router();
 const database = new Database();
 const HostnameHelper = require('./HostnameHelper.js');
 const hostnameHelper = new HostnameHelper();
@@ -67,13 +69,13 @@ router.post('/intent', VerifyToken, async function(req, res) {
     const getBody = await buildPocketRequestBody(req.body.userid);
     switch (req.body.cmd) {
       case 'ScoutTitles':
-        scoutTitles(getBody, res, req.body.extendedData == true);
+        scoutTitles(req.body.userid, res, req.body.extendedData == true);
         break;
       case 'SearchAndPlayArticle':
       case 'SearchAndSummarizeArticle':
         searchAndPlayArticle(
           res,
-          getBody,
+          req.body.userid,
           req.body.searchTerms,
           req.body.cmd === 'SearchAndSummarizeArticle',
           req.body.extendedData == true
@@ -125,6 +127,22 @@ router.post('/summary', VerifyToken, async function(req, res) {
     console.log('Error in /summary ', reason);
     const errSpeech = `There was an error processing the article. ${reason}`;
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
+  }
+});
+
+router.get('/search', VerifyToken, async function(req, res) {
+  try {
+    const titles = await getTitlesFromPocket(
+      req.query.userid,
+      req.body.extendedData == true
+    );
+    const article = await findBestScoringTitle(req.query.q, titles.articles);
+    const result = `Search for: ${req.query.q}, identified article: ${
+      article.title
+    }`;
+    res.send(result);
+  } catch (err) {
+    res.sendStatus(404);
   }
 });
 
@@ -253,51 +271,67 @@ function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, titleAttr, res) {
     });
 }
 
-function scoutTitles(getBody, res, extendedData) {
-  getOptions.body = JSON.stringify(getBody);
-  rp(getOptions)
-    .then(function(body) {
-      const jsonBody = JSON.parse(body);
-      if (jsonBody.status === 1 || jsonBody.status === 2) {
-        //console.log(jsonBody);
-        let articlesPromises = [];
+async function getTitlesFromPocket(userid, extendedData) {
+  try {
+    const getBody = await buildPocketRequestBody(userid);
 
-        // process list of articles
-        Object.keys(jsonBody.list).forEach(key => {
-          if (jsonBody.list[key].resolved_title) {
-            articlesPromises.push(
-              getArticleMetadata(jsonBody.list[key], extendedData)
-            );
-          }
+    getOptions.body = JSON.stringify(getBody);
+    const body = await rp(getOptions);
+    const jsonBody = JSON.parse(body);
+    const result = { status: jsonBody.status };
+    if (jsonBody.status === 1 || jsonBody.status === 2) {
+      let articlesPromises = [];
+
+      // process list of articles
+      Object.keys(jsonBody.list).forEach(key => {
+        if (jsonBody.list[key].resolved_title) {
+          articlesPromises.push(
+            getArticleMetadata(jsonBody.list[key], extendedData)
+          );
+        }
+      });
+      return Promise.all(articlesPromises).then(function(values) {
+        hostnameHelper.clearCurrentRequests();
+        let articles = [];
+
+        values.forEach(function(value) {
+          articles.push(value);
         });
 
-        Promise.all(articlesPromises).then(function(values) {
-          hostnameHelper.clearCurrentRequests();
-          let articles = [];
-
-          values.forEach(function(value) {
-            articles.push(value);
-          });
-
-          articles.sort((a, b) => {
-            return a.sort_id - b.sort_id;
-          });
-
-          res.status(200).send(JSON.stringify({ articles }));
+        articles.sort((a, b) => {
+          return a.sort_id - b.sort_id;
         });
-      } else {
-        res.status(500).send(
-          JSON.stringify({
-            error: `Unknown status from Pocket: ${jsonBody.status}`
-          })
-        );
-      }
-    })
-    .catch(function(err) {
-      res.status(404).send(JSON.stringify({ speech: 'Wow.  Amazing.' }));
-      console.log('Failed to get to pocket');
-      console.log(err);
-    });
+
+        result.articles = articles;
+        return result;
+      });
+    } else {
+      return result;
+    }
+  } catch (err) {
+    if (err.statusCode === 401) throw 'Unauthorized -- re-link Pocket account';
+    else throw err;
+  }
+}
+
+async function scoutTitles(userid, res, extendedData) {
+  try {
+    const titleObj = await getTitlesFromPocket(userid, extendedData);
+    if (titleObj && titleObj.articles) {
+      res.status(200).send(JSON.stringify({ articles: titleObj.articles }));
+    } else {
+      res.status(500).send(
+        JSON.stringify({
+          error: `Unknown status from Pocket: ${titleObj.status}`
+        })
+      );
+    }
+  } catch (err) {
+    res
+      .status(404)
+      .send(JSON.stringify({ speech: `Error getting titles: ${err}` }));
+    console.log(`Error getting titles: ${err}`);
+  }
 }
 
 /**
@@ -373,17 +407,16 @@ async function searchForPocketArticle(getBody, searchTerm, extendedData) {
 
 async function searchAndPlayArticle(
   res,
-  getBody,
+  pocketuserid,
   searchTerm,
   summaryOnly,
   extendedData
 ) {
   try {
-    const articleInfo = await searchForPocketArticle(
-      getBody,
-      searchTerm,
-      extendedData
-    );
+    console.log('Search term is: ', searchTerm);
+    const titles = await getTitlesFromPocket(pocketuserid, extendedData);
+    const articleInfo = await findBestScoringTitle(searchTerm, titles.articles);
+
     if (articleInfo) {
       console.log(articleInfo);
 
@@ -461,6 +494,43 @@ async function buildAudioFromText(textString) {
   const chunkText = texttools.chunkText(cleanText);
   console.log('chunkText is: ', chunkText.length, chunkText);
   return polly_tts.getSpeechSynthUrl(chunkText);
+}
+
+function findBestScoringTitle(searchPhrase, articleMetadataArray) {
+  return new Promise((resolve, reject) => {
+    natural.PorterStemmer.attach();
+    //tokenize and stem the search utterance that user said
+    let wordsStem = searchPhrase.tokenizeAndStem();
+
+    let tfidf = new natural.TfIdf();
+    //tokenize and Stem each title and then add to our dataset
+    for (var i = 0; i < articleMetadataArray.length; i++) {
+      console.log(articleMetadataArray[i].title);
+      let stemmed = articleMetadataArray[i].title.tokenizeAndStem();
+      tfidf.addDocument(stemmed);
+    }
+
+    let maxValue = 0;
+    let curMaxIndex = 0;
+    let iCount = 0;
+    tfidf.tfidfs(wordsStem, function(i, measure) {
+      console.log('document #' + i + ' is ' + measure);
+      if (measure > maxValue) {
+        maxValue = measure;
+        curMaxIndex = i;
+      }
+      iCount++;
+      if (iCount >= articleMetadataArray.length) {
+        console.log('Done getting results.');
+        console.log('Max Score is: ' + maxValue);
+        console.log('Article is: ' + articleMetadataArray[curMaxIndex].title);
+        if (maxValue === 0) {
+          reject('NoMatchFound');
+        }
+        resolve(articleMetadataArray[curMaxIndex]);
+      }
+    });
+  });
 }
 
 module.exports = router;
