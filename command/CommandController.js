@@ -64,7 +64,6 @@ router.post('/intent', VerifyToken, async function(req, res) {
   try {
     console.log(`Command = ${req.body.cmd}`);
     res.setHeader('Content-Type', 'application/json');
-    const getBody = await buildPocketRequestBody(req.body.userid);
     switch (req.body.cmd) {
       case 'ScoutTitles':
         scoutTitles(req.body.userid, res);
@@ -79,9 +78,13 @@ router.post('/intent', VerifyToken, async function(req, res) {
         );
         break;
       case 'ScoutMyPocket':
-        getBody.count = '3';
-        getOptions.body = JSON.stringify(getBody);
-        scoutSummaries(getOptions, 'list', 'given_url', 'given_title', res);
+        scoutSummaries(
+          req.body.userid,
+          'list',
+          'given_url',
+          'given_title',
+          res
+        );
         break;
       default:
         break;
@@ -170,8 +173,12 @@ async function processArticleRequest(req, summaryOnly) {
   return result;
 }
 
-function scoutSummaries(getOptions, jsonBodyAttr, urlAttr, titleAttr, res) {
+async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
   // Gets the user's Pocket titles and summarizes first three.
+  const getBody = await buildPocketRequestBody(userid);
+  getBody.count = '3';
+  getOptions.body = JSON.stringify(getBody);
+
   console.log('jsonboddyattr=', jsonBodyAttr);
   console.log('urlattr=', urlAttr);
   rp(getOptions)
