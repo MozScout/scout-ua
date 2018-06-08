@@ -81,7 +81,14 @@ class HostnameHelper {
             publisherName = values[1].openGraph.site_name;
           }
 
-          return self.storeHostnameData(link, iconUrl, publisherName);
+          return self
+            .storeHostnameData(link, iconUrl, publisherName)
+            .then(function(values) {
+              if (self.currentRequests[type][hostname]) {
+                delete self.currentRequests[type][hostname];
+              }
+              return values;
+            });
         })
         .catch(function(err) {
           console.log(

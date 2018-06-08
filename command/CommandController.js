@@ -291,7 +291,6 @@ async function getTitlesFromPocket(userid, extendedData) {
         }
       });
       return Promise.all(articlesPromises).then(function(values) {
-        hostnameHelper.clearCurrentRequests();
         let articles = [];
 
         values.forEach(function(value) {
