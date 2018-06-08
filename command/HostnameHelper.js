@@ -82,7 +82,7 @@ class HostnameHelper {
           }
 
           return self
-            .storeHostnameData(link, iconUrl, publisherName)
+            .storeHostnameData(link, iconUrl, publisherName, type)
             .then(function(values) {
               if (self.currentRequests[type][hostname]) {
                 delete self.currentRequests[type][hostname];
@@ -133,8 +133,16 @@ class HostnameHelper {
     }
   }
 
-  async storeHostnameData(link, faviconUrl, name) {
+  async storeHostnameData(link, faviconUrl, name, type = 'all') {
     let hostname = this.getHostname(link);
+
+    // Setting strings as 'error' if requests were unsuccessful.
+    if ((type == 'all' || type == 'favicon') && faviconUrl == '') {
+      faviconUrl = 'error';
+    }
+    if ((type == 'all' || type == 'publisher') && name == '') {
+      name = 'error';
+    }
     return await database.storeHostnameData(hostname, faviconUrl, name);
   }
 }
