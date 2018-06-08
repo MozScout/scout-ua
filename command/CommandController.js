@@ -25,6 +25,16 @@ const getOptions = {
   }
 };
 
+const modifyPocketUser = {
+  uri: 'https://getpocket.com/v3/send',
+  method: 'POST',
+  body: '',
+  headers: {
+    'Content-Type': 'application/json; charset=UTF-8',
+    'X-Accept': 'application/json'
+  }
+};
+
 const articleOptions = {
   uri: 'https://text.getpocket.com/v3/text',
   method: 'POST',
@@ -85,6 +95,9 @@ router.post('/intent', VerifyToken, async function(req, res) {
           'given_title',
           res
         );
+        break;
+      case 'Archive':
+        archiveTitle(req.body.userid, req.body.itemid, res);
         break;
       default:
         break;
@@ -337,6 +350,37 @@ function getArticleMetadata(pocketArticle) {
     lengthMinutes,
     imageURL: pocketArticle.top_image_url
   };
+}
+
+/**
+ * Archive a title for the Pocket User
+ */
+async function archiveTitle(userId, itemId, res) {
+  try {
+    const getBody = await buildPocketRequestBody(userId);
+    getBody.actions = [
+      {
+        action: 'archive',
+        item_id: itemId
+      }
+    ];
+    modifyPocketUser.body = JSON.stringify(getBody);
+    const body = await rp(modifyPocketUser);
+    const jsonBody = JSON.parse(body);
+    if (jsonBody.action_results[0]) {
+      res.status(200).send(JSON.stringify({ success: true }));
+    } else {
+      res.status(500).send(
+        JSON.stringify({
+          success: false,
+          error: `Unknown status from Pocket during Archiving.`
+        })
+      );
+    }
+  } catch (err) {
+    if (err.statusCode === 401) throw 'Unauthorized -- re-link Pocket account';
+    else throw err;
+  }
 }
 
 /**
