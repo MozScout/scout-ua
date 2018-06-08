@@ -1,5 +1,6 @@
 const ScoutUser = require('./models/ScoutUser');
 const AudioFileLocation = require('./models/AudioFileLocation');
+const Hostname = require('./models/Hostname');
 
 class Database {
   async processScoutUser(userid, access_token) {
@@ -69,6 +70,41 @@ class Database {
       fileLocation.summary_audio_date = Date.now();
     }
     await fileLocation.save();
+  }
+
+  async getHostnameData(hostname) {
+    console.log(`getHostnameData for ${hostname}`);
+    const data = await Hostname.get({ hostname: hostname });
+    return data;
+  }
+
+  async storeHostnameData(hostname, faviconUrl, name) {
+    console.log(`storeHostnameData for ${hostname}: ${faviconUrl}, ${name}`);
+    let data = await Hostname.get({ hostname: hostname });
+    if (!data) {
+      data = new Hostname({
+        hostname: hostname,
+        favicon_url: '',
+        favicon_updated_on: 0,
+        publisher_name: hostname,
+        publisher_updated_on: 0
+      });
+    }
+    if (faviconUrl != '' && faviconUrl != 'error') {
+      data.favicon_url = faviconUrl;
+      data.favicon_updated_on = Date.now();
+    } else if (faviconUrl == 'error') {
+      data.favicon_updated_on = Date.now();
+    }
+    if (name != '' && name != 'error') {
+      data.publisher_name = name;
+      data.publisher_updated_on = Date.now();
+    } else if (name == 'error') {
+      data.publisher_updated_on = Date.now();
+    }
+
+    await data.save();
+    return data;
   }
 }
 

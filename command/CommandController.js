@@ -11,6 +11,8 @@ const Database = require('../data/database');
 
 const router = express.Router();
 const database = new Database();
+const HostnameHelper = require('./HostnameHelper.js');
+const hostnameHelper = new HostnameHelper();
 
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
@@ -76,7 +78,7 @@ router.post('/intent', VerifyToken, async function(req, res) {
     res.setHeader('Content-Type', 'application/json');
     switch (req.body.cmd) {
       case 'ScoutTitles':
-        scoutTitles(req.body.userid, res);
+        scoutTitles(req.body.userid, res, req.body.extendedData == true);
         break;
       case 'SearchAndPlayArticle':
       case 'SearchAndSummarizeArticle':
@@ -84,7 +86,8 @@ router.post('/intent', VerifyToken, async function(req, res) {
           res,
           req.body.userid,
           req.body.searchTerms,
-          req.body.cmd === 'SearchAndSummarizeArticle'
+          req.body.cmd === 'SearchAndSummarizeArticle',
+          req.body.extendedData == true
         );
         break;
       case 'ScoutMyPocket':
@@ -113,7 +116,11 @@ router.post('/article', VerifyToken, async function(req, res) {
   console.log(`GET /article: ${req.body.url}`);
   try {
     res.setHeader('Content-Type', 'application/json');
-    const result = await processArticleRequest(req, false);
+    const result = await processArticleRequest(
+      req,
+      false,
+      req.body.extendedData == true
+    );
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
     console.log('Error in /article ', reason);
@@ -126,7 +133,11 @@ router.post('/summary', VerifyToken, async function(req, res) {
   console.log(`GET /summary: ${req.body.url}`);
   try {
     res.setHeader('Content-Type', 'application/json');
-    const result = await processArticleRequest(req, true);
+    const result = await processArticleRequest(
+      req,
+      true,
+      req.body.extendedData == true
+    );
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
     console.log('Error in /summary ', reason);
@@ -137,7 +148,10 @@ router.post('/summary', VerifyToken, async function(req, res) {
 
 router.get('/search', VerifyToken, async function(req, res) {
   try {
-    const titles = await getTitlesFromPocket(req.query.userid);
+    const titles = await getTitlesFromPocket(
+      req.query.userid,
+      req.body.extendedData == true
+    );
     const article = await findBestScoringTitle(req.query.q, titles.articles);
     const result = `Search for: ${req.query.q}, identified article: ${
       article.title
@@ -148,9 +162,13 @@ router.get('/search', VerifyToken, async function(req, res) {
   }
 });
 
-async function processArticleRequest(req, summaryOnly) {
+async function processArticleRequest(req, summaryOnly, extendedData) {
   const getBody = await buildPocketRequestBody(req.body.userid);
-  let result = await searchForPocketArticle(getBody, req.body.url);
+  let result = await searchForPocketArticle(
+    getBody,
+    req.body.url,
+    extendedData
+  );
 
   let audioUrl;
   if (result && result.item_id) {
@@ -273,7 +291,7 @@ async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
     });
 }
 
-async function getTitlesFromPocket(userid) {
+async function getTitlesFromPocket(userid, extendedData) {
   try {
     const getBody = await buildPocketRequestBody(userid);
 
@@ -282,30 +300,42 @@ async function getTitlesFromPocket(userid) {
     const jsonBody = JSON.parse(body);
     const result = { status: jsonBody.status };
     if (jsonBody.status === 1 || jsonBody.status === 2) {
-      let articles = [];
+      let articlesPromises = [];
 
       // process list of articles
       Object.keys(jsonBody.list).forEach(key => {
         if (jsonBody.list[key].resolved_title) {
-          articles.push(getArticleMetadata(jsonBody.list[key]));
+          articlesPromises.push(
+            getArticleMetadata(jsonBody.list[key], extendedData)
+          );
         }
       });
+      return Promise.all(articlesPromises).then(function(values) {
+        let articles = [];
 
-      articles.sort((a, b) => {
-        return a.sort_id - b.sort_id;
+        values.forEach(function(value) {
+          articles.push(value);
+        });
+
+        articles.sort((a, b) => {
+          return a.sort_id - b.sort_id;
+        });
+
+        result.articles = articles;
+        return result;
       });
-      result.articles = articles;
+    } else {
+      return result;
     }
-    return result;
   } catch (err) {
     if (err.statusCode === 401) throw 'Unauthorized -- re-link Pocket account';
     else throw err;
   }
 }
 
-async function scoutTitles(userid, res) {
+async function scoutTitles(userid, res, extendedData) {
   try {
-    const titleObj = await getTitlesFromPocket(userid);
+    const titleObj = await getTitlesFromPocket(userid, extendedData);
     if (titleObj && titleObj.articles) {
       res.status(200).send(JSON.stringify({ articles: titleObj.articles }));
     } else {
@@ -327,7 +357,7 @@ async function scoutTitles(userid, res) {
  * Takes a full article object retrieved from Pocket's /get API and
  * extracts the fields we use.
  */
-function getArticleMetadata(pocketArticle) {
+async function getArticleMetadata(pocketArticle, extendedData) {
   const wordsPerMinute = 155;
   let lengthMinutes;
   const wordCount = pocketArticle.word_count;
@@ -341,7 +371,7 @@ function getArticleMetadata(pocketArticle) {
     author = author ? `${author}, ${authors[auth].name}` : authors[auth].name;
   }
 
-  return {
+  const result = {
     item_id: pocketArticle.item_id,
     sort_id: pocketArticle.sort_id,
     resolved_url: pocketArticle.resolved_url,
@@ -350,6 +380,20 @@ function getArticleMetadata(pocketArticle) {
     lengthMinutes,
     imageURL: pocketArticle.top_image_url
   };
+
+  if (extendedData) {
+    try {
+      const faviconData = await hostnameHelper.getHostnameData(
+        pocketArticle.resolved_url
+      );
+      result.publisher = faviconData.publisher_name;
+      result.icon_url = faviconData.favicon_url;
+    } catch (err) {
+      result.publisher = hostnameHelper.getHostname(pocketArticle.resolved_url);
+      result.icon_url = '';
+    }
+  }
+  return result;
 }
 
 /**
@@ -387,7 +431,7 @@ async function archiveTitle(userId, itemId, res) {
  * Looks for an article in user's account that matches the searchTerm,
  * and if found, returns metadata for it. Otherwise undefined.
  */
-async function searchForPocketArticle(getBody, searchTerm) {
+async function searchForPocketArticle(getBody, searchTerm, extendedData) {
   console.log('Search term is: ', searchTerm);
   getBody.search = searchTerm;
   getOptions.body = JSON.stringify(getBody);
@@ -398,7 +442,10 @@ async function searchForPocketArticle(getBody, searchTerm) {
     const keysArr = Object.keys(jsonBody.list);
     console.log('keysarr = ', keysArr);
     if (keysArr.length > 0) {
-      result = getArticleMetadata(jsonBody.list[keysArr[0]]);
+      result = await getArticleMetadata(
+        jsonBody.list[keysArr[0]],
+        extendedData
+      );
     }
   } else {
     console.log(
@@ -412,11 +459,12 @@ async function searchAndPlayArticle(
   res,
   pocketuserid,
   searchTerm,
-  summaryOnly
+  summaryOnly,
+  extendedData
 ) {
   try {
     console.log('Search term is: ', searchTerm);
-    const titles = await getTitlesFromPocket(pocketuserid);
+    const titles = await getTitlesFromPocket(pocketuserid, extendedData);
     const articleInfo = await findBestScoringTitle(searchTerm, titles.articles);
 
     if (articleInfo) {
