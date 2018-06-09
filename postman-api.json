@@ -1,0 +1,756 @@
+{
+	"info": {
+		"name": "Scout - Public",
+		"_postman_id": "269ae63b-33a8-efee-6b13-ad45ccc3dc98",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"description": "",
+			"item": [
+				{
+					"name": "Register API user",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "user.name",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "this.is@ema.il",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "secretstuff",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/api/auth/register",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Create a user for the Scout API and receive a token for use in subsequent calls. The returned `token` should be included in the header of most Scout calls in the `x-access-token` parameter.\n\n\nSample return value:\n```\n{\n    \"auth\": true,\n    \"token\": \"bdswOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVhZWEyZjQ2MzZjNmIxMDAxNDUyMmI3NSIsdwyNTI5Njk2Nn0.JXPdZ-1tONX-Cfc5IcasHaIeBLoddoWZ1jX75k\"\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Validate JWOT token",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "dave",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "dave@thing.com",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "passy",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/api/auth/me",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						},
+						"description": "Check if {{jwot}} is a valid auth token and if so, retrieve the API user to which it is assigned.\n\nSample return values:\n* Success\n```\n{\n    \"_id\": \"5aea039c0f18db001485fcaa\",\n    \"name\": \"user.name\",\n    \"email\": \"this.is@ema.il\",\n    \"__v\": 0\n}\n```\n\n* Failure\n```\n{\n    \"auth\": false,\n    \"message\": \"Failed to authenticate token.\"\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Link Pocket account",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "dave",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "dave@thing.com",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "passy",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/api/auth/mobile/login",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"mobile",
+								"login"
+							]
+						},
+						"description": "Use this API in a browser to initiate the authorization flow to link a Pocket account to the Scout application. The user will be redirected to a Pocket login screen where they can provide their credentials.\n\nAfter successful authentication, the Pocket user ID (usually an email address) will be returned. This value must be sent as the `userid` parameter in subsequent Pocket content related API calls.\n\nSample return value:\n```\n{\n  userid: \"user@getpocket.com\"\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Create/Update Scout user",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "userid",
+									"value": "user@getpocket.com",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "access_token",
+									"value": "6499b1-7e32b-3473-684c-8cca248",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "",
+									"value": "",
+									"description": "",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/api/users/scoutusers",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"scoutusers"
+							]
+						},
+						"description": "This API is used to store the Pocket access token for a user at the conclusion of the Pocket authorization flow. It is not generally necessary or advised to call it directly from the client."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Pocket Content",
+			"description": "",
+			"item": [
+				{
+					"name": "Intent: ScoutTitles",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "cmd",
+									"value": "ScoutTitles",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "userid",
+									"value": "{{pocket-userid}}",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "extendedData",
+									"value": "1",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/command/intent",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"command",
+								"intent"
+							]
+						},
+						"description": "Retrieve a list of the articles which have been saved in the user's Pocket account.\n\nIncluding the optional parameter `extendedData` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nSample return value:\n```\n{\n    \"speech\": \" 1. My Last Day as a Surgeon.  2. Why do we work so hard?.  3. Lump-Sum Investing Is the Best Strategy, Except Now. \",\n    \"articles\": [\n        {\n            \"item_id\": \"1159711105\",\n            \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n            \"title\": \"My Last Day as a Surgeon\",\n            \"author\": \"Paul Kalanithi\",\n            \"lengthMinutes\": 9,\n            \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n            \"publisher\": \"The New Yorker\",\n            \"icon_url\": \"https://www.newyorker.com/favicon.ico\"\n\n        },\n        {\n            \"item_id\": \"1217239342\",\n            \"resolved_url\": \"https://www.1843magazine.com/features/why-do-we-work-so-hard\",\n            \"title\": \"Why do we work so hard?\",\n            \"author\": \"Ryan Avent\",\n            \"lengthMinutes\": 24,\n            \"imageURL\": \"https://1843magazine.static-economist.com/sites/default/files/styles/il_manual_crop_16_9/public/201604_FE_WRK_001-WEB-V2.jpg\",\n            \"publisher\": \"1843\",\n            \"icon_url\": \"https://www.1843magazine.com/favicon.ico\"\n\n        },\n        {\n            \"item_id\": \"2157153239\",\n            \"resolved_url\": \"https://www.bloomberg.com/view/articles/2018-04-18/lump-sum-investing-is-the-best-strategy-except-in-this-market\",\n            \"title\": \"Lump-Sum Investing Is the Best Strategy, Except Now\",\n            \"author\": \"Ben Carlson\",\n            \"lengthMinutes\": 4,\n            \"imageURL\": \"https://assets.bwbx.io/images/users/iqjWHBFdfxIU/iCOArnr48ADY/v0/1200x800.jpg\",\n            \"publisher\": \"Bloomberg\",\n            \"icon_url\": \"https://www.bloomberg.com/favicon.ico\"\n        }\n    ]\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Intent: SearchAndPlayArticle",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "cmd",
+									"value": "SearchAndPlayArticle",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "userid",
+									"value": "{{pocket-userid}}",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "searchTerms",
+									"value": "surgeon",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/command/intent",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"command",
+								"intent"
+							]
+						},
+						"description": "Searches the user's saved Pocket articles for one with an article title that matches the `searchTerms`. \n\nIf found, returns the location of an audio file which contains a spoken version of the article.\n\nIncluding the optional parameter `extendedData` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nSample return values:\n\nSuccess:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\"\n}```\n\nFailure:\n```\n{\n    \"speech\": \"Unable to find a matching article. Try another phrase.\"\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Intent: SearchAndSummarizeArticle",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "cmd",
+									"value": "SearchAndSummarizeArticle",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "userid",
+									"value": "{{pocket-userid}}",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "searchTerms",
+									"value": "nuclear",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "extendedData",
+									"value": "1",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/command/intent",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"command",
+								"intent"
+							]
+						},
+						"description": "Searches the user's saved Pocket articles for one with an article title that matches the `searchTerms`. \n\nIf found, returns the location of an audio file which contains an abridged version of the content at `url`.\n\nIncluding the optional parameter `extendedData` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nSample return values:\n\nSuccess:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\"\n}```\n\nFailure:\n```\n{\n    \"speech\": \"Unable to find a matching article. Try another phrase.\"\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Intent: ScoutMyPocket",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "cmd",
+									"value": "ScoutMyPocket",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "userid",
+									"value": "{{pocket-userid}}",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/command/intent",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"command",
+								"intent"
+							]
+						},
+						"description": "Returns the location of an audio file which contains summaries of the Pocket articles saved by `userid`. \n\nSample return value:\n```\n{\"url\":\"https://moz-scout-audio.s3.amazonaws.com/578ce163-38d6-4f93-b8af-6aeb856cb8c9.mp3\"}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Intent: Archive",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "cmd",
+									"value": "Archive",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "userid",
+									"value": "{{pocket-userid}}",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "itemid",
+									"value": "123",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/command/intent",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"command",
+								"intent"
+							]
+						},
+						"description": "Notifies Pocket to archive the article `itemid` for user `userid`. The `itemid` is made available in the article metadata as `item_id` when calling the ScoutTitles or other APIs. \n\nSample return value:\n```\n{\n  \"success\": true\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Command: Article",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "userid",
+									"value": "{{pocket-userid}}",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "url",
+									"value": "https://news.com/my-article.html",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "extendedData",
+									"value": "1",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/command/article",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"command",
+								"article"
+							]
+						},
+						"description": "Returns the location of an audio file which contains a spoken version of the content at `url`.\n\nIf the article at `url` is also present in the user's Pocket account, additional metadata will be provided to describe the content.\n\nIncluding the optional parameter `extendedData` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nSample return value:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\"\n}```"
+					},
+					"response": []
+				},
+				{
+					"name": "Command: Summary",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "userid",
+									"value": "{{pocket-userid}}",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "url",
+									"value": "https://news.com/my-article.html",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "extendedData",
+									"value": "1",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/command/summary",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"command",
+								"summary"
+							]
+						},
+						"description": "Returns the location of an audio file which contains an abridged version of the content at `url`.\n\nIf the article at `url` is also present in the user's Pocket account, additional metadata will be provided to describe the content.\n\nIncluding the optional parameter `extendedData` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nSample return value:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\"\n}```"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Article Status",
+			"description": "",
+			"item": [
+				{
+					"name": "Create/Update Status",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "pocket_user_id",
+									"value": "{{pocket-userid}}",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "article_id",
+									"value": "12345678",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "offset_ms",
+									"value": "987",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/article-status",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"article-status"
+							]
+						},
+						"description": "Record the listen status of an article for a given Pocket user. The `article_id` value should be the Pocket `item_id` which is retrieved in the `ScoutTitles` API. Currently, the only status supported is what portion of the article the user has listened to, recorded as the offset in milliseconds from the beginning of the audio file."
+					},
+					"response": []
+				},
+				{
+					"name": "Get single article status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "user.name",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "this.is@ema.il",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "secretstuff",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/article-status/{{pocket-userid}}/12345678",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"article-status",
+								"{{pocket-userid}}",
+								"12345678"
+							]
+						},
+						"description": "Retrieve the article status values for a given Pocket user and article. \n\nSample return value:\n```\n{\n    \"pocket_user_id\": \"user@getpocket.com\",\n    \"article_id\": \"12345678\",\n    \"offset_ms\": 987\n}\n```\n\nIf there is no record of the user having listened to this article yet, the response is a 404 status."
+					},
+					"response": []
+				},
+				{
+					"name": "Get all statuses for user",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "user.name",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "this.is@ema.il",
+									"description": "",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "secretstuff",
+									"description": "",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/article-status/{{pocket-userid}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"article-status",
+								"{{pocket-userid}}"
+							]
+						},
+						"description": "Retrieve a list of all known article status values for a given Pocket user. \n\nSample return value:\n```\n[\n    {\n        \"pocket_user_id\": \"user@getpocket.com\",\n        \"article_id\": \"12345\",\n        \"offset_ms\": 9876\n    },\n    {\n        \"pocket_user_id\": \"user@getpocket.com\",\n        \"article_id\": \"123456\",\n        \"offset_ms\": 9876\n    },\n    {\n        \"pocket_user_id\": \"user@getpocket.com\",\n        \"article_id\": \"1234567\",\n        \"offset_ms\": 98765\n    },\n]\n```\n\nIf there are no article status records for this user, an empty list is returned."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
