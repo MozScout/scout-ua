@@ -14,6 +14,14 @@ const database = new Database();
 const HostnameHelper = require('./HostnameHelper.js');
 const hostnameHelper = new HostnameHelper();
 
+var endInstructionsData = {
+  text:
+    'Your article is finished. ' +
+    'To listen to more articles say "Alexa, tell Scout to get titles"',
+  url: '',
+  date: 0
+};
+
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
@@ -119,7 +127,8 @@ router.post('/article', VerifyToken, async function(req, res) {
     const result = await processArticleRequest(
       req,
       false,
-      req.body.extendedData == true
+      req.body.extendedData == true,
+      req.body.end_instructions == true
     );
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
@@ -136,7 +145,8 @@ router.post('/summary', VerifyToken, async function(req, res) {
     const result = await processArticleRequest(
       req,
       true,
-      req.body.extendedData == true
+      req.body.extendedData == true,
+      req.body.end_instructions == true
     );
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
@@ -162,7 +172,12 @@ router.get('/search', VerifyToken, async function(req, res) {
   }
 });
 
-async function processArticleRequest(req, summaryOnly, extendedData) {
+async function processArticleRequest(
+  req,
+  summaryOnly,
+  extendedData,
+  endInstructions
+) {
   const getBody = await buildPocketRequestBody(req.body.userid);
   let result = await searchForPocketArticle(
     getBody,
@@ -201,6 +216,20 @@ async function processArticleRequest(req, summaryOnly, extendedData) {
   } else {
     result = { url: audioUrl };
   }
+
+  if (endInstructions) {
+    let expireDate = new Date();
+    // Set the expire_date to 30 days ago
+    expireDate.setDate(expireDate.getDate() - 30);
+    if (new Date(endInstructionsData.date) < expireDate) {
+      endInstructionsData.url = await buildAudioFromText(
+        endInstructionsData.text
+      );
+      endInstructionsData.date = Date.now();
+    }
+    result.instructions_url = endInstructionsData.url;
+  }
+
   return result;
 }
 
