@@ -8,6 +8,8 @@ const polly_tts = require('./polly_tts');
 const AudioFileHelper = require('./AudioFileHelper');
 const audioHelper = new AudioFileHelper();
 const Database = require('../data/database');
+const ArticleStatusHelper = require('../articlestatus/ArticleStatusHelper.js');
+const astatHelper = new ArticleStatusHelper();
 
 const router = express.Router();
 const database = new Database();
@@ -121,6 +123,13 @@ router.post('/article', VerifyToken, async function(req, res) {
       false,
       req.body.extendedData == true
     );
+    const astat = await astatHelper.getArticleStatus(
+      req.body.userid,
+      result.item_id
+    );
+    if (astat) {
+      result.offset_ms = astat.offset_ms;
+    }
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
     console.log('Error in /article ', reason);
@@ -201,6 +210,7 @@ async function processArticleRequest(req, summaryOnly, extendedData) {
   } else {
     result = { url: audioUrl };
   }
+  result.offset_ms = 0;
   return result;
 }
 
