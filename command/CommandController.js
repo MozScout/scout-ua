@@ -226,9 +226,16 @@ async function processArticleRequest(
     // Set the expire_date to 30 days ago
     expireDate.setDate(expireDate.getDate() - 30);
     if (new Date(endInstructionsData.date) < expireDate) {
-      endInstructionsData.url = await buildAudioFromText(
-        endInstructionsData.text
-      );
+      if (process.env.META_VOICE) {
+        endInstructionsData.url = await buildAudioFromText(
+          endInstructionsData.text,
+          process.env.META_VOICE
+        );
+      } else {
+        endInstructionsData.url = await buildAudioFromText(
+          endInstructionsData.text
+        );
+      }
       endInstructionsData.date = Date.now();
     }
     result.instructions_url = endInstructionsData.url;
@@ -574,11 +581,14 @@ async function buildSummaryAudioFromUrl(url) {
   }
 }
 
-async function buildAudioFromText(textString) {
+async function buildAudioFromText(
+  textString,
+  voiceType = process.env.POLLY_VOICE || 'Salli'
+) {
   const cleanText = texttools.cleanText(textString);
   const chunkText = texttools.chunkText(cleanText);
   console.log('chunkText is: ', chunkText.length, chunkText);
-  return polly_tts.getSpeechSynthUrl(chunkText);
+  return polly_tts.getSpeechSynthUrl(chunkText, voiceType);
 }
 
 function findBestScoringTitle(searchPhrase, articleMetadataArray) {

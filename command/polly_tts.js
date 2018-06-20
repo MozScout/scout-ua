@@ -5,7 +5,7 @@ var audioconcat = require('audioconcat');
 var glob = require('glob');
 
 var polly_tts = {
-  getPollyChunk: function(text, filenameIndex, audio_file) {
+  getPollyChunk: function(text, filenameIndex, audio_file, voiceType) {
     return new Promise(function(resolve, reject) {
       let rate = process.env.PROSODY_RATE || 'medium';
       let vol = process.env.PROSODY_VOLUME || 'medium';
@@ -22,7 +22,7 @@ var polly_tts = {
         Text: ssmlText,
         OutputFormat: 'mp3',
         SampleRate: '16000',
-        VoiceId: process.env.POLLY_VOICE || 'Salli',
+        VoiceId: voiceType,
         TextType: 'ssml'
       };
 
@@ -76,12 +76,12 @@ var polly_tts = {
     });
   },
 
-  getSpeechSynthUrl: function(parts) {
+  getSpeechSynthUrl: function(parts, voiceType) {
     return new Promise((resolve, reject) => {
       let audio_file = uuidgen.generate();
       let promArray = [];
       for (var i = 0; i < parts.length; i++) {
-        promArray.push(this.getPollyChunk(parts[i], i, audio_file));
+        promArray.push(this.getPollyChunk(parts[i], i, audio_file, voiceType));
       }
 
       Promise.all(promArray)
