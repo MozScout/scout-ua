@@ -501,6 +501,17 @@ async function searchAndPlayArticle(
         );
       }
       articleInfo.url = audioUrl;
+
+      articleInfo.offset_ms = 0;
+      if (!summaryOnly) {
+        const astat = await astatHelper.getArticleStatus(
+          pocketuserid,
+          articleInfo.item_id
+        );
+        if (astat) {
+          articleInfo.offset_ms = astat.offset_ms;
+        }
+      }
       res.status(200).send(JSON.stringify(articleInfo));
     } else {
       throw 'NoSearchMatch';
