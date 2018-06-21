@@ -8,6 +8,7 @@ const polly_tts = require('./polly_tts');
 const AudioFileHelper = require('./AudioFileHelper');
 const audioHelper = new AudioFileHelper();
 const Database = require('../data/database');
+const ua = require('universal-analytics');
 
 const router = express.Router();
 const database = new Database();
@@ -73,6 +74,8 @@ async function buildPocketRequestBody(pocketUserId) {
 }
 
 router.post('/intent', VerifyToken, async function(req, res) {
+  logMetric(req.body.cmd, req.body.userid, req.get('User-Agent'));
+
   try {
     console.log(`Command = ${req.body.cmd}`);
     res.setHeader('Content-Type', 'application/json');
@@ -118,6 +121,8 @@ router.post('/intent', VerifyToken, async function(req, res) {
 
 router.post('/article', VerifyToken, async function(req, res) {
   console.log(`GET /article: ${req.body.url}`);
+  logMetric('article', req.body.userid, req.get('User-Agent'));
+
   try {
     res.setHeader('Content-Type', 'application/json');
     const result = await processArticleRequest(
@@ -135,6 +140,8 @@ router.post('/article', VerifyToken, async function(req, res) {
 
 router.post('/summary', VerifyToken, async function(req, res) {
   console.log(`GET /summary: ${req.body.url}`);
+  logMetric('summary', req.body.userid, req.get('User-Agent'));
+
   try {
     res.setHeader('Content-Type', 'application/json');
     const result = await processArticleRequest(
@@ -151,6 +158,8 @@ router.post('/summary', VerifyToken, async function(req, res) {
 });
 
 router.get('/search', VerifyToken, async function(req, res) {
+  logMetric('search', req.body.userid, req.get('User-Agent'));
+
   try {
     const titles = await getTitlesFromPocket(
       req.query.userid,
@@ -165,6 +174,20 @@ router.get('/search', VerifyToken, async function(req, res) {
     res.sendStatus(404);
   }
 });
+
+function logMetric(cmd, userid, agent) {
+  console.log('User-Agent is: ' + agent);
+  if (process.env.GA_PROPERTY_ID) {
+    var visitor = ua(process.env.GA_PROPERTY_ID, userid).debug();
+    var ga_params = {
+      ec: cmd,
+      ea: userid,
+      cd1: userid,
+      el: agent
+    };
+    visitor.event(ga_params).send();
+  }
+}
 
 async function processArticleRequest(req, summaryOnly, extendedData) {
   const getBody = await buildPocketRequestBody(req.body.userid);
