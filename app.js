@@ -16,7 +16,7 @@ if (
 // app.js
 app.get('/hello', function(req, res) {
   res.status(200).send(
-    `Hello! pocket=${process.env.POCKET_KEY}, 
+    `Hello! pocket=${process.env.POCKET_KEY},
       pollybucket=${process.env.POLLY_S3_BUCKET}`
   );
 });
@@ -35,5 +35,8 @@ app.use('/command', CommandController);
 
 const StatusController = require('./articlestatus/ArticleStatusController');
 app.use('/article-status', StatusController);
+
+const UseCountController = require('./count/UseCountController');
+app.use('/count', UseCountController);
 
 module.exports = app;

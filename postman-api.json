@@ -1,14 +1,13 @@
 {
 	"info": {
+		"_postman_id": "3569b654-c964-48f5-9327-fa3f129c657f",
 		"name": "Scout - Public",
-		"_postman_id": "269ae63b-33a8-efee-6b13-ad45ccc3dc98",
-		"description": "",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
 			"name": "Authentication",
-			"description": "",
+			"description": null,
 			"item": [
 				{
 					"name": "Register API user",
@@ -30,19 +29,16 @@
 								{
 									"key": "name",
 									"value": "user.name",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "email",
 									"value": "this.is@ema.il",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "password",
 									"value": "secretstuff",
-									"description": "",
 									"type": "text"
 								}
 							]
@@ -86,19 +82,16 @@
 								{
 									"key": "name",
 									"value": "dave",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "email",
 									"value": "dave@thing.com",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "password",
 									"value": "passy",
-									"description": "",
 									"type": "text"
 								}
 							]
@@ -142,19 +135,16 @@
 								{
 									"key": "name",
 									"value": "dave",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "email",
 									"value": "dave@thing.com",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "password",
 									"value": "passy",
-									"description": "",
 									"type": "text"
 								}
 							]
@@ -195,19 +185,16 @@
 								{
 									"key": "userid",
 									"value": "user@getpocket.com",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "access_token",
 									"value": "6499b1-7e32b-3473-684c-8cca248",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "",
 									"value": "",
-									"description": "",
 									"type": "text",
 									"disabled": true
 								}
@@ -232,7 +219,7 @@
 		},
 		{
 			"name": "Pocket Content",
-			"description": "",
+			"description": null,
 			"item": [
 				{
 					"name": "Intent: ScoutTitles",
@@ -254,19 +241,16 @@
 								{
 									"key": "cmd",
 									"value": "ScoutTitles",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "userid",
 									"value": "{{pocket-userid}}",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "extendedData",
 									"value": "1",
-									"description": "",
 									"type": "text"
 								}
 							]
@@ -305,19 +289,16 @@
 								{
 									"key": "cmd",
 									"value": "SearchAndPlayArticle",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "userid",
 									"value": "{{pocket-userid}}",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "searchTerms",
 									"value": "surgeon",
-									"description": "",
 									"type": "text"
 								}
 							]
@@ -356,25 +337,21 @@
 								{
 									"key": "cmd",
 									"value": "SearchAndSummarizeArticle",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "userid",
 									"value": "{{pocket-userid}}",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "searchTerms",
 									"value": "nuclear",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "extendedData",
 									"value": "1",
-									"description": "",
 									"type": "text"
 								}
 							]
@@ -413,13 +390,11 @@
 								{
 									"key": "cmd",
 									"value": "ScoutMyPocket",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "userid",
 									"value": "{{pocket-userid}}",
-									"description": "",
 									"type": "text"
 								}
 							]
@@ -458,19 +433,16 @@
 								{
 									"key": "cmd",
 									"value": "Archive",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "userid",
 									"value": "{{pocket-userid}}",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "itemid",
 									"value": "123",
-									"description": "",
 									"type": "text"
 								}
 							]
@@ -509,19 +481,16 @@
 								{
 									"key": "userid",
 									"value": "{{pocket-userid}}",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "url",
 									"value": "https://news.com/my-article.html",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "extendedData",
 									"value": "1",
-									"description": "",
 									"type": "text"
 								}
 							]
@@ -560,19 +529,16 @@
 								{
 									"key": "userid",
 									"value": "{{pocket-userid}}",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "url",
 									"value": "https://news.com/my-article.html",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "extendedData",
 									"value": "1",
-									"description": "",
 									"type": "text"
 								}
 							]
@@ -595,7 +561,7 @@
 		},
 		{
 			"name": "Article Status",
-			"description": "",
+			"description": null,
 			"item": [
 				{
 					"name": "Create/Update Status",
@@ -617,19 +583,16 @@
 								{
 									"key": "pocket_user_id",
 									"value": "{{pocket-userid}}",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "article_id",
 									"value": "12345678",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "offset_ms",
 									"value": "987",
-									"description": "",
 									"type": "text"
 								}
 							]
@@ -667,19 +630,16 @@
 								{
 									"key": "name",
 									"value": "user.name",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "email",
 									"value": "this.is@ema.il",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "password",
 									"value": "secretstuff",
-									"description": "",
 									"type": "text"
 								}
 							]
@@ -719,19 +679,16 @@
 								{
 									"key": "name",
 									"value": "user.name",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "email",
 									"value": "this.is@ema.il",
-									"description": "",
 									"type": "text"
 								},
 								{
 									"key": "password",
 									"value": "secretstuff",
-									"description": "",
 									"type": "text"
 								}
 							]
@@ -749,6 +706,124 @@
 						"description": "Retrieve a list of all known article status values for a given Pocket user. \n\nSample return value:\n```\n[\n    {\n        \"pocket_user_id\": \"user@getpocket.com\",\n        \"article_id\": \"12345\",\n        \"offset_ms\": 9876\n    },\n    {\n        \"pocket_user_id\": \"user@getpocket.com\",\n        \"article_id\": \"123456\",\n        \"offset_ms\": 9876\n    },\n    {\n        \"pocket_user_id\": \"user@getpocket.com\",\n        \"article_id\": \"1234567\",\n        \"offset_ms\": 98765\n    },\n]\n```\n\nIf there are no article status records for this user, an empty list is returned."
 					},
 					"response": []
+				}
+			]
+		},
+		{
+			"name": "Use Count",
+			"description": "APIs to count User usage of Scout",
+			"item": [
+				{
+					"name": "Increment Counter",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "user_id",
+									"value": "{{pocket-userid}}",
+									"type": "text"
+								},
+								{
+									"key": "use_date",
+									"value": "2018-06-20T23:42:35.114Z",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/count",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"count"
+							]
+						},
+						"description": "Increment the use counter for a specific user `user_id`. The `use_date` needs to be set to the use date."
+					},
+					"response": []
+				},
+				{
+					"name": "Get counter",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/x-www-form-urlencoded"
+							},
+							{
+								"key": "x-access-token",
+								"value": "{{jwot}}"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "user.name",
+									"type": "text"
+								},
+								{
+									"key": "email",
+									"value": "this.is@ema.il",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "secretstuff",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{hostname}}/count/{{pocket-userid}}",
+							"host": [
+								"{{hostname}}"
+							],
+							"path": [
+								"count",
+								"{{pocket-userid}}"
+							]
+						},
+						"description": "Retrieve the counter for a specific user."
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "d9d0fb7a-1616-4a9f-a284-3db4f4679936",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "7a391642-5b9a-41b6-8180-0fc57c4be2df",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
 				}
 			]
 		}

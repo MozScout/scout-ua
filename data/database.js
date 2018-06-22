@@ -1,6 +1,7 @@
 const ScoutUser = require('./models/ScoutUser');
 const AudioFileLocation = require('./models/AudioFileLocation');
 const Hostname = require('./models/Hostname');
+const UseCount = require('./models/UseCount');
 
 class Database {
   async processScoutUser(userid, access_token) {
@@ -104,6 +105,31 @@ class Database {
     }
 
     await data.save();
+    return data;
+  }
+
+  async getUseCount(userId) {
+    console.log(`getUseCount for ${userId}`);
+    const data = await UseCount.get({ user_id: userId });
+    return data;
+  }
+
+  async incrementUseCount(userId, useDate) {
+    useDate = new Date(useDate);
+    console.log(`incrementUseCount for ${userId}: ${useDate}`);
+    let data = await UseCount.get({ user_id: userId });
+    if (!data) {
+      data = new UseCount({
+        user_id: userId,
+        count: 0,
+        last_use: 0
+      });
+    }
+    if (new Date(data.last_use).getTime() != useDate.getTime()) {
+      data.count += 1;
+      data.last_use = useDate;
+      await data.save();
+    }
     return data;
   }
 }
