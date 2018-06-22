@@ -8,6 +8,8 @@ const polly_tts = require('./polly_tts');
 const AudioFileHelper = require('./AudioFileHelper');
 const audioHelper = new AudioFileHelper();
 const Database = require('../data/database');
+const ArticleStatusHelper = require('../articlestatus/ArticleStatusHelper.js');
+const astatHelper = new ArticleStatusHelper();
 const ua = require('universal-analytics');
 
 const router = express.Router();
@@ -130,6 +132,13 @@ router.post('/article', VerifyToken, async function(req, res) {
       false,
       req.body.extendedData == true || req.body.extended_data == true
     );
+    const astat = await astatHelper.getArticleStatus(
+      req.body.userid,
+      result.item_id
+    );
+    if (astat) {
+      result.offset_ms = astat.offset_ms;
+    }
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
     console.log('Error in /article ', reason);
@@ -228,6 +237,10 @@ async function processArticleRequest(req, summaryOnly, extendedData) {
   } else {
     result = { url: audioUrl };
   }
+
+  // Initially set offset to 0 (overwrite later if necessary)
+  result.offset_ms = 0;
+
   return result;
 }
 
@@ -520,6 +533,17 @@ async function searchAndPlayArticle(
         );
       }
       articleInfo.url = audioUrl;
+
+      articleInfo.offset_ms = 0;
+      if (!summaryOnly) {
+        const astat = await astatHelper.getArticleStatus(
+          pocketuserid,
+          articleInfo.item_id
+        );
+        if (astat) {
+          articleInfo.offset_ms = astat.offset_ms;
+        }
+      }
       res.status(200).send(JSON.stringify(articleInfo));
     } else {
       throw 'NoSearchMatch';
