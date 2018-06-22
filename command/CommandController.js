@@ -237,7 +237,10 @@ async function processArticleRequest(req, summaryOnly, extendedData) {
   } else {
     result = { url: audioUrl };
   }
+
+  // Initially set offset to 0 (overwrite later if necessary)
   result.offset_ms = 0;
+
   return result;
 }
 

@@ -10,8 +10,8 @@ class ArticleStatusHelper {
     return await astat.save();
   }
 
-  async getArticleStatus(userid, articleid = -1) {
-    if (articleid == -1) {
+  async getArticleStatus(userid, articleid) {
+    if (!articleid) {
       return await ArticleStatus.query({
         pocket_user_id: userid
       }).exec();
