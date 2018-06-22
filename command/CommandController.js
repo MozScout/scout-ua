@@ -10,6 +10,7 @@ const audioHelper = new AudioFileHelper();
 const Database = require('../data/database');
 const ArticleStatusHelper = require('../articlestatus/ArticleStatusHelper.js');
 const astatHelper = new ArticleStatusHelper();
+const ua = require('universal-analytics');
 
 const router = express.Router();
 const database = new Database();
@@ -75,21 +76,27 @@ async function buildPocketRequestBody(pocketUserId) {
 }
 
 router.post('/intent', VerifyToken, async function(req, res) {
+  logMetric(req.body.cmd, req.body.userid, req.get('User-Agent'));
+
   try {
     console.log(`Command = ${req.body.cmd}`);
     res.setHeader('Content-Type', 'application/json');
     switch (req.body.cmd) {
       case 'ScoutTitles':
-        scoutTitles(req.body.userid, res, req.body.extendedData == true);
+        scoutTitles(
+          req.body.userid,
+          res,
+          req.body.extendedData == true || req.body.extended_data == true
+        );
         break;
       case 'SearchAndPlayArticle':
       case 'SearchAndSummarizeArticle':
         searchAndPlayArticle(
           res,
           req.body.userid,
-          req.body.searchTerms,
+          req.body.searchTerms ? req.body.searchTerms : req.body.search_terms,
           req.body.cmd === 'SearchAndSummarizeArticle',
-          req.body.extendedData == true
+          req.body.extendedData == true || req.body.extended_data == true
         );
         break;
       case 'ScoutMyPocket':
@@ -116,12 +123,14 @@ router.post('/intent', VerifyToken, async function(req, res) {
 
 router.post('/article', VerifyToken, async function(req, res) {
   console.log(`GET /article: ${req.body.url}`);
+  logMetric('article', req.body.userid, req.get('User-Agent'));
+
   try {
     res.setHeader('Content-Type', 'application/json');
     const result = await processArticleRequest(
       req,
       false,
-      req.body.extendedData == true
+      req.body.extendedData == true || req.body.extended_data == true
     );
     const astat = await astatHelper.getArticleStatus(
       req.body.userid,
@@ -140,12 +149,14 @@ router.post('/article', VerifyToken, async function(req, res) {
 
 router.post('/summary', VerifyToken, async function(req, res) {
   console.log(`GET /summary: ${req.body.url}`);
+  logMetric('summary', req.body.userid, req.get('User-Agent'));
+
   try {
     res.setHeader('Content-Type', 'application/json');
     const result = await processArticleRequest(
       req,
       true,
-      req.body.extendedData == true
+      req.body.extendedData == true || req.body.extended_data == true
     );
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
@@ -156,10 +167,12 @@ router.post('/summary', VerifyToken, async function(req, res) {
 });
 
 router.get('/search', VerifyToken, async function(req, res) {
+  logMetric('search', req.body.userid, req.get('User-Agent'));
+
   try {
     const titles = await getTitlesFromPocket(
       req.query.userid,
-      req.body.extendedData == true
+      req.body.extendedData == true || req.body.extended_data == true
     );
     const article = await findBestScoringTitle(req.query.q, titles.articles);
     const result = `Search for: ${req.query.q}, identified article: ${
@@ -170,6 +183,20 @@ router.get('/search', VerifyToken, async function(req, res) {
     res.sendStatus(404);
   }
 });
+
+function logMetric(cmd, userid, agent) {
+  console.log('User-Agent is: ' + agent);
+  if (process.env.GA_PROPERTY_ID) {
+    var visitor = ua(process.env.GA_PROPERTY_ID, userid).debug();
+    var ga_params = {
+      ec: cmd,
+      ea: userid,
+      cd1: userid,
+      el: agent
+    };
+    visitor.event(ga_params).send();
+  }
+}
 
 async function processArticleRequest(req, summaryOnly, extendedData) {
   const getBody = await buildPocketRequestBody(req.body.userid);
@@ -388,7 +415,9 @@ async function getArticleMetadata(pocketArticle, extendedData) {
     title: pocketArticle.resolved_title,
     author,
     lengthMinutes,
-    imageURL: pocketArticle.top_image_url
+    length_minutes: lengthMinutes,
+    imageURL: pocketArticle.top_image_url,
+    image_url: pocketArticle.top_image_url
   };
 
   if (extendedData) {

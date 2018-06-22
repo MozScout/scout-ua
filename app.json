@@ -31,6 +31,9 @@
     },
     "PROSODY_VOLUME": {
       "required": true
+    },
+    "GA_PROPERTY_ID": {
+      "required": true
     }
   },
   "formation": {
