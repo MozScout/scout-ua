@@ -2,6 +2,7 @@ const Database = require('../data/database');
 const database = new Database();
 const AWS = require('aws-sdk');
 const url = require('url');
+const logger = require('../logger');
 
 const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
@@ -15,7 +16,7 @@ class CommandHelper {
 
     // then see if that file still exists at s3
     if (fileUrl) {
-      console.log(`Checking location for item=${articleId}: ${fileUrl}`);
+      logger.info(`Checking location for item=${articleId}: ${fileUrl}`);
       const path = url.parse(fileUrl).path;
       const params = {
         Bucket: process.env.POLLY_S3_BUCKET,
@@ -25,9 +26,9 @@ class CommandHelper {
       try {
         const s3request = s3.headObject(params);
         await s3request.promise();
-        console.log('Verified existing file');
+        logger.debug('Verified existing file');
       } catch (err) {
-        console.log('File no longer exists');
+        logger.warn('File no longer exists');
         fileUrl = '';
       }
     }

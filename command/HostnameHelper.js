@@ -3,6 +3,7 @@ const database = new Database();
 const url = require('url');
 const getFavicons = require('get-website-favicon');
 const scrape = require('html-metadata');
+const logger = require('../logger');
 
 class HostnameHelper {
   constructor() {
@@ -21,14 +22,14 @@ class HostnameHelper {
     let hostname = this.getHostname(link);
     let self = this;
     if (!self.currentRequests[type][hostname]) {
-      console.log(`Fetching ${type} data for ${hostname}`);
+      logger.debug(`Fetching ${type} data for ${hostname}`);
       let faviconPromise;
       let metadataPromise;
       let faviconError = false;
       let metadataError = false;
       if (type == 'all' || type == 'favicon') {
         faviconPromise = getFavicons(link).catch(function(err) {
-          console.log(
+          logger.error(
             `Error occured during HostnameHelper Favicon promise calls: ${
               err.status
             }, ${err.name}. Domain: ${hostname}`
@@ -38,7 +39,7 @@ class HostnameHelper {
       }
       if (type == 'all' || type == 'publisher') {
         metadataPromise = scrape(link).catch(function(err) {
-          console.log(
+          logger.error(
             `Error occured during HostnameHelper Metadata promise calls: ${
               err.status
             }, ${err.name}. Domain: ${hostname}`
@@ -91,7 +92,7 @@ class HostnameHelper {
             });
         })
         .catch(function(err) {
-          console.log(
+          logger.error(
             `Error occured during HostnameHelper promise calls. Error: ${
               err.status
             }, ${err.name}`
