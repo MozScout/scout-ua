@@ -7,12 +7,10 @@ const logger = winston.createLogger({
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
+        winston.format.align(),
         winston.format.simple()
       ),
-      level: level,
-      timestamp: function() {
-        return new Date().toISOString();
-      }
+      level: level
     })
   ]
 });
