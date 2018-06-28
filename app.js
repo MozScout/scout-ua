@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const app = express();
 const dynamoose = require('dynamoose');
+const logger = require('./logger');
 
 // DynamoDB init
 if (
@@ -9,14 +10,14 @@ if (
   (process.env.DYNAMODB_USE_LOCAL === 'true' ||
     process.env.DYNAMODB_USE_LOCAL === '1')
 ) {
-  console.log(`Using local DynamoDB...`);
+  logger.info(`Using local DynamoDB...`);
   dynamoose.local();
 }
 
 // app.js
 app.get('/hello', function(req, res) {
   res.status(200).send(
-    `Hello! pocket=${process.env.POCKET_KEY}, 
+    `Hello! pocket=${process.env.POCKET_KEY},
       pollybucket=${process.env.POLLY_S3_BUCKET}`
   );
 });

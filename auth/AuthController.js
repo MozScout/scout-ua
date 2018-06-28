@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const uuidgen = require('node-uuid-generator');
 const APIUser = require('../data/models/APIUser');
+const logger = require('../logger');
 
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: false }));
@@ -12,7 +13,7 @@ router.use(bodyParser.json());
 
 router.post('/register', async function(req, res) {
   try {
-    console.log(`/register ${req.body.name}`);
+    logger.info(`/register ${req.body.name}`);
     const userid = uuidgen.generate();
     const token = jwt.sign({ id: userid }, process.env.JWT_SECRET);
 
@@ -32,7 +33,7 @@ router.post('/register', async function(req, res) {
 });
 
 router.get('/me', VerifyToken, async function(req, res) {
-  console.log(`looking up user ${req.userId}`);
+  logger.info(`looking up user ${req.userId}`);
   const apiuser = await APIUser.get({
     id: req.userId
   });

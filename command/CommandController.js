@@ -8,7 +8,10 @@ const polly_tts = require('./polly_tts');
 const AudioFileHelper = require('./AudioFileHelper');
 const audioHelper = new AudioFileHelper();
 const Database = require('../data/database');
+const ArticleStatusHelper = require('../articlestatus/ArticleStatusHelper.js');
+const astatHelper = new ArticleStatusHelper();
 const ua = require('universal-analytics');
+const logger = require('../logger');
 
 const router = express.Router();
 const database = new Database();
@@ -58,7 +61,7 @@ const articleOptions = {
 
 const summaryLink =
   'https://api.smmry.com?SM_API_KEY=' + process.env.SM_API_KEY + '&SM_URL=';
-console.log('SummaryLink Creation is: ' + summaryLink);
+logger.info('SummaryLink Creation is: ' + summaryLink);
 const summaryOptions = {
   uri: '',
   method: 'GET',
@@ -85,7 +88,7 @@ router.post('/intent', VerifyToken, async function(req, res) {
   logMetric(req.body.cmd, req.body.userid, req.get('User-Agent'));
 
   try {
-    console.log(`Command = ${req.body.cmd}`);
+    logger.info(`Command = ${req.body.cmd}`);
     res.setHeader('Content-Type', 'application/json');
     switch (req.body.cmd) {
       case 'ScoutTitles':
@@ -121,14 +124,14 @@ router.post('/intent', VerifyToken, async function(req, res) {
         break;
     }
   } catch (reason) {
-    console.log('database err: ', reason);
+    logger.error('database err: ', reason);
     let errSpeech = 'Unable to connect to Pocket. Please relink your account.';
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 });
 
 router.post('/article', VerifyToken, async function(req, res) {
-  console.log(`GET /article: ${req.body.url}`);
+  logger.info(`GET /article: ${req.body.url}`);
   logMetric('article', req.body.userid, req.get('User-Agent'));
 
   try {
@@ -139,16 +142,23 @@ router.post('/article', VerifyToken, async function(req, res) {
       req.body.extendedData == true || req.body.extended_data == true,
       req.body.end_instructions == true
     );
+    const astat = await astatHelper.getArticleStatus(
+      req.body.userid,
+      result.item_id
+    );
+    if (astat) {
+      result.offset_ms = astat.offset_ms;
+    }
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
-    console.log('Error in /article ', reason);
+    logger.error('Error in /article ', reason);
     const errSpeech = `There was an error processing the article. ${reason}`;
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 });
 
 router.post('/summary', VerifyToken, async function(req, res) {
-  console.log(`GET /summary: ${req.body.url}`);
+  logger.info(`GET /summary: ${req.body.url}`);
   logMetric('summary', req.body.userid, req.get('User-Agent'));
 
   try {
@@ -161,7 +171,7 @@ router.post('/summary', VerifyToken, async function(req, res) {
     );
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
-    console.log('Error in /summary ', reason);
+    logger.error('Error in /summary ', reason);
     const errSpeech = `There was an error processing the article. ${reason}`;
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
@@ -186,7 +196,7 @@ router.get('/search', VerifyToken, async function(req, res) {
 });
 
 function logMetric(cmd, userid, agent) {
-  console.log('User-Agent is: ' + agent);
+  logger.info('User-Agent is: ' + agent);
   if (process.env.GA_PROPERTY_ID) {
     var visitor = ua(process.env.GA_PROPERTY_ID, userid).debug();
     var ga_params = {
@@ -263,6 +273,8 @@ async function processArticleRequest(
     }
     result.instructions_url = endInstructionsData.url;
   }
+  // Initially set offset to 0 (overwrite later if necessary)
+  result.offset_ms = 0;
 
   return result;
 }
@@ -273,8 +285,8 @@ async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
   getBody.count = '3';
   getOptions.body = JSON.stringify(getBody);
 
-  console.log('jsonboddyattr=', jsonBodyAttr);
-  console.log('urlattr=', urlAttr);
+  logger.debug('jsonboddyattr=', jsonBodyAttr);
+  logger.debug('urlattr=', urlAttr);
   rp(getOptions)
     .then(function(body) {
       const jsonBody = JSON.parse(body);
@@ -284,7 +296,7 @@ async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
           let arrJson = jsonBody[jsonBodyAttr];
           Object.keys(arrJson).forEach(key => {
             summaryOptions.uri = summaryLink + arrJson[key][urlAttr];
-            console.log('Summary uri is: ' + summaryOptions.uri);
+            logger.debug('Summary uri is: ' + summaryOptions.uri);
             promiseArray.push(
               rp(summaryOptions)
                 .then(sumResults => {
@@ -293,12 +305,12 @@ async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
                   return sumResultsJson;
                 })
                 .catch(function(err) {
-                  console.log('Caught an error: ' + err);
+                  logger.error('Caught an error: ' + err);
                   return JSON.stringify({});
                 })
             );
           });
-          console.log('RETURNING PROMISE.ALL ' + Date.now());
+          logger.debug('RETURNING PROMISE.ALL ' + Date.now());
           return Promise.all(promiseArray);
         };
 
@@ -316,30 +328,30 @@ async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
                   element.sm_api_content
                 );
               } else {
-                console.log('no data.  Summary must have failed.');
+                logger.warn('no data.  Summary must have failed.');
               }
             });
-            console.log('Text response is: ' + textResponse);
-            console.log('Time to get summaries: ' + Date.now());
+            logger.debug('Text response is: ' + textResponse);
+            logger.debug('Time to get summaries: ' + Date.now());
             return buildAudioFromText(textResponse);
           })
           .then(function(url) {
-            console.log('Time to buildAudioFromText ' + Date.now());
+            logger.debug('Time to buildAudioFromText ' + Date.now());
             res.status(200).send(JSON.stringify({ url: url }));
           })
           .catch(function(err) {
             res
               .status(500)
               .send(JSON.stringify({ speech: 'Summary Engine error' }));
-            console.log('Error parsing: ' + err);
+            logger.error('Error parsing: ' + err);
           });
       } else {
-        console.log('Searching for the article failed to find a match');
+        logger.warn('Searching for the article failed to find a match');
         throw 'NoSearchMatch';
       }
     })
     .catch(reason => {
-      console.log('caught an error: ', reason);
+      logger.error('caught an error: ', reason);
       let errSpeech = '';
       switch (reason) {
         case 'NoSearchMatch':
@@ -412,7 +424,7 @@ async function scoutTitles(userid, res, extendedData) {
     res
       .status(404)
       .send(JSON.stringify({ speech: `Error getting titles: ${err}` }));
-    console.log(`Error getting titles: ${err}`);
+    logger.error(`Error getting titles: ${err}`);
   }
 }
 
@@ -497,7 +509,7 @@ async function archiveTitle(userId, itemId, res) {
  * and if found, returns metadata for it. Otherwise undefined.
  */
 async function searchForPocketArticle(getBody, searchTerm, extendedData) {
-  console.log('Search term is: ', searchTerm);
+  logger.info('Search term is: ', searchTerm);
   getBody.search = searchTerm;
   getOptions.body = JSON.stringify(getBody);
   const body = await rp(getOptions);
@@ -505,7 +517,7 @@ async function searchForPocketArticle(getBody, searchTerm, extendedData) {
   let result;
   if (jsonBody.status == '1') {
     const keysArr = Object.keys(jsonBody.list);
-    console.log('keysarr = ', keysArr);
+    logger.debug('keysarr = ', keysArr);
     if (keysArr.length > 0) {
       result = await getArticleMetadata(
         jsonBody.list[keysArr[0]],
@@ -513,7 +525,7 @@ async function searchForPocketArticle(getBody, searchTerm, extendedData) {
       );
     }
   } else {
-    console.log(
+    logger.warn(
       `Searching for '${searchTerm}' failed to find a matching article.`
     );
   }
@@ -528,12 +540,12 @@ async function searchAndPlayArticle(
   extendedData
 ) {
   try {
-    console.log('Search term is: ', searchTerm);
+    logger.info('Search term is: ', searchTerm);
     const titles = await getTitlesFromPocket(pocketuserid, extendedData);
     const articleInfo = await findBestScoringTitle(searchTerm, titles.articles);
 
     if (articleInfo) {
-      console.log(articleInfo);
+      logger.debug(articleInfo);
 
       // do we already have the audio file?
       let audioUrl = await audioHelper.getAudioFileLocation(
@@ -556,12 +568,23 @@ async function searchAndPlayArticle(
         );
       }
       articleInfo.url = audioUrl;
+
+      articleInfo.offset_ms = 0;
+      if (!summaryOnly) {
+        const astat = await astatHelper.getArticleStatus(
+          pocketuserid,
+          articleInfo.item_id
+        );
+        if (astat) {
+          articleInfo.offset_ms = astat.offset_ms;
+        }
+      }
       res.status(200).send(JSON.stringify(articleInfo));
     } else {
       throw 'NoSearchMatch';
     }
   } catch (reason) {
-    console.log('searchAndPlayArticle error: ', reason);
+    logger.error('searchAndPlayArticle error: ', reason);
     let errSpeech = '';
     switch (reason) {
       case 'NoSearchMatch':
@@ -610,7 +633,7 @@ async function buildAudioFromText(
 ) {
   const cleanText = texttools.cleanText(textString);
   const chunkText = texttools.chunkText(cleanText);
-  console.log('chunkText is: ', chunkText.length, chunkText);
+  logger.debug('chunkText is: ', chunkText.length, chunkText);
   return polly_tts.getSpeechSynthUrl(chunkText, voiceType);
 }
 
@@ -623,7 +646,7 @@ function findBestScoringTitle(searchPhrase, articleMetadataArray) {
     let tfidf = new natural.TfIdf();
     //tokenize and Stem each title and then add to our dataset
     for (var i = 0; i < articleMetadataArray.length; i++) {
-      console.log(articleMetadataArray[i].title);
+      logger.debug(articleMetadataArray[i].title);
       let stemmed = articleMetadataArray[i].title.tokenizeAndStem();
       tfidf.addDocument(stemmed);
     }
@@ -632,16 +655,16 @@ function findBestScoringTitle(searchPhrase, articleMetadataArray) {
     let curMaxIndex = 0;
     let iCount = 0;
     tfidf.tfidfs(wordsStem, function(i, measure) {
-      console.log('document #' + i + ' is ' + measure);
+      logger.debug('document #' + i + ' is ' + measure);
       if (measure > maxValue) {
         maxValue = measure;
         curMaxIndex = i;
       }
       iCount++;
       if (iCount >= articleMetadataArray.length) {
-        console.log('Done getting results.');
-        console.log('Max Score is: ' + maxValue);
-        console.log('Article is: ' + articleMetadataArray[curMaxIndex].title);
+        logger.debug('Done getting results.');
+        logger.debug('Max Score is: ' + maxValue);
+        logger.info('Article is: ' + articleMetadataArray[curMaxIndex].title);
         if (maxValue === 0) {
           reject('NoMatchFound');
         }
