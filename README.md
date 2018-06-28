@@ -47,8 +47,6 @@ You need the following environment variables:
 * `DYNAMODB_USE_LOCAL`: false
 * `JWT_SECRET`: secret used for JWT
 * `POCKET_KEY`: Pocket Consumer Key. See [Pocket Developer Apps](https://getpocket.com/developer/apps/)
-* `POLLY_ACCCESSKEYID`: AWS IAM Credentials for AWS Polly (can be the same as the first credentials)
-* `POLLY_SECRETACCESSKEY`: Your IAM Polly User Secret
 * `POLLY_S3_BUCKET`: S3 Bucket
 * `POLLY_VOICE`: Optional. See [available voices](https://console.aws.amazon.com/polly/home/SynthesizeSpeech?region=us-east-1).
 * `META_VOICE`: Optional. Voice for intro/outro.
