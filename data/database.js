@@ -1,19 +1,20 @@
 const ScoutUser = require('./models/ScoutUser');
 const AudioFileLocation = require('./models/AudioFileLocation');
 const Hostname = require('./models/Hostname');
+const logger = require('../logger');
 
 class Database {
   async processScoutUser(userid, access_token) {
     try {
-      console.error(userid);
+      logger.error(userid);
 
       const suser = await ScoutUser.get({ pocket_user_id: userid });
       if (suser) {
-        console.log('Found existing user');
+        logger.debug('Found existing user');
         suser.pocket_access_token = access_token;
         await suser.save();
       } else {
-        console.log(`Creating new user`);
+        logger.info(`Creating new user`);
         const newuser = new ScoutUser({
           pocket_user_id: userid,
           pocket_access_token: access_token
@@ -21,15 +22,15 @@ class Database {
         await newuser.save();
       }
     } catch (err) {
-      console.log(`processScoutUser operation failed: ${err}`);
+      logger.error(`processScoutUser operation failed: ${err}`);
     }
   }
 
   async getAccessToken(userid) {
-    console.log(`getAccessToken for ${userid}`);
+    logger.info(`getAccessToken for ${userid}`);
     const user = await ScoutUser.get({ pocket_user_id: userid });
     if (user) {
-      console.log('Got token: ' + user.pocket_access_token);
+      logger.debug('Got token: ' + user.pocket_access_token);
       return user.pocket_access_token;
     } else {
       throw 'No user token';
@@ -37,7 +38,7 @@ class Database {
   }
 
   async getAudioFileLocation(articleId, audioType) {
-    console.log(`getAudioFileLocation for ${articleId}/${audioType}`);
+    logger.info(`getAudioFileLocation for ${articleId}/${audioType}`);
     const fileLocation = await AudioFileLocation.get({ item_id: articleId });
     if (fileLocation) {
       if (audioType === 'full' && fileLocation.full_audio_location) {
@@ -53,7 +54,7 @@ class Database {
   }
 
   async storeAudioFileLocation(articleId, audioType, location) {
-    console.log(
+    logger.info(
       `storeAudioFileLocation for ${articleId}/${audioType}: ${location}`
     );
     let fileLocation = await AudioFileLocation.get({ item_id: articleId });
@@ -73,13 +74,13 @@ class Database {
   }
 
   async getHostnameData(hostname) {
-    console.log(`getHostnameData for ${hostname}`);
+    logger.info(`getHostnameData for ${hostname}`);
     const data = await Hostname.get({ hostname: hostname });
     return data;
   }
 
   async storeHostnameData(hostname, faviconUrl, name) {
-    console.log(`storeHostnameData for ${hostname}: ${faviconUrl}, ${name}`);
+    logger.info(`storeHostnameData for ${hostname}: ${faviconUrl}, ${name}`);
     let data = await Hostname.get({ hostname: hostname });
     if (!data) {
       data = new Hostname({

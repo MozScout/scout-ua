@@ -1,10 +1,11 @@
 /* eslint no-useless-escape: 0 */ // --> OFF
 /* eslint quotes: 0 */ // --> OFF
 const chunk = require('chunk-text');
+const logger = require('../logger');
 
 const texttools = {
   truncateArticle: function(str, length, ending) {
-    console.log('Truncating article');
+    logger.debug('Truncating article');
     if (length == null) {
       length = 600;
     }
@@ -12,10 +13,10 @@ const texttools = {
       ending = '...';
     }
     if (str.length > length) {
-      console.log('truncating');
+      logger.debug('truncating');
       return str.substring(0, length - ending.length) + ending;
     } else {
-      console.log('did not need to truncate');
+      logger.debug('did not need to truncate');
       return str;
     }
   },

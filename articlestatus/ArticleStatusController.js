@@ -3,6 +3,7 @@ var bodyParser = require('body-parser');
 const ArticleStatusHelper = require('./ArticleStatusHelper.js');
 const astatHelper = new ArticleStatusHelper();
 const VerifyToken = require('../VerifyToken');
+const logger = require('../logger');
 
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: true }));
@@ -21,7 +22,7 @@ router.post('/', VerifyToken, async function(req, res) {
     );
     res.sendStatus(201);
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.sendStatus(500);
   }
 });
@@ -32,7 +33,7 @@ router.get('/:userid', VerifyToken, async function(req, res) {
     const articles = await astatHelper.getArticleStatus(req.params.userid);
     res.send(articles);
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.sendStatus(500);
   }
 });
@@ -50,7 +51,7 @@ router.get('/:userid/:articleid', VerifyToken, async (req, res) => {
       res.sendStatus(404);
     }
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.sendStatus(500);
   }
 });
