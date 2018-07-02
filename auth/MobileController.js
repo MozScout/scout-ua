@@ -51,7 +51,7 @@ router.get('/login', function(req, res) {
 
     var redir =
       `https://getpocket.com/auth/authorize` +
-      `?request_token=${userAuthKey}&redirect_uri=${redirUri}`;
+      `?force=login&request_token=${userAuthKey}&redirect_uri=${redirUri}`;
     logger.debug(`redirecting to ${redir}...`);
     return res.redirect(redir);
   });
