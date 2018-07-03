@@ -133,12 +133,14 @@ router.post('/article', VerifyToken, async function(req, res) {
       false,
       req.body.extendedData == true || req.body.extended_data == true
     );
-    const astat = await astatHelper.getArticleStatus(
-      req.body.userid,
-      result.item_id
-    );
-    if (astat) {
-      result.offset_ms = astat.offset_ms;
+    if (result.item_id) {
+      const astat = await astatHelper.getArticleStatus(
+        req.body.userid,
+        result.item_id
+      );
+      if (astat) {
+        result.offset_ms = astat.offset_ms;
+      }
     }
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
