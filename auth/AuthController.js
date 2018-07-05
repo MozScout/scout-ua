@@ -5,42 +5,37 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const uuidgen = require('node-uuid-generator');
 const APIUser = require('../data/models/APIUser');
+const Database = require('../data/database');
 const logger = require('../logger');
 
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: false }));
 router.use(bodyParser.json());
+const database = new Database();
 
-router.post('/register', async function(req, res) {
+router.post('/token', async function(req, res) {
   try {
-    logger.info(`/register ${req.body.name}`);
+    logger.info(`/register ${req.body.userid}`);
+    // Lookup the API user info
+    let apiUser = await database.getApiUser(req.body.userid);
+    if (!apiUser) {
+      return res.status(401).send('Unauthorized');
+    }
+
+    //See if the hashed passwords match
+    let pwEncrypt = bcrypt.hashSync(req.body.password, 8);
+    if (pwEncrypt !== apiUser.password) {
+      return res.status(401).send('Unauthorized');
+    }
+
+    //This is a valid API user so create the token
     const userid = uuidgen.generate();
     const token = jwt.sign({ id: userid }, process.env.JWT_SECRET);
 
-    const newApiUser = new APIUser({
-      id: userid,
-      jwt: token,
-      name: req.body.name,
-      email: req.body.email,
-      password: bcrypt.hashSync(req.body.password, 8),
-      active: true
-    });
-    await newApiUser.save();
+    //Return the token... No need to store it.
     res.status(200).send({ auth: true, token: token });
   } catch (err) {
     return res.status(500).send(`Error creating API user: ${err}`);
-  }
-});
-
-router.get('/me', VerifyToken, async function(req, res) {
-  logger.info(`looking up user ${req.userId}`);
-  const apiuser = await APIUser.get({
-    id: req.userId
-  });
-  if (apiuser) {
-    res.status(200).send(apiuser);
-  } else {
-    return res.status(404).send('No user found.');
   }
 });
 

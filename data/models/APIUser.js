@@ -5,9 +5,7 @@ const schema = new dynamoose.Schema({
     type: String,
     hashKey: true
   },
-  jwt: String,
-  name: String,
-  email: String,
+  userid: String,
   password: String,
   active: Boolean
 });

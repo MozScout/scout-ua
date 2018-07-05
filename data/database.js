@@ -1,6 +1,7 @@
 const ScoutUser = require('./models/ScoutUser');
 const AudioFiles = require('./models/AudioFiles');
 const Hostname = require('./models/Hostname');
+const ApiUser = require('./models/ApiUser');
 const logger = require('../logger');
 const uuidgen = require('node-uuid-generator');
 
@@ -289,6 +290,13 @@ class Database {
     });
     await opus.save();
     logger.debug('after opus save');
+  }
+
+  // This API determines whether the caller is allowed to get an API token
+  async getApiUser(userid) {
+    logger.info(`getApiUser for ${userid}`);
+    let data = await ApiUser.get({ userid: userid });
+    return data;
   }
 }
 

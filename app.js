@@ -15,18 +15,18 @@ if (
 }
 
 // app.js
-app.get('/hello', function(req, res) {
-  res.status(200).send(
-    `Hello! pocket=${process.env.POCKET_KEY},
-      pollybucket=${process.env.POLLY_S3_BUCKET}`
-  );
+
+// This middleware forces the use of https
+app.use(function(req, res, next) {
+  if (req.protocol !== 'https' || !req.secure) {
+    return res.status(403).send({ message: 'SSL required' });
+  }
+  // allow the request to continue
+  next();
 });
 
 const UserController = require('./user/UserController');
 app.use('/api/users', UserController);
-
-const AuthController = require('./auth/AuthController');
-app.use('/api/auth', AuthController);
 
 const MobileController = require('./auth/MobileController');
 app.use('/api/auth/mobile', MobileController);
