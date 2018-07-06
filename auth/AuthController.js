@@ -1,10 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const VerifyToken = require('../VerifyToken');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const uuidgen = require('node-uuid-generator');
-const APIUser = require('../data/models/APIUser');
 const Database = require('../data/database');
 const logger = require('../logger');
 
