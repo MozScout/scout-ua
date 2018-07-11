@@ -402,7 +402,7 @@ describe('POST /command/article', function() {
         });
     });
 
-    it('Article: firefox (not in Pocket)', done => {
+    it('Article: firefox (not in Pocket). Should return 404.', done => {
       data.url = constants.MOZILLA_URL;
       chai
         .request(API_URL)
@@ -410,13 +410,7 @@ describe('POST /command/article', function() {
         .set('x-access-token', accessToken)
         .send(data)
         .end((err, res) => {
-          expect(res).have.status(200);
-          expect(res.body).be.a('object');
-          expect(res.body).have.property('url');
-          expect(res.body).have.property('offset_ms');
-          expect(res.body.offset_ms).be.at.least(0);
-          expect(Object.keys(res.body)).to.have.lengthOf(2);
-          expect(res.body.url).not.be.equal('');
+          expect(res).have.status(404);
           done();
         });
     });
@@ -459,7 +453,7 @@ describe('POST /command/article', function() {
         });
     });
 
-    it('Article: alexa (not in Pocket)', done => {
+    it('Article: alexa (not in Pocket). Should return 404.', done => {
       data.url = constants.ALEXA_URL;
       chai
         .request(API_URL)
@@ -467,13 +461,7 @@ describe('POST /command/article', function() {
         .set('x-access-token', accessToken)
         .send(data)
         .end((err, res) => {
-          expect(res).have.status(200);
-          expect(res.body).be.a('object');
-          expect(res.body).have.property('url');
-          expect(res.body).have.property('offset_ms');
-          expect(res.body.offset_ms).be.at.least(0);
-          expect(Object.keys(res.body)).to.have.lengthOf(2);
-          expect(res.body.url).not.be.equal('');
+          expect(res).have.status(404);
           done();
         });
     });
@@ -558,7 +546,7 @@ describe('POST /command/summary', function() {
         });
     });
 
-    it('Article: firefox (not in Pocket)', done => {
+    it('Article: firefox (not in Pocket). Should return 404.', done => {
       data.url = constants.MOZILLA_URL;
       chai
         .request(API_URL)
@@ -566,13 +554,7 @@ describe('POST /command/summary', function() {
         .set('x-access-token', accessToken)
         .send(data)
         .end((err, res) => {
-          expect(res).have.status(200);
-          expect(res.body).be.a('object');
-          expect(res.body).have.property('url');
-          expect(res.body).have.property('offset_ms');
-          expect(res.body.offset_ms).be.at.least(0);
-          expect(Object.keys(res.body)).to.have.lengthOf(2);
-          expect(res.body.url).not.be.equal('');
+          expect(res).have.status(404);
           done();
         });
     });
@@ -615,7 +597,7 @@ describe('POST /command/summary', function() {
         });
     });
 
-    it('Article: alexa (not in Pocket)', done => {
+    it('Article: alexa (not in Pocket). Should return 404.', done => {
       data.url = constants.ALEXA_URL;
       chai
         .request(API_URL)
@@ -623,13 +605,7 @@ describe('POST /command/summary', function() {
         .set('x-access-token', accessToken)
         .send(data)
         .end((err, res) => {
-          expect(res).have.status(200);
-          expect(res.body).be.a('object');
-          expect(res.body).have.property('url');
-          expect(res.body).have.property('offset_ms');
-          expect(res.body.offset_ms).be.at.least(0);
-          expect(Object.keys(res.body)).to.have.lengthOf(2);
-          expect(res.body.url).not.be.equal('');
+          expect(res).have.status(404);
           done();
         });
     });
