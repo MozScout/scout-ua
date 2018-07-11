@@ -169,19 +169,20 @@ router.post('/summary', VerifyToken, async function(req, res) {
 });
 
 router.get('/search', VerifyToken, async function(req, res) {
-  logMetric('search', req.body.userid, req.get('User-Agent'));
+  logMetric('search', req.query.userid, req.get('User-Agent'));
 
   try {
     const titles = await getTitlesFromPocket(
       req.query.userid,
-      req.body.extendedData == true || req.body.extended_data == true
+      req.query.extendedData == true || req.query.extended_data == true
     );
     const article = await findBestScoringTitle(req.query.q, titles.articles);
-    const result = `Search for: ${req.query.q}, identified article: ${
-      article.title
-    }`;
-    res.send(result);
+    logger.info(
+      `Search for: ${req.query.q}, identified article: ${article.title}`
+    );
+    res.send(article);
   } catch (err) {
+    logger.error('Error on /search: ' + err);
     res.sendStatus(404);
   }
 });
