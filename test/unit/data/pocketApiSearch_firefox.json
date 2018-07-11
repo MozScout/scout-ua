@@ -1,0 +1,66 @@
+{
+  "status": 1,
+  "complete": 1,
+  "list": {
+    "2232154160": {
+      "item_id": "2232154160",
+      "resolved_id": "2232154160",
+      "given_url":
+        "https://www.nytimes.com/2018/06/20/technology/personaltech/firefox-chrome-browser-privacy.html",
+      "given_title": "",
+      "favorite": "0",
+      "status": "0",
+      "time_added": "1529606567",
+      "time_updated": "1529606567",
+      "time_read": "0",
+      "time_favorited": "0",
+      "sort_id": 0,
+      "resolved_title": "Firefox Is Back. It’s Time to Give It a Try.",
+      "resolved_url":
+        "https://www.nytimes.com/2018/06/20/technology/personaltech/firefox-chrome-browser-privacy.html",
+      "excerpt":
+        "Do you ever feel that the web is breaking?  When shopping online for a toaster oven, you can expect an ad for that oven to stalk you from site to site. If you have just a few web browser tabs open, your laptop battery drains rapidly.",
+      "is_article": "1",
+      "is_index": "0",
+      "has_video": "0",
+      "has_image": "1",
+      "word_count": "1254",
+      "lang": "en",
+      "time_to_read": 6,
+      "top_image_url":
+        "https://static01.nyt.com/images/2018/06/21/business/21Techfix/merlin_139815324_5d0f3563-0071-4a44-926f-3841b7e7fb44-facebookJumbo.jpg",
+      "authors": {
+        "54325432": {
+          "item_id": "2232154160",
+          "author_id": "54325432",
+          "name": "BRIAN X. CHEN",
+          "url": "http://www.nytimes.com/by/brian-x-chen"
+        }
+      },
+      "image": {
+        "item_id": "2232154160",
+        "src":
+          "https://static01.nyt.com/images/2018/06/21/business/21Techfix/merlin_139815324_5d0f3563-0071-4a44-926f-3841b7e7fb44-articleLarge.jpg?quality=75&auto=webp&disable=upscale",
+        "width": "0",
+        "height": "0"
+      },
+      "images": {
+        "1": {
+          "item_id": "2232154160",
+          "image_id": "1",
+          "src":
+            "https://static01.nyt.com/images/2018/06/21/business/21Techfix/merlin_139815324_5d0f3563-0071-4a44-926f-3841b7e7fb44-articleLarge.jpg?quality=75&auto=webp&disable=upscale",
+          "width": "0",
+          "height": "0",
+          "credit": "Minh Uong/The New York Times",
+          "caption": ""
+        }
+      }
+    }
+  },
+  "error": null,
+  "search_meta": {
+    "search_type": "normal"
+  },
+  "since": 1531261119
+}

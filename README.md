@@ -1,6 +1,7 @@
 # Scout UA
 
 [![Build Status](https://travis-ci.org/MozScout/scout-ua.svg?branch=master)](https://travis-ci.org/MozScout/scout-ua)
+[![Coverage Status](https://coveralls.io/repos/github/MozScout/scout-ua/badge.svg?branch=master)](https://coveralls.io/github/MozScout/scout-ua?branch=master)
 
 # Setting up
 

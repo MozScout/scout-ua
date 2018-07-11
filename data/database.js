@@ -6,7 +6,7 @@ const logger = require('../logger');
 class Database {
   async processScoutUser(userid, access_token) {
     try {
-      logger.error(userid);
+      logger.debug(userid);
 
       const suser = await ScoutUser.get({ pocket_user_id: userid });
       if (suser) {
