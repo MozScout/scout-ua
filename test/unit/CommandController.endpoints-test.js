@@ -367,4 +367,64 @@ describe('CommandController - Endpoints', function() {
         });
     });
   });
+
+  describe('/search', function() {
+    it('Returns data for search: firefox', done => {
+      chai
+        .request(app)
+        .get('/command/search')
+        .set('x-access-token', 'token')
+        .query({ q: 'firefox', userid: userData.userid })
+        .end((err, res) => {
+          expect(res).have.status(200);
+          expect(res.body).be.a('object');
+          fs.readFile(MOCK_DATA_PATH + '/search_firefox.json', 'utf8', function(
+            err,
+            data
+          ) {
+            if (err) {
+              return console.log(err);
+            }
+            expect(res.body).to.deep.equal(JSON.parse(data));
+            done();
+          });
+        });
+    });
+
+    it('Returns 404 for empty search', done => {
+      chai
+        .request(app)
+        .get('/command/search')
+        .set('x-access-token', 'token')
+        .query({ q: '', userid: userData.userid })
+        .end((err, res) => {
+          expect(res).have.status(404);
+          done();
+        });
+    });
+
+    it('Returns 404 when no query', done => {
+      chai
+        .request(app)
+        .get('/command/search')
+        .set('x-access-token', 'token')
+        .query({ userid: userData.userid })
+        .end((err, res) => {
+          expect(res).have.status(404);
+          done();
+        });
+    });
+
+    it('Returns 404 for search: no match', done => {
+      chai
+        .request(app)
+        .get('/command/search')
+        .set('x-access-token', 'token')
+        .query({ q: 'nomatch', userid: userData.userid })
+        .end((err, res) => {
+          expect(res).have.status(404);
+          done();
+        });
+    });
+  });
 });
