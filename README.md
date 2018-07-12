@@ -48,12 +48,13 @@ You need the following environment variables:
 * `DYNAMODB_USE_LOCAL`: false
 * `JWT_SECRET`: secret used for JWT
 * `POCKET_KEY`: Pocket Consumer Key. See [Pocket Developer Apps](https://getpocket.com/developer/apps/)
-* `POLLY_S3_BUCKET`: S3 Bucket
-* `POLLY_VOICE`: Optional. See [available voices](https://console.aws.amazon.com/polly/home/SynthesizeSpeech?region=us-east-1).
-* `META_VOICE`: Optional. Voice for intro/outro.
-* `PROSODY_RATE`: Optional. Voice speed (x-slow, slow, medium, fast, x-fast). See [documentation](https://docs.aws.amazon.com/polly/latest/dg/supported-ssml.html#prosody-tag).
+* `POLLY_S3_BUCKET`: S3 Bucket for streaming files
+* `POLLY_VOICE`: Optional. Reading voice. See [available voices](https://console.aws.amazon.com/polly/home/SynthesizeSpeech?region=us-east-1). Defaults to Salli.
+* `META_VOICE`: Optional. Voice for intro/outro. Defaults to Joey.
+* `PROSODY_RATE`: Optional. Voice speed (x-slow, slow, medium, fast, x-fast). See [documentation](https://docs.aws.amazon.com/polly/latest/dg/supported-ssml.html#prosody-tag). Defaults to medium.
+* `PROSODY_VOLUME`: Optional. Voice volume (silent, x-soft, soft, medium, loud, x-loud). See [documentation](https://docs.aws.amazon.com/polly/latest/dg/supported-ssml.html#prosody-tag). Defaults to medium.
 * `SM_API_KEY`: Partner API key for [SMMRY](https://smmry.com/partner) service.
-* `LOG_LEVEL`: Optional. [Winston](https://github.com/winstonjs/winston) logging level.
+* `LOG_LEVEL`: Optional. [Winston](https://github.com/winstonjs/winston) logging level. Defaults to info.
 * `GA_PROPERTY_ID`: Google Analytics ID. Can be an empty string.
 
 # Deploy locally
