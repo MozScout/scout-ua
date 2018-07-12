@@ -263,7 +263,7 @@ async function processArticleRequest(
 
   if (endInstructions) {
     let expireDate = new Date();
-    // Set the expire_date to 30 days ago
+    // Set the expire_date to 30 days ago as S3 deletes expired files
     expireDate.setDate(expireDate.getDate() - 30);
     if (new Date(endInstructionsData.date) < expireDate) {
       if (process.env.META_VOICE) {
