@@ -1,4 +1,5 @@
 const ArticleStatus = require('../data/models/ArticleStatus');
+const logger = require('../logger');
 
 class ArticleStatusHelper {
   async storeArticleStatus(userid, articleid, offset) {
@@ -11,15 +12,17 @@ class ArticleStatusHelper {
   }
 
   async getArticleStatus(userid, articleid) {
-    if (!articleid) {
-      return await ArticleStatus.query({
-        pocket_user_id: userid
-      }).exec();
-    } else {
+    if (articleid) {
+      logger.debug('getArticleStatus for ' + userid + ' ' + articleid);
       return await ArticleStatus.get({
         pocket_user_id: userid,
         article_id: articleid
       });
+    } else {
+      logger.debug('getArticleStatus for ' + userid);
+      return await ArticleStatus.query({
+        pocket_user_id: userid
+      }).exec();
     }
   }
 }
