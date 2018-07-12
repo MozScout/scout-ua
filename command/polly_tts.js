@@ -62,16 +62,16 @@ var polly_tts = {
         .concat(filename)
         .on('start', function(command) {
           logger.debug('starting: ' + Date.now());
-          logger.debug('ffmpeg process started:', command);
+          logger.debug('ffmpeg process started:' + command);
         })
         .on('error', function(err, stdout, stderr) {
-          logger.error('Error:', err);
-          logger.error('ffmpeg stderr:', stderr);
+          logger.error('Error:' + err);
+          logger.error('ffmpeg stderr:' + stderr);
           reject(err);
         })
         .on('end', function(output) {
           logger.debug('ending: ' + Date.now());
-          logger.debug('Audio created in:', output);
+          logger.debug('Audio created in:' + output);
           resolve(filename);
         });
     });
@@ -103,7 +103,7 @@ var polly_tts = {
 
           var fileStream = fs.createReadStream(newAudioFile);
           fileStream.on('error', function(err) {
-            logger.error('File Error', err);
+            logger.error('File Error' + err);
             reject('File error:' + err);
             return;
           });
@@ -117,7 +117,7 @@ var polly_tts = {
               logger.error('error uploading');
               reject('error uploading:' + err);
             } else {
-              logger.debug('Upload Success', data.Location);
+              logger.debug('Upload Success' + data.Location);
               logger.debug('Done uploading: ' + Date.now());
               // Return the URL of the Mp3 in the S3 bucket.
               resolve(data.Location);

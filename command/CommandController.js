@@ -124,14 +124,14 @@ router.post('/intent', VerifyToken, async function(req, res) {
         break;
     }
   } catch (reason) {
-    logger.error('database err: ', reason);
+    logger.error('database err: ' + reason);
     let errSpeech = 'Unable to connect to Pocket. Please relink your account.';
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 });
 
 router.post('/article', VerifyToken, async function(req, res) {
-  logger.info(`GET /article: ${req.body.url}`);
+  logger.info(`POST /article: ${req.body.url}`);
   logMetric('article', req.body.userid, req.get('User-Agent'));
 
   try {
@@ -149,16 +149,17 @@ router.post('/article', VerifyToken, async function(req, res) {
     if (astat) {
       result.offset_ms = astat.offset_ms;
     }
+    logger.info('POST article resp: ' + JSON.stringify(result));
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
-    logger.error('Error in /article ', reason);
+    logger.error('Error in /article ' + reason);
     const errSpeech = `There was an error processing the article. ${reason}`;
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 });
 
 router.post('/summary', VerifyToken, async function(req, res) {
-  logger.info(`GET /summary: ${req.body.url}`);
+  logger.info(`POST /summary: ${req.body.url}`);
   logMetric('summary', req.body.userid, req.get('User-Agent'));
 
   try {
@@ -171,26 +172,27 @@ router.post('/summary', VerifyToken, async function(req, res) {
     );
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
-    logger.error('Error in /summary ', reason);
+    logger.error('Error in /summary ' + reason);
     const errSpeech = `There was an error processing the article. ${reason}`;
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 });
 
 router.get('/search', VerifyToken, async function(req, res) {
-  logMetric('search', req.body.userid, req.get('User-Agent'));
+  logMetric('search', req.query.userid, req.get('User-Agent'));
 
   try {
     const titles = await getTitlesFromPocket(
       req.query.userid,
-      req.body.extendedData == true || req.body.extended_data == true
+      req.query.extendedData == true || req.query.extended_data == true
     );
     const article = await findBestScoringTitle(req.query.q, titles.articles);
-    const result = `Search for: ${req.query.q}, identified article: ${
-      article.title
-    }`;
-    res.send(result);
+    logger.info(
+      `Search for: ${req.query.q}, identified article: ${article.title}`
+    );
+    res.send(article);
   } catch (err) {
+    logger.error('Error on /search: ' + err);
     res.sendStatus(404);
   }
 });
@@ -198,7 +200,7 @@ router.get('/search', VerifyToken, async function(req, res) {
 function logMetric(cmd, userid, agent) {
   logger.info('User-Agent is: ' + agent);
   if (process.env.GA_PROPERTY_ID) {
-    var visitor = ua(process.env.GA_PROPERTY_ID, userid).debug();
+    var visitor = ua(process.env.GA_PROPERTY_ID, userid);
     var ga_params = {
       ec: cmd,
       ea: userid,
@@ -224,15 +226,19 @@ async function processArticleRequest(
 
   let audioUrl;
   if (result && result.item_id) {
+    logger.info('Found result: ' + result.item_id);
     // we have a matching pocket item. do we already have the audio file?
     audioUrl = await audioHelper.getAudioFileLocation(
       result.item_id,
       summaryOnly
     );
+  } else {
+    logger.info('error:  no result returned from searchForPocketArticle');
   }
 
   // if we didn't find it in the DB, create the audio file
   if (!audioUrl) {
+    logger.info('Did not find the audio URL in DB: ' + result.item_id);
     if (summaryOnly) {
       audioUrl = await buildSummaryAudioFromUrl(req.body.url);
     } else {
@@ -253,6 +259,7 @@ async function processArticleRequest(
   } else {
     result = { url: audioUrl };
   }
+  logger.debug('result.url is: ' + result.url);
 
   if (endInstructions) {
     let expireDate = new Date();
@@ -285,8 +292,8 @@ async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
   getBody.count = '3';
   getOptions.body = JSON.stringify(getBody);
 
-  logger.debug('jsonboddyattr=', jsonBodyAttr);
-  logger.debug('urlattr=', urlAttr);
+  logger.debug('jsonboddyattr=' + jsonBodyAttr);
+  logger.debug('urlattr=' + urlAttr);
   rp(getOptions)
     .then(function(body) {
       const jsonBody = JSON.parse(body);
@@ -351,7 +358,7 @@ async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
       }
     })
     .catch(reason => {
-      logger.error('caught an error: ', reason);
+      logger.error('caught an error: ' + reason);
       let errSpeech = '';
       switch (reason) {
         case 'NoSearchMatch':
@@ -509,7 +516,7 @@ async function archiveTitle(userId, itemId, res) {
  * and if found, returns metadata for it. Otherwise undefined.
  */
 async function searchForPocketArticle(getBody, searchTerm, extendedData) {
-  logger.info('Search term is: ', searchTerm);
+  logger.info('Search term is: ' + searchTerm);
   getBody.search = searchTerm;
   getOptions.body = JSON.stringify(getBody);
   const body = await rp(getOptions);
@@ -517,7 +524,8 @@ async function searchForPocketArticle(getBody, searchTerm, extendedData) {
   let result;
   if (jsonBody.status == '1') {
     const keysArr = Object.keys(jsonBody.list);
-    logger.debug('keysarr = ', keysArr);
+    logger.debug('keysarr = ' + keysArr);
+    logger.info('article count: ' + keysArr.length);
     if (keysArr.length > 0) {
       result = await getArticleMetadata(
         jsonBody.list[keysArr[0]],
@@ -540,7 +548,7 @@ async function searchAndPlayArticle(
   extendedData
 ) {
   try {
-    logger.info('Search term is: ', searchTerm);
+    logger.info('Search term is: ' + searchTerm);
     const titles = await getTitlesFromPocket(pocketuserid, extendedData);
     const articleInfo = await findBestScoringTitle(searchTerm, titles.articles);
 
@@ -584,7 +592,7 @@ async function searchAndPlayArticle(
       throw 'NoSearchMatch';
     }
   } catch (reason) {
-    logger.error('searchAndPlayArticle error: ', reason);
+    logger.error('searchAndPlayArticle error: ' + reason);
     let errSpeech = '';
     switch (reason) {
       case 'NoSearchMatch':
@@ -607,7 +615,9 @@ async function buildAudioFromUrl(url) {
     refresh: '0',
     output: 'json'
   };
+  logger.info('Getting article from pocket API: ' + url);
   const article = JSON.parse(await rp(articleOptions));
+  logger.info('Returned article from pocket API: ' + article.title);
   return buildAudioFromText(`${article.title}. ${article.article}`);
 }
 
