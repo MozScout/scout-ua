@@ -282,12 +282,6 @@
                   "value": "1",
                   "description": "",
                   "type": "text"
-                },
-                {
-                  "key": "end_instructions",
-                  "value": "1",
-                  "description": "",
-                  "type": "text"
                 }
               ]
             },
@@ -297,7 +291,7 @@
               "path": ["command", "intent"]
             },
             "description":
-              "Searches the user's saved Pocket articles for one with an article title that matches the `searchTerms`. \n\nIf found, returns the location of an audio file which contains a spoken version of the article.\n\nIncluding the optional parameter `extended_data` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nIncluding the optional parameter `end_instructions` with a value of `1` will also return an URL to an audio file of instructions to give to the user at the end of an article (for the Alexa Skill).\n\nSample return values:\n\nSuccess:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\",\n    \"instructions_url\": \"https://scout-streaming-2018.s3.amazonaws.com/94c38b5d-7099-4eb7-aa0e-cc5e76ee2f58.mp3\",\n    \"offset_ms\": 1000\n}```\n\nFailure:\n```\n{\n    \"speech\": \"Unable to find a matching article. Try another phrase.\"\n}\n```"
+              "Searches the user's saved Pocket articles for one with an article title that matches the `searchTerms`. \n\nIf found, returns the location of an audio file which contains a spoken version of the article.\n\nIncluding the optional parameter `extended_data` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nSample return values:\n\nSuccess:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\",\n    \"offset_ms\": 1000\n}```\n\nFailure:\n```\n{\n    \"speech\": \"Unable to find a matching article. Try another phrase.\"\n}\n```"
           },
           "response": []
         },
@@ -337,12 +331,6 @@
                   "key": "extended_data",
                   "value": "1",
                   "type": "text"
-                },
-                {
-                  "key": "end_instructions",
-                  "value": "1",
-                  "description": "",
-                  "type": "text"
                 }
               ]
             },
@@ -352,7 +340,7 @@
               "path": ["command", "intent"]
             },
             "description":
-              "Searches the user's saved Pocket articles for one with an article title that matches the `searchTerms`. \n\nIf found, returns the location of an audio file which contains an abridged version of the content at `url`.\n\nIncluding the optional parameter `extended_data` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nIncluding the optional parameter `end_instructions` with a value of `1` will also return an URL to an audio file of instructions to give to the user at the end of an article (for the Alexa Skill).\n\nSample return values:\n\nSuccess:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\",\n    \"instructions_url\": \"https://scout-streaming-2018.s3.amazonaws.com/94c38b5d-7099-4eb7-aa0e-cc5e76ee2f58.mp3\",\n    \"offset_ms\": 0\n}```\n\nFailure:\n```\n{\n    \"speech\": \"Unable to find a matching article. Try another phrase.\"\n}\n```"
+              "Searches the user's saved Pocket articles for one with an article title that matches the `searchTerms`. \n\nIf found, returns the location of an audio file which contains an abridged version of the content at `url`.\n\nIncluding the optional parameter `extended_data` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nSample return values:\n\nSuccess:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\",\n    \"offset_ms\": 0\n}```\n\nFailure:\n```\n{\n    \"speech\": \"Unable to find a matching article. Try another phrase.\"\n}\n```"
           },
           "response": []
         },
@@ -472,7 +460,7 @@
                   "type": "text"
                 },
                 {
-                  "key": "end_instructions",
+                  "key": "meta_audio",
                   "value": "1",
                   "description": "",
                   "type": "text"
@@ -485,7 +473,7 @@
               "path": ["command", "article"]
             },
             "description":
-              "Returns the location of an audio file which contains a spoken version of the content at `url`.\n\nIf the article at `url` is also present in the user's Pocket account, additional metadata will be provided to describe the content.\n\nIncluding the optional parameter `extended_data` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nIncluding the optional parameter `end_instructions` with a value of `1` will also return an URL to an audio file of instructions to give to the user at the end of an article (for the Alexa Skill).\n\nSample return value:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\",\n    \"instructions_url\": \"https://scout-streaming-2018.s3.amazonaws.com/94c38b5d-7099-4eb7-aa0e-cc5e76ee2f58.mp3\",\n    \"offset_ms\": 1000\n}```"
+              "Returns the location of an audio file which contains a spoken version of the content at `url`.\n\nIf the article at `url` is also present in the user's Pocket account, additional metadata will be provided to describe the content.\n\nIncluding the optional parameter `extended_data` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nIncluding the optional parameter `meta_audio` with a value of `1` will also return URLs to audio files of intro, outro and instructions to give to the user before and after an article (for the Alexa Skill).\n\nSample return value:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\",\n    \"instructions_url\": \"https://scout-streaming-2018.s3.amazonaws.com/94c38b5d-7099-4eb7-aa0e-cc5e76ee2f58.mp3\",\n    \"intro_url\": \"https://scout-streaming-ben.s3.amazonaws.com/3efbb22f-c5cb-419c-8841-816dba15b7b8.mp3\",\n    \"outro_url\": \"https://scout-streaming-ben.s3.amazonaws.com/d0af2f31-1cbf-46cb-956c-1f995c05246b.mp3\",\n    \"offset_ms\": 1000\n}```"
           },
           "response": []
         },
@@ -522,7 +510,7 @@
                   "type": "text"
                 },
                 {
-                  "key": "end_instructions",
+                  "key": "meta_audio",
                   "value": "1",
                   "description": "",
                   "type": "text"
@@ -535,7 +523,7 @@
               "path": ["command", "summary"]
             },
             "description":
-              "Returns the location of an audio file which contains an abridged version of the content at `url`.\n\nIf the article at `url` is also present in the user's Pocket account, additional metadata will be provided to describe the content.\n\nIncluding the optional parameter `extended_data` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nIncluding the optional parameter `end_instructions` with a value of `1` will also return an URL to an audio file of instructions to give to the user at the end of an article (for the Alexa Skill).\n\nSample return value:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\",\n    \"instructions_url\": \"https://scout-streaming-2018.s3.amazonaws.com/94c38b5d-7099-4eb7-aa0e-cc5e76ee2f58.mp3\",\n    \"offset_ms\": 0\n}```"
+              "Returns the location of an audio file which contains an abridged version of the content at `url`.\n\nIf the article at `url` is also present in the user's Pocket account, additional metadata will be provided to describe the content.\n\nIncluding the optional parameter `extended_data` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nIncluding the optional parameter `meta_audio` with a value of `1` will also return URLs to audio files of intro, outro and instructions to give to the user before and after an article (for the Alexa Skill).\n\nSample return value:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\",\n    \"instructions_url\": \"https://scout-streaming-2018.s3.amazonaws.com/94c38b5d-7099-4eb7-aa0e-cc5e76ee2f58.mp3\",\n    \"intro_url\": \"https://scout-streaming-ben.s3.amazonaws.com/3efbb22f-c5cb-419c-8841-816dba15b7b8.mp3\",\n    \"outro_url\": \"https://scout-streaming-ben.s3.amazonaws.com/d0af2f31-1cbf-46cb-956c-1f995c05246b.mp3\",\n    \"offset_ms\": 0\n}```"
           },
           "response": []
         },
