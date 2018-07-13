@@ -18,6 +18,14 @@ const database = new Database();
 const HostnameHelper = require('./HostnameHelper.js');
 const hostnameHelper = new HostnameHelper();
 
+var endInstructionsData = {
+  text:
+    'Your article is finished. ' +
+    'To listen to more articles say "Alexa, tell Scout to get titles"',
+  url: '',
+  date: 0
+};
+
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
@@ -131,7 +139,8 @@ router.post('/article', VerifyToken, async function(req, res) {
     const result = await processArticleRequest(
       req,
       false,
-      req.body.extendedData == true || req.body.extended_data == true
+      req.body.extendedData == true || req.body.extended_data == true,
+      req.body.end_instructions == true
     );
     const astat = await astatHelper.getArticleStatus(
       req.body.userid,
@@ -158,7 +167,8 @@ router.post('/summary', VerifyToken, async function(req, res) {
     const result = await processArticleRequest(
       req,
       true,
-      req.body.extendedData == true || req.body.extended_data == true
+      req.body.extendedData == true || req.body.extended_data == true,
+      req.body.end_instructions == true
     );
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
@@ -201,7 +211,12 @@ function logMetric(cmd, userid, agent) {
   }
 }
 
-async function processArticleRequest(req, summaryOnly, extendedData) {
+async function processArticleRequest(
+  req,
+  summaryOnly,
+  extendedData,
+  endInstructions
+) {
   const getBody = await buildPocketRequestBody(req.body.userid);
   let result = await searchForPocketArticle(
     getBody,
@@ -246,6 +261,25 @@ async function processArticleRequest(req, summaryOnly, extendedData) {
   }
   logger.debug('result.url is: ' + result.url);
 
+  if (endInstructions) {
+    let expireDate = new Date();
+    // Set the expire_date to 30 days ago as S3 deletes expired files
+    expireDate.setDate(expireDate.getDate() - 30);
+    if (new Date(endInstructionsData.date) < expireDate) {
+      if (process.env.META_VOICE) {
+        endInstructionsData.url = await buildAudioFromText(
+          endInstructionsData.text,
+          process.env.META_VOICE
+        );
+      } else {
+        endInstructionsData.url = await buildAudioFromText(
+          endInstructionsData.text
+        );
+      }
+      endInstructionsData.date = Date.now();
+    }
+    result.instructions_url = endInstructionsData.url;
+  }
   // Initially set offset to 0 (overwrite later if necessary)
   result.offset_ms = 0;
 
@@ -603,10 +637,14 @@ async function buildSummaryAudioFromUrl(url) {
   }
 }
 
-async function buildAudioFromText(textString) {
+async function buildAudioFromText(
+  textString,
+  voiceType = process.env.POLLY_VOICE || 'Salli'
+) {
   const cleanText = texttools.cleanText(textString);
   const chunkText = texttools.chunkText(cleanText);
-  return polly_tts.getSpeechSynthUrl(chunkText);
+  logger.debug('chunkText is: ', chunkText.length, chunkText);
+  return polly_tts.getSpeechSynthUrl(chunkText, voiceType);
 }
 
 function findBestScoringTitle(searchPhrase, articleMetadataArray) {

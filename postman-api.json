@@ -1,15 +1,14 @@
 {
   "info": {
+    "_postman_id": "4a92ce1b-f6ec-444f-8501-fbcf28a21dce",
     "name": "Scout - Public",
-    "_postman_id": "269ae63b-33a8-efee-6b13-ad45ccc3dc98",
-    "description": "",
     "schema":
       "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
       "name": "Authentication",
-      "description": "",
+      "description": null,
       "item": [
         {
           "name": "Register API user",
@@ -31,19 +30,16 @@
                 {
                   "key": "name",
                   "value": "user.name",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "email",
                   "value": "this.is@ema.il",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "password",
                   "value": "secretstuff",
-                  "description": "",
                   "type": "text"
                 }
               ]
@@ -82,19 +78,16 @@
                 {
                   "key": "name",
                   "value": "dave",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "email",
                   "value": "dave@thing.com",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "password",
                   "value": "passy",
-                  "description": "",
                   "type": "text"
                 }
               ]
@@ -133,19 +126,16 @@
                 {
                   "key": "name",
                   "value": "dave",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "email",
                   "value": "dave@thing.com",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "password",
                   "value": "passy",
-                  "description": "",
                   "type": "text"
                 }
               ]
@@ -180,19 +170,16 @@
                 {
                   "key": "userid",
                   "value": "user@getpocket.com",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "access_token",
                   "value": "6499b1-7e32b-3473-684c-8cca248",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "",
                   "value": "",
-                  "description": "",
                   "type": "text",
                   "disabled": true
                 }
@@ -212,7 +199,7 @@
     },
     {
       "name": "Pocket Content",
-      "description": "",
+      "description": null,
       "item": [
         {
           "name": "Intent: ScoutTitles",
@@ -234,19 +221,16 @@
                 {
                   "key": "cmd",
                   "value": "ScoutTitles",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "userid",
                   "value": "{{pocket-userid}}",
-                  "description": "",
                   "type": "text"
                 },
                 {
-                  "key": "extendedData",
+                  "key": "extended_data",
                   "value": "1",
-                  "description": "",
                   "type": "text"
                 }
               ]
@@ -257,7 +241,7 @@
               "path": ["command", "intent"]
             },
             "description":
-              "Retrieve a list of the articles which have been saved in the user's Pocket account.\n\nIncluding the optional parameter `extendedData` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nSample return value:\n```\n{\n    \"speech\": \" 1. My Last Day as a Surgeon.  2. Why do we work so hard?.  3. Lump-Sum Investing Is the Best Strategy, Except Now. \",\n    \"articles\": [\n        {\n            \"item_id\": \"1159711105\",\n            \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n            \"title\": \"My Last Day as a Surgeon\",\n            \"author\": \"Paul Kalanithi\",\n            \"lengthMinutes\": 9,\n            \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n            \"publisher\": \"The New Yorker\",\n            \"icon_url\": \"https://www.newyorker.com/favicon.ico\"\n\n        },\n        {\n            \"item_id\": \"1217239342\",\n            \"resolved_url\": \"https://www.1843magazine.com/features/why-do-we-work-so-hard\",\n            \"title\": \"Why do we work so hard?\",\n            \"author\": \"Ryan Avent\",\n            \"lengthMinutes\": 24,\n            \"imageURL\": \"https://1843magazine.static-economist.com/sites/default/files/styles/il_manual_crop_16_9/public/201604_FE_WRK_001-WEB-V2.jpg\",\n            \"publisher\": \"1843\",\n            \"icon_url\": \"https://www.1843magazine.com/favicon.ico\"\n\n        },\n        {\n            \"item_id\": \"2157153239\",\n            \"resolved_url\": \"https://www.bloomberg.com/view/articles/2018-04-18/lump-sum-investing-is-the-best-strategy-except-in-this-market\",\n            \"title\": \"Lump-Sum Investing Is the Best Strategy, Except Now\",\n            \"author\": \"Ben Carlson\",\n            \"lengthMinutes\": 4,\n            \"imageURL\": \"https://assets.bwbx.io/images/users/iqjWHBFdfxIU/iCOArnr48ADY/v0/1200x800.jpg\",\n            \"publisher\": \"Bloomberg\",\n            \"icon_url\": \"https://www.bloomberg.com/favicon.ico\"\n        }\n    ]\n}\n```"
+              "Retrieve a list of the articles which have been saved in the user's Pocket account.\n\nIncluding the optional parameter `extended_data` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nSample return value:\n```\n{\n    \"speech\": \" 1. My Last Day as a Surgeon.  2. Why do we work so hard?.  3. Lump-Sum Investing Is the Best Strategy, Except Now. \",\n    \"articles\": [\n        {\n            \"item_id\": \"1159711105\",\n            \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n            \"title\": \"My Last Day as a Surgeon\",\n            \"author\": \"Paul Kalanithi\",\n            \"lengthMinutes\": 9,\n            \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n            \"publisher\": \"The New Yorker\",\n            \"icon_url\": \"https://www.newyorker.com/favicon.ico\"\n\n        },\n        {\n            \"item_id\": \"1217239342\",\n            \"resolved_url\": \"https://www.1843magazine.com/features/why-do-we-work-so-hard\",\n            \"title\": \"Why do we work so hard?\",\n            \"author\": \"Ryan Avent\",\n            \"lengthMinutes\": 24,\n            \"imageURL\": \"https://1843magazine.static-economist.com/sites/default/files/styles/il_manual_crop_16_9/public/201604_FE_WRK_001-WEB-V2.jpg\",\n            \"publisher\": \"1843\",\n            \"icon_url\": \"https://www.1843magazine.com/favicon.ico\"\n\n        },\n        {\n            \"item_id\": \"2157153239\",\n            \"resolved_url\": \"https://www.bloomberg.com/view/articles/2018-04-18/lump-sum-investing-is-the-best-strategy-except-in-this-market\",\n            \"title\": \"Lump-Sum Investing Is the Best Strategy, Except Now\",\n            \"author\": \"Ben Carlson\",\n            \"lengthMinutes\": 4,\n            \"imageURL\": \"https://assets.bwbx.io/images/users/iqjWHBFdfxIU/iCOArnr48ADY/v0/1200x800.jpg\",\n            \"publisher\": \"Bloomberg\",\n            \"icon_url\": \"https://www.bloomberg.com/favicon.ico\"\n        }\n    ]\n}\n```"
           },
           "response": []
         },
@@ -281,18 +265,27 @@
                 {
                   "key": "cmd",
                   "value": "SearchAndPlayArticle",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "userid",
                   "value": "{{pocket-userid}}",
+                  "type": "text"
+                },
+                {
+                  "key": "search_terms",
+                  "value": "surgeon",
+                  "type": "text"
+                },
+                {
+                  "key": "extended_data",
+                  "value": "1",
                   "description": "",
                   "type": "text"
                 },
                 {
-                  "key": "searchTerms",
-                  "value": "surgeon",
+                  "key": "end_instructions",
+                  "value": "1",
                   "description": "",
                   "type": "text"
                 }
@@ -304,7 +297,7 @@
               "path": ["command", "intent"]
             },
             "description":
-              "Searches the user's saved Pocket articles for one with an article title that matches the `searchTerms`. \n\nIf found, returns the location of an audio file which contains a spoken version of the article.\n\nIncluding the optional parameter `extendedData` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nSample return values:\n\nSuccess:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\"\n    \"offset_ms\": 1000\n}```\n\nFailure:\n```\n{\n    \"speech\": \"Unable to find a matching article. Try another phrase.\"\n}\n```"
+              "Searches the user's saved Pocket articles for one with an article title that matches the `searchTerms`. \n\nIf found, returns the location of an audio file which contains a spoken version of the article.\n\nIncluding the optional parameter `extended_data` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nIncluding the optional parameter `end_instructions` with a value of `1` will also return an URL to an audio file of instructions to give to the user at the end of an article (for the Alexa Skill).\n\nSample return values:\n\nSuccess:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\",\n    \"instructions_url\": \"https://scout-streaming-2018.s3.amazonaws.com/94c38b5d-7099-4eb7-aa0e-cc5e76ee2f58.mp3\",\n    \"offset_ms\": 1000\n}```\n\nFailure:\n```\n{\n    \"speech\": \"Unable to find a matching article. Try another phrase.\"\n}\n```"
           },
           "response": []
         },
@@ -328,23 +321,25 @@
                 {
                   "key": "cmd",
                   "value": "SearchAndSummarizeArticle",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "userid",
                   "value": "{{pocket-userid}}",
-                  "description": "",
                   "type": "text"
                 },
                 {
-                  "key": "searchTerms",
+                  "key": "search_terms",
                   "value": "nuclear",
-                  "description": "",
                   "type": "text"
                 },
                 {
-                  "key": "extendedData",
+                  "key": "extended_data",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "end_instructions",
                   "value": "1",
                   "description": "",
                   "type": "text"
@@ -357,7 +352,7 @@
               "path": ["command", "intent"]
             },
             "description":
-              "Searches the user's saved Pocket articles for one with an article title that matches the `searchTerms`. \n\nIf found, returns the location of an audio file which contains an abridged version of the content at `url`.\n\nIncluding the optional parameter `extendedData` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nSample return values:\n\nSuccess:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\"\n}```\n\nFailure:\n```\n{\n    \"speech\": \"Unable to find a matching article. Try another phrase.\"\n}\n```"
+              "Searches the user's saved Pocket articles for one with an article title that matches the `searchTerms`. \n\nIf found, returns the location of an audio file which contains an abridged version of the content at `url`.\n\nIncluding the optional parameter `extended_data` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nIncluding the optional parameter `end_instructions` with a value of `1` will also return an URL to an audio file of instructions to give to the user at the end of an article (for the Alexa Skill).\n\nSample return values:\n\nSuccess:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\",\n    \"instructions_url\": \"https://scout-streaming-2018.s3.amazonaws.com/94c38b5d-7099-4eb7-aa0e-cc5e76ee2f58.mp3\",\n    \"offset_ms\": 0\n}```\n\nFailure:\n```\n{\n    \"speech\": \"Unable to find a matching article. Try another phrase.\"\n}\n```"
           },
           "response": []
         },
@@ -381,13 +376,11 @@
                 {
                   "key": "cmd",
                   "value": "ScoutMyPocket",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "userid",
                   "value": "{{pocket-userid}}",
-                  "description": "",
                   "type": "text"
                 }
               ]
@@ -422,19 +415,16 @@
                 {
                   "key": "cmd",
                   "value": "Archive",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "userid",
                   "value": "{{pocket-userid}}",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "itemid",
                   "value": "123",
-                  "description": "",
                   "type": "text"
                 }
               ]
@@ -469,17 +459,20 @@
                 {
                   "key": "userid",
                   "value": "{{pocket-userid}}",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "url",
                   "value": "https://news.com/my-article.html",
-                  "description": "",
                   "type": "text"
                 },
                 {
-                  "key": "extendedData",
+                  "key": "extended_data",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "end_instructions",
                   "value": "1",
                   "description": "",
                   "type": "text"
@@ -492,7 +485,7 @@
               "path": ["command", "article"]
             },
             "description":
-              "Returns the location of an audio file which contains a spoken version of the content at `url`.\n\nIf the article at `url` is also present in the user's Pocket account, additional metadata will be provided to describe the content.\n\nIncluding the optional parameter `extendedData` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nSample return value:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\"\n    \"offset_ms\": 1000\n}```"
+              "Returns the location of an audio file which contains a spoken version of the content at `url`.\n\nIf the article at `url` is also present in the user's Pocket account, additional metadata will be provided to describe the content.\n\nIncluding the optional parameter `extended_data` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nIncluding the optional parameter `end_instructions` with a value of `1` will also return an URL to an audio file of instructions to give to the user at the end of an article (for the Alexa Skill).\n\nSample return value:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\",\n    \"instructions_url\": \"https://scout-streaming-2018.s3.amazonaws.com/94c38b5d-7099-4eb7-aa0e-cc5e76ee2f58.mp3\",\n    \"offset_ms\": 1000\n}```"
           },
           "response": []
         },
@@ -516,17 +509,20 @@
                 {
                   "key": "userid",
                   "value": "{{pocket-userid}}",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "url",
                   "value": "https://news.com/my-article.html",
-                  "description": "",
                   "type": "text"
                 },
                 {
-                  "key": "extendedData",
+                  "key": "extended_data",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "end_instructions",
                   "value": "1",
                   "description": "",
                   "type": "text"
@@ -539,7 +535,44 @@
               "path": ["command", "summary"]
             },
             "description":
-              "Returns the location of an audio file which contains an abridged version of the content at `url`.\n\nIf the article at `url` is also present in the user's Pocket account, additional metadata will be provided to describe the content.\n\nIncluding the optional parameter `extendedData` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nSample return value:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\"\n}```"
+              "Returns the location of an audio file which contains an abridged version of the content at `url`.\n\nIf the article at `url` is also present in the user's Pocket account, additional metadata will be provided to describe the content.\n\nIncluding the optional parameter `extended_data` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nIncluding the optional parameter `end_instructions` with a value of `1` will also return an URL to an audio file of instructions to give to the user at the end of an article (for the Alexa Skill).\n\nSample return value:\n```\n{\n    \"item_id\": \"1159711105\",\n    \"sort_id\": 0,\n    \"resolved_url\": \"https://www.newyorker.com/books/page-turner/my-last-day-as-a-surgeon\",\n    \"title\": \"My Last Day as a Surgeon\",\n    \"author\": \"Paul Kalanithi\",\n    \"lengthMinutes\": 9,\n    \"imageURL\": \"https://media.newyorker.com/photos/5909736debe912338a377603/16:9/w_1200,h_630,c_limit/Kalanithi-excerpt-2.jpg\",\n    \"url\": \"https://scout-audio.s3.amazonaws.com/5e82cf95-a6f9-4d41-bf7d-669e66e34974.mp3\",\n    \"instructions_url\": \"https://scout-streaming-2018.s3.amazonaws.com/94c38b5d-7099-4eb7-aa0e-cc5e76ee2f58.mp3\",\n    \"offset_ms\": 0\n}```"
+          },
+          "response": []
+        },
+        {
+          "name": "Command: Search",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded",
+                "disabled": true
+              },
+              {
+                "key": "x-access-token",
+                "value": "{{jwot}}"
+              }
+            ],
+            "body": {},
+            "url": {
+              "raw":
+                "{{hostname}}/command/search?q={{search_term}}&userid={{pocket-userid}}",
+              "host": ["{{hostname}}"],
+              "path": ["command", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "{{search_term}}"
+                },
+                {
+                  "key": "userid",
+                  "value": "{{pocket-userid}}"
+                }
+              ]
+            },
+            "description":
+              "Returns the metadata related to the search query if this one is matching an article title from his Pocket list. \nReturns 404 if no match was found.\n\nIncluding the optional parameter `extended_data` with a value of `1` will also attempt to fetch the publisher of the article (e.g. \"The New Yorker\" instead of \"newyorker.com\") and the URL of the site's favicon. Note that these are not available in all circumstances so test for validity.\n\nSample return value:\n```\n{\n  \"item_id\": \"2232154160\",\n  \"sort_id\": 0,\n  \"resolved_url\":\n    \"https://www.nytimes.com/2018/06/20/technology/personaltech/firefox-chrome-browser-privacy.html\",\n  \"title\": \"Firefox Is Back. It’s Time to Give It a Try.\",\n  \"author\": \"BRIAN X. CHEN\",\n  \"lengthMinutes\": 8,\n  \"length_minutes\": 8,\n  \"imageURL\":\n    \"https://static01.nyt.com/images/2018/06/21/business/21Techfix/merlin_139815324_5d0f3563-0071-4a44-926f-3841b7e7fb44-facebookJumbo.jpg\",\n  \"image_url\":\n    \"https://static01.nyt.com/images/2018/06/21/business/21Techfix/merlin_139815324_5d0f3563-0071-4a44-926f-3841b7e7fb44-facebookJumbo.jpg\"\n}\n```"
           },
           "response": []
         }
@@ -547,7 +580,7 @@
     },
     {
       "name": "Article Status",
-      "description": "",
+      "description": null,
       "item": [
         {
           "name": "Create/Update Status",
@@ -569,19 +602,16 @@
                 {
                   "key": "pocket_user_id",
                   "value": "{{pocket-userid}}",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "article_id",
                   "value": "12345678",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "offset_ms",
                   "value": "987",
-                  "description": "",
                   "type": "text"
                 }
               ]
@@ -616,19 +646,16 @@
                 {
                   "key": "name",
                   "value": "user.name",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "email",
                   "value": "this.is@ema.il",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "password",
                   "value": "secretstuff",
-                  "description": "",
                   "type": "text"
                 }
               ]
@@ -663,19 +690,16 @@
                 {
                   "key": "name",
                   "value": "user.name",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "email",
                   "value": "this.is@ema.il",
-                  "description": "",
                   "type": "text"
                 },
                 {
                   "key": "password",
                   "value": "secretstuff",
-                  "description": "",
                   "type": "text"
                 }
               ]
