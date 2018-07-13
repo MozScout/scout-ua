@@ -53,6 +53,7 @@ describe('CommandController - Endpoints', function() {
         return { action_results: [true], status: 1 };
       });
     nock('https://text.getpocket.com/v3')
+      .persist()
       .post('/text')
       .reply(function() {
         console.log('Fake Pocket API called on /text');
@@ -62,6 +63,7 @@ describe('CommandController - Endpoints', function() {
         ];
       });
     nock('https://api.smmry.com')
+      .persist()
       .get('/')
       .query(true)
       .reply(200, function(uri) {
@@ -312,6 +314,7 @@ describe('CommandController - Endpoints', function() {
     });
     after(function() {
       delete userData.url;
+      delete userData.meta_audio;
     });
     it('Returns data for article: firefox', done => {
       chai
@@ -335,6 +338,31 @@ describe('CommandController - Endpoints', function() {
           );
         });
     });
+
+    it('With meta_audio flag', done => {
+      userData.meta_audio = 1;
+      chai
+        .request(app)
+        .post('/command/article')
+        .set('x-access-token', 'token')
+        .send(userData)
+        .end((err, res) => {
+          console.log(res.body);
+          expect(res).have.status(200);
+          expect(res.body).be.a('object');
+          fs.readFile(
+            MOCK_DATA_PATH + '/ArticleMetaAudio_firefox.json',
+            'utf8',
+            function(err, data) {
+              if (err) {
+                return console.log(err);
+              }
+              expect(res.body).to.deep.equal(JSON.parse(data));
+              done();
+            }
+          );
+        });
+    });
   });
 
   describe('/summary', function() {
@@ -343,6 +371,7 @@ describe('CommandController - Endpoints', function() {
     });
     after(function() {
       delete userData.url;
+      delete userData.meta_audio;
     });
     it('Returns data for article: firefox', done => {
       chai
@@ -355,6 +384,30 @@ describe('CommandController - Endpoints', function() {
           expect(res.body).be.a('object');
           fs.readFile(
             MOCK_DATA_PATH + '/SearchAndPlayArticle_firefox.json',
+            'utf8',
+            function(err, data) {
+              if (err) {
+                return console.log(err);
+              }
+              expect(res.body).to.deep.equal(JSON.parse(data));
+              done();
+            }
+          );
+        });
+    });
+
+    it('With meta_audio flag', done => {
+      userData.meta_audio = 1;
+      chai
+        .request(app)
+        .post('/command/article')
+        .set('x-access-token', 'token')
+        .send(userData)
+        .end((err, res) => {
+          expect(res).have.status(200);
+          expect(res.body).be.a('object');
+          fs.readFile(
+            MOCK_DATA_PATH + '/ArticleMetaAudio_firefox.json',
             'utf8',
             function(err, data) {
               if (err) {
