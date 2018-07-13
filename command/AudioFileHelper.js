@@ -51,6 +51,29 @@ class CommandHelper {
       location
     );
   }
+
+  async getMetaAudioLocation(articleId) {
+    let result = await database.getMetaAudioLocation(articleId);
+
+    if (result) {
+      if (
+        (await this.checkFileExistence(result.intro_location)) &&
+        (await this.checkFileExistence(result.outro_location))
+      ) {
+        return result;
+      }
+    }
+
+    return '';
+  }
+
+  async storeMetaAudioLocation(articleId, introLocation, outroLocation) {
+    return await database.storeMetaAudioLocation(
+      articleId,
+      introLocation,
+      outroLocation
+    );
+  }
 }
 
 module.exports = CommandHelper;

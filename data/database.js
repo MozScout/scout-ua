@@ -1,5 +1,6 @@
 const ScoutUser = require('./models/ScoutUser');
 const AudioFileLocation = require('./models/AudioFileLocation');
+const MetaAudioLocation = require('./models/MetaAudioLocation');
 const Hostname = require('./models/Hostname');
 const logger = require('../logger');
 
@@ -106,6 +107,25 @@ class Database {
 
     await data.save();
     return data;
+  }
+
+  async getMetaAudioLocation(articleId) {
+    logger.info(`getMetaAudioLocation for ${articleId}`);
+    return await MetaAudioLocation.get({ item_id: articleId });
+  }
+
+  async storeMetaAudioLocation(articleId, introLocation, outroLocation) {
+    logger.info(`storeMetaAudioLocation for ${articleId}`);
+    let metaLocation = await MetaAudioLocation.get({ item_id: articleId });
+    if (!metaLocation) {
+      metaLocation = new MetaAudioLocation({
+        item_id: articleId
+      });
+    }
+    metaLocation.intro_location = introLocation;
+    metaLocation.outro_location = outroLocation;
+    metaLocation.date = Date.now();
+    await metaLocation.save();
   }
 }
 

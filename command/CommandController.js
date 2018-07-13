@@ -275,17 +275,16 @@ async function processArticleRequest(
 }
 
 async function generateMetaAudio(data) {
-  let intro;
-  let outro;
+  let metaAudio = await audioHelper.getMetaAudioLocation(data.item_id);
+  let intro = metaAudio.intro_location;
+  let outro = metaAudio.outro_location;
   let voice = process.env.META_VOICE || process.env.POLLY_VOICE || 'Salli';
 
-  if (!intro) {
+  if (!metaAudio) {
     logger.info('Generating intro for item:' + data.item_id);
     let publisherText = data.publisher ? `From ${data.publisher}, ` : ``;
     intro = await buildAudioFromText(`${publisherText}${data.title}`, voice);
-  }
 
-  if (!outro) {
     logger.info('Generating outro for item:' + data.item_id);
     articleOptions.formData = {
       consumer_key: process.env.POCKET_KEY,
@@ -302,6 +301,8 @@ async function generateMetaAudio(data) {
       'Published on ' + publishedDate.toLocaleDateString('en-US', dateOptions);
     let authorString = data.author ? `Written by ${data.author}. ` : '';
     outro = await buildAudioFromText(`${authorString}${dateString}`, voice);
+
+    await audioHelper.storeMetaAudioLocation(data.item_id, intro, outro);
   }
 
   // regenerate end_instructions if file doesn't exist anymore
