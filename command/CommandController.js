@@ -140,7 +140,7 @@ router.post('/article', VerifyToken, async function(req, res) {
       req,
       false,
       req.body.extendedData == true || req.body.extended_data == true,
-      req.body.end_instructions == true
+      req.body.meta_audio == true
     );
     const astat = await astatHelper.getArticleStatus(
       req.body.userid,
@@ -168,7 +168,7 @@ router.post('/summary', VerifyToken, async function(req, res) {
       req,
       true,
       req.body.extendedData == true || req.body.extended_data == true,
-      req.body.end_instructions == true
+      req.body.meta_audio == true
     );
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
@@ -215,13 +215,13 @@ async function processArticleRequest(
   req,
   summaryOnly,
   extendedData,
-  endInstructions
+  metaAudioRequested
 ) {
   const getBody = await buildPocketRequestBody(req.body.userid);
   let result = await searchForPocketArticle(
     getBody,
     req.body.url,
-    extendedData
+    extendedData || metaAudioRequested
   );
 
   let audioUrl;
@@ -261,29 +261,63 @@ async function processArticleRequest(
   }
   logger.debug('result.url is: ' + result.url);
 
-  if (endInstructions) {
-    let expireDate = new Date();
-    // Set the expire_date to 30 days ago as S3 deletes expired files
-    expireDate.setDate(expireDate.getDate() - 30);
-    if (new Date(endInstructionsData.date) < expireDate) {
-      if (process.env.META_VOICE) {
-        endInstructionsData.url = await buildAudioFromText(
-          endInstructionsData.text,
-          process.env.META_VOICE
-        );
-      } else {
-        endInstructionsData.url = await buildAudioFromText(
-          endInstructionsData.text
-        );
-      }
-      endInstructionsData.date = Date.now();
-    }
-    result.instructions_url = endInstructionsData.url;
+  if (metaAudioRequested) {
+    let metaAudio = await generateMetaAudio(result);
+
+    result.instructions_url = metaAudio.instructions_url;
+    result.intro_url = metaAudio.intro_url;
+    result.outro_url = metaAudio.outro_url;
   }
   // Initially set offset to 0 (overwrite later if necessary)
   result.offset_ms = 0;
 
   return result;
+}
+
+async function generateMetaAudio(data) {
+  let intro;
+  let outro;
+  let voice = process.env.META_VOICE || process.env.POLLY_VOICE || 'Salli';
+
+  if (!intro) {
+    logger.info('Generating intro for item:' + data.item_id);
+    let publisherText = data.publisher ? `From ${data.publisher}, ` : ``;
+    intro = await buildAudioFromText(`${publisherText}${data.title}`, voice);
+  }
+
+  if (!outro) {
+    logger.info('Generating outro for item:' + data.item_id);
+    articleOptions.formData = {
+      consumer_key: process.env.POCKET_KEY,
+      url: data.resolved_url,
+      images: '0',
+      videos: '0',
+      refresh: '0',
+      output: 'json'
+    };
+    const article = JSON.parse(await rp(articleOptions));
+    var dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+    let publishedDate = new Date(article.timePublished * 1000);
+    let dateString =
+      'Published on ' + publishedDate.toLocaleDateString('en-US', dateOptions);
+    let authorString = data.author ? `Written by ${data.author}. ` : '';
+    outro = await buildAudioFromText(`${authorString}${dateString}`, voice);
+  }
+
+  // regenerate end_instructions if file doesn't exist anymore
+  if (!await audioHelper.checkFileExistence(endInstructionsData.url)) {
+    endInstructionsData.url = await buildAudioFromText(
+      endInstructionsData.text,
+      voice
+    );
+    endInstructionsData.date = Date.now();
+  }
+
+  return {
+    intro_url: intro,
+    outro_url: outro,
+    instructions_url: endInstructionsData.url
+  };
 }
 
 async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
@@ -618,7 +652,7 @@ async function buildAudioFromUrl(url) {
   logger.info('Getting article from pocket API: ' + url);
   const article = JSON.parse(await rp(articleOptions));
   logger.info('Returned article from pocket API: ' + article.title);
-  return buildAudioFromText(`${article.title}. ${article.article}`);
+  return buildAudioFromText(`${article.article}`);
 }
 
 async function buildSummaryAudioFromUrl(url) {
