@@ -8,6 +8,7 @@ chai.use(chaiHttp);
 const AudioFileHelper = require('../../command/AudioFileHelper');
 const polly_tts = require('../../command/polly_tts');
 const statusHelper = require('../../articlestatus/ArticleStatusHelper.js');
+const HostnameHelper = require('../../command/HostnameHelper.js');
 
 const expect = chai.expect;
 const fs = require('fs');
@@ -77,6 +78,14 @@ describe('CommandController - Endpoints', function() {
       });
 
     sinon.replace(
+      HostnameHelper.prototype,
+      'getHostnameData',
+      sinon.fake(function() {
+        console.log('Calling fake getHostnameData');
+        return { publisher_name: 'publisher', favicon_url: 'favicon' };
+      })
+    );
+    sinon.replace(
       db.prototype,
       'getAccessToken',
       sinon.fake(function() {
@@ -106,6 +115,28 @@ describe('CommandController - Endpoints', function() {
       'storeAudioFileLocation',
       sinon.fake(function() {
         console.log('Calling fake storeAudioFileLocation');
+      })
+    );
+    sinon.replace(
+      AudioFileHelper.prototype,
+      'checkFileExistence',
+      sinon.fake(function(url) {
+        console.log('Calling fake checkFileExistence');
+        return url == 'audio_file_url';
+      })
+    );
+    sinon.replace(
+      AudioFileHelper.prototype,
+      'getMetaAudioLocation',
+      sinon.fake(function() {
+        console.log('Calling fake getMetaAudioLocation');
+      })
+    );
+    sinon.replace(
+      AudioFileHelper.prototype,
+      'storeMetaAudioLocation',
+      sinon.fake(function() {
+        console.log('Calling fake storeMetaAudioLocation');
       })
     );
     sinon.replace(

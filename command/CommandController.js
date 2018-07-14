@@ -276,8 +276,8 @@ async function processArticleRequest(
 
 async function generateMetaAudio(data) {
   let metaAudio = await audioHelper.getMetaAudioLocation(data.item_id);
-  let intro = metaAudio.intro_location;
-  let outro = metaAudio.outro_location;
+  let intro;
+  let outro;
   let voice = process.env.META_VOICE || process.env.POLLY_VOICE || 'Salli';
 
   if (!metaAudio) {
@@ -303,6 +303,9 @@ async function generateMetaAudio(data) {
     outro = await buildAudioFromText(`${authorString}${dateString}`, voice);
 
     await audioHelper.storeMetaAudioLocation(data.item_id, intro, outro);
+  } else {
+    intro = metaAudio.intro_location;
+    outro = metaAudio.outro_location;
   }
 
   // regenerate end_instructions if file doesn't exist anymore
