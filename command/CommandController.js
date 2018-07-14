@@ -484,26 +484,28 @@ async function archiveTitle(userId, itemId, res) {
  * and if found, returns metadata for it. Otherwise undefined.
  */
 async function searchForPocketArticle(getBody, searchTerm, extendedData) {
-  logger.info('Search term is: ' + searchTerm);
-  getBody.search = searchTerm;
-  getOptions.body = JSON.stringify(getBody);
-  const body = await rp(getOptions);
-  const jsonBody = JSON.parse(body);
   let result;
-  if (jsonBody.status == '1') {
-    const keysArr = Object.keys(jsonBody.list);
-    logger.debug('keysarr = ' + keysArr);
-    logger.info('article count: ' + keysArr.length);
-    if (keysArr.length > 0) {
-      result = await getArticleMetadata(
-        jsonBody.list[keysArr[0]],
-        extendedData
+  if (searchTerm) {
+    logger.info('Search term is: ' + searchTerm);
+    getBody.search = searchTerm;
+    getOptions.body = JSON.stringify(getBody);
+    const body = await rp(getOptions);
+    const jsonBody = JSON.parse(body);
+    if (jsonBody.status == '1') {
+      const keysArr = Object.keys(jsonBody.list);
+      logger.debug('keysarr = ' + keysArr);
+      logger.info('article count: ' + keysArr.length);
+      if (keysArr.length > 0) {
+        result = await getArticleMetadata(
+          jsonBody.list[keysArr[0]],
+          extendedData
+        );
+      }
+    } else {
+      logger.warn(
+        `Searching for '${searchTerm}' failed to find a matching article.`
       );
     }
-  } else {
-    logger.warn(
-      `Searching for '${searchTerm}' failed to find a matching article.`
-    );
   }
   return result;
 }

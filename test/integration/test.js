@@ -480,7 +480,7 @@ describe('POST /command/article', function() {
           expect(res.body).have.property('speech');
           expect(Object.keys(res.body)).to.have.lengthOf(1);
           expect(res.body.speech).contain(
-            'There was an error processing the article. StatusCodeError: 500'
+            'There was an error processing the article.'
           );
           done();
         });
@@ -499,8 +499,7 @@ describe('POST /command/article', function() {
           expect(res.body).have.property('speech');
           expect(Object.keys(res.body)).to.have.lengthOf(1);
           expect(res.body.speech).contain(
-            'There was an error processing the article. ' +
-              'TypeError: Cannot read property'
+            'There was an error processing the article.'
           );
           done();
         });
@@ -624,7 +623,7 @@ describe('POST /command/summary', function() {
           expect(res.body).have.property('speech');
           expect(Object.keys(res.body)).to.have.lengthOf(1);
           expect(res.body.speech).contain(
-            'There was an error processing the article. No summary available'
+            'There was an error processing the article.'
           );
           done();
         });
@@ -643,8 +642,7 @@ describe('POST /command/summary', function() {
           expect(res.body).have.property('speech');
           expect(Object.keys(res.body)).to.have.lengthOf(1);
           expect(res.body.speech).contain(
-            'There was an error processing the article. ' +
-              'No summary available'
+            'There was an error processing the article.'
           );
           done();
         });
