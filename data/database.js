@@ -114,15 +114,32 @@ class Database {
     return await MetaAudioLocation.get({ item_id: articleId });
   }
 
-  async storeMetaAudioLocation(articleId, introLocation, outroLocation) {
-    logger.info(`storeMetaAudioLocation for ${articleId}`);
+  async storeIntroLocation(articleId, introLocation, summaryOnly) {
+    logger.info(`storeIntroLocation for ${articleId}`);
     let metaLocation = await MetaAudioLocation.get({ item_id: articleId });
     if (!metaLocation) {
       metaLocation = new MetaAudioLocation({
         item_id: articleId
       });
     }
-    metaLocation.intro_location = introLocation;
+    if (summaryOnly) {
+      metaLocation.intro_summary_location = introLocation;
+    } else {
+      metaLocation.intro_full_location = introLocation;
+    }
+
+    metaLocation.date = Date.now();
+    await metaLocation.save();
+  }
+
+  async storeOutroLocation(articleId, outroLocation) {
+    logger.info(`storeOutroLocation for ${articleId}`);
+    let metaLocation = await MetaAudioLocation.get({ item_id: articleId });
+    if (!metaLocation) {
+      metaLocation = new MetaAudioLocation({
+        item_id: articleId
+      });
+    }
     metaLocation.outro_location = outroLocation;
     metaLocation.date = Date.now();
     await metaLocation.save();

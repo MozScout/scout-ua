@@ -10,7 +10,8 @@ const schema = new dynamoose.Schema({
     type: String,
     hashKey: true
   },
-  intro_location: String,
+  intro_full_location: String,
+  intro_summary_location: String,
   outro_location: String,
   date: Date
 });

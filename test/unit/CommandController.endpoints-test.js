@@ -134,9 +134,16 @@ describe('CommandController - Endpoints', function() {
     );
     sinon.replace(
       AudioFileHelper.prototype,
-      'storeMetaAudioLocation',
+      'storeOutroLocation',
       sinon.fake(function() {
-        console.log('Calling fake storeMetaAudioLocation');
+        console.log('Calling fake storeOutroLocation');
+      })
+    );
+    sinon.replace(
+      AudioFileHelper.prototype,
+      'storeIntroLocation',
+      sinon.fake(function() {
+        console.log('Calling fake storeIntroLocation');
       })
     );
     sinon.replace(

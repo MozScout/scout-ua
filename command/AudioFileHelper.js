@@ -53,26 +53,19 @@ class CommandHelper {
   }
 
   async getMetaAudioLocation(articleId) {
-    let result = await database.getMetaAudioLocation(articleId);
-
-    if (result) {
-      if (
-        (await this.checkFileExistence(result.intro_location)) &&
-        (await this.checkFileExistence(result.outro_location))
-      ) {
-        return result;
-      }
-    }
-
-    return '';
+    return await database.getMetaAudioLocation(articleId);
   }
 
-  async storeMetaAudioLocation(articleId, introLocation, outroLocation) {
-    return await database.storeMetaAudioLocation(
+  async storeIntroLocation(articleId, introLocation, summaryOnly) {
+    return await database.storeIntroLocation(
       articleId,
       introLocation,
-      outroLocation
+      summaryOnly
     );
+  }
+
+  async storeOutroLocation(articleId, outroLocation) {
+    return await database.storeOutroLocation(articleId, outroLocation);
   }
 }
 

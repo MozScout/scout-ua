@@ -262,7 +262,7 @@ async function processArticleRequest(
   logger.debug('result.url is: ' + result.url);
 
   if (metaAudioRequested) {
-    let metaAudio = await generateMetaAudio(result);
+    let metaAudio = await generateMetaAudio(result, summaryOnly);
 
     result.instructions_url = metaAudio.instructions_url;
     result.intro_url = metaAudio.intro_url;
@@ -274,17 +274,46 @@ async function processArticleRequest(
   return result;
 }
 
-async function generateMetaAudio(data) {
+async function generateMetaAudio(data, summaryOnly) {
   let metaAudio = await audioHelper.getMetaAudioLocation(data.item_id);
   let intro;
   let outro;
   let voice = process.env.META_VOICE || process.env.POLLY_VOICE || 'Salli';
 
-  if (!metaAudio) {
-    logger.info('Generating intro for item:' + data.item_id);
-    let publisherText = data.publisher ? `From ${data.publisher}, ` : ``;
-    intro = await buildAudioFromText(`${publisherText}${data.title}`, voice);
+  let introFullText = data.publisher
+    ? `From ${data.publisher}, ${data.title}`
+    : `${data.title}`;
+  let introSummaryText = data.publisher
+    ? `A summary of ${data.publisher}, ${data.title}`
+    : `A summary of ${data.title}`;
 
+  if (
+    summaryOnly &&
+    metaAudio &&
+    (await audioHelper.checkFileExistence(metaAudio.intro_summary_location))
+  ) {
+    intro = metaAudio.intro_summary_location;
+  } else if (summaryOnly) {
+    logger.info('Generating summary intro for item:' + data.item_id);
+    intro = await buildAudioFromText(`${introSummaryText}`, voice);
+    await audioHelper.storeIntroLocation(data.item_id, intro, summaryOnly);
+  } else if (
+    metaAudio &&
+    (await audioHelper.checkFileExistence(metaAudio.intro_full_location))
+  ) {
+    intro = metaAudio.intro_full_location;
+  } else {
+    logger.info('Generating full article intro for item:' + data.item_id);
+    intro = await buildAudioFromText(`${introFullText}`, voice);
+    await audioHelper.storeIntroLocation(data.item_id, intro, summaryOnly);
+  }
+
+  if (
+    metaAudio &&
+    (await audioHelper.checkFileExistence(metaAudio.outro_location))
+  ) {
+    outro = metaAudio.outro_location;
+  } else {
     logger.info('Generating outro for item:' + data.item_id);
     articleOptions.formData = {
       consumer_key: process.env.POCKET_KEY,
@@ -302,10 +331,7 @@ async function generateMetaAudio(data) {
     let authorString = data.author ? `Written by ${data.author}. ` : '';
     outro = await buildAudioFromText(`${authorString}${dateString}`, voice);
 
-    await audioHelper.storeMetaAudioLocation(data.item_id, intro, outro);
-  } else {
-    intro = metaAudio.intro_location;
-    outro = metaAudio.outro_location;
+    await audioHelper.storeOutroLocation(data.item_id, outro);
   }
 
   // regenerate end_instructions if file doesn't exist anymore
