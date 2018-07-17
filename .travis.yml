@@ -1,4 +1,5 @@
 language: node_js
 node_js:
   - "8.10"
-script: "npm install && npm run lint && npm run travis-unit"
+before_script: echo $TEST_API_URL && if [ $TRAVIS_PULL_REQUEST != "false" ]; then export TEST_API_URL="https://scout-stage-pr-$TRAVIS_PULL_REQUEST.herokuapp.com"; fi && echo $TEST_API_URL
+script: npm install && npm run lint && npm run travis-unit && if [ $TEST_API_ACCESS_TOKEN ]; then npm run integ-test; fi
