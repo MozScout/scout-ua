@@ -130,6 +130,11 @@ router.post('/intent', VerifyToken, async function(req, res) {
   }
 });
 
+// Request body parameters:
+// url: article url
+// userid
+// extended_data: 1 (optional) to have publisher name and favicon
+// meta_audio: 1 (optional) to have intro/outro/instructions audiofiles
 router.post('/article', VerifyToken, async function(req, res) {
   logger.info(`POST /article: ${req.body.url}`);
   logMetric('article', req.body.userid, req.get('User-Agent'));
@@ -140,7 +145,7 @@ router.post('/article', VerifyToken, async function(req, res) {
       req,
       false,
       req.body.extendedData == true || req.body.extended_data == true,
-      req.body.meta_audio == true
+      req.body.meta_audio == true // returns false is meta_audio is not defined
     );
     const astat = await astatHelper.getArticleStatus(
       req.body.userid,
@@ -158,6 +163,11 @@ router.post('/article', VerifyToken, async function(req, res) {
   }
 });
 
+// Request body parameters:
+// url: article url
+// userid
+// extended_data: 1 (optional) to have publisher name and favicon
+// meta_audio: 1 (optional) to have intro/outro/instructions audiofiles
 router.post('/summary', VerifyToken, async function(req, res) {
   logger.info(`POST /summary: ${req.body.url}`);
   logMetric('summary', req.body.userid, req.get('User-Agent'));
@@ -222,6 +232,7 @@ async function processArticleRequest(
     getBody,
     req.body.url,
     extendedData || metaAudioRequested
+    // metaAudio requires to have the publisher name
   );
 
   let audioUrl;
@@ -274,7 +285,14 @@ async function processArticleRequest(
   return result;
 }
 
+// generateMetaAudio returns urls to intro/outro/instructions audio files.
+// It tries to fetch them from the database
+// It regenerates them if they are in db but they were deleted from S3
+// or generates them if they are not in db
+// Summary Intros, Full article intros, and outros are stored in Dynamo
 async function generateMetaAudio(data, summaryOnly) {
+  // MetaAudio is an audiofile related to metadata
+  // (summary intro, full article intro or outro)
   let metaAudio = await audioHelper.getMetaAudioLocation(data.item_id);
   let intro;
   let outro;
@@ -287,6 +305,13 @@ async function generateMetaAudio(data, summaryOnly) {
     ? `A summary of ${data.publisher}, ${data.title}`
     : `A summary of ${data.title}`;
 
+  // 4 cases depending on what we want:
+  // - we want a summary intro:
+  //   (1) and the file is in db and exists: return it
+  //   (2) and the file is not in db or doesn't exist anymore: generate/store it
+  // - we want a full article intro:
+  //   (3) and the file is in db and exists: return it
+  //   (4) and the file is not in db or doesn't exist anymore: generate/store it
   if (
     summaryOnly &&
     metaAudio &&
@@ -308,6 +333,7 @@ async function generateMetaAudio(data, summaryOnly) {
     await audioHelper.storeIntroLocation(data.item_id, intro, summaryOnly);
   }
 
+  // We do the same thing for the outro
   if (
     metaAudio &&
     (await audioHelper.checkFileExistence(metaAudio.outro_location))
