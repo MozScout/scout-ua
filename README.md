@@ -60,7 +60,7 @@ You need the following environment variables:
 # Deploy locally
 
 * |npm install| -- installs the dependencies.
-* |npm test| -- runs the tests. (Right now just the linter)
+* |npm test| -- runs the tests.
 * |npm start| -- starts the server locally.
 
 # Deploy on Heroku
@@ -72,3 +72,9 @@ This can also be run on Heroku. Here are the instructions for running with Herok
 * |heroku buildpacks:add --index 1 https://github.com/shunjikonishi/heroku-buildpack-ffmpeg.git|
 * |git push heroku master| or |git push heroku <your branch>:master|
 * |heroku logs --tail|
+
+# Tests
+
+`npm test` runs the tests.
+
+For the integration tests, you need to add the `TEST_API_URL` and the `TEST_API_ACCESS_TOKEN` (JWT token) environment variables.

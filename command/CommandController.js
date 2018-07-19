@@ -147,12 +147,14 @@ router.post('/article', VerifyToken, async function(req, res) {
       req.body.extendedData == true || req.body.extended_data == true,
       req.body.meta_audio == true // returns false is meta_audio is not defined
     );
-    const astat = await astatHelper.getArticleStatus(
-      req.body.userid,
-      result.item_id
-    );
-    if (astat) {
-      result.offset_ms = astat.offset_ms;
+    if (result.item_id) {
+      const astat = await astatHelper.getArticleStatus(
+        req.body.userid,
+        result.item_id
+      );
+      if (astat) {
+        result.offset_ms = astat.offset_ms;
+      }
     }
     logger.info('POST article resp: ' + JSON.stringify(result));
     res.status(200).send(JSON.stringify(result));
@@ -606,26 +608,28 @@ async function archiveTitle(userId, itemId, res) {
  * and if found, returns metadata for it. Otherwise undefined.
  */
 async function searchForPocketArticle(getBody, searchTerm, extendedData) {
-  logger.info('Search term is: ' + searchTerm);
-  getBody.search = searchTerm;
-  getOptions.body = JSON.stringify(getBody);
-  const body = await rp(getOptions);
-  const jsonBody = JSON.parse(body);
   let result;
-  if (jsonBody.status == '1') {
-    const keysArr = Object.keys(jsonBody.list);
-    logger.debug('keysarr = ' + keysArr);
-    logger.info('article count: ' + keysArr.length);
-    if (keysArr.length > 0) {
-      result = await getArticleMetadata(
-        jsonBody.list[keysArr[0]],
-        extendedData
+  if (searchTerm) {
+    logger.info('Search term is: ' + searchTerm);
+    getBody.search = searchTerm;
+    getOptions.body = JSON.stringify(getBody);
+    const body = await rp(getOptions);
+    const jsonBody = JSON.parse(body);
+    if (jsonBody.status == '1') {
+      const keysArr = Object.keys(jsonBody.list);
+      logger.debug('keysarr = ' + keysArr);
+      logger.info('article count: ' + keysArr.length);
+      if (keysArr.length > 0) {
+        result = await getArticleMetadata(
+          jsonBody.list[keysArr[0]],
+          extendedData
+        );
+      }
+    } else {
+      logger.warn(
+        `Searching for '${searchTerm}' failed to find a matching article.`
       );
     }
-  } else {
-    logger.warn(
-      `Searching for '${searchTerm}' failed to find a matching article.`
-    );
   }
   return result;
 }
