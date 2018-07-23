@@ -80,7 +80,7 @@ async function buildPocketRequestBody(pocketUserId) {
     access_token: pocketToken,
     detailType: 'complete',
     sort: 'newest',
-    count: 50
+    count: 40
   };
 }
 
