@@ -189,9 +189,10 @@ router.post('/article2', VerifyToken, async function(req, res) {
           false,
           audioUrl
         );
-        result.url = audioUrl;
       }
     }
+    result.url = audioUrl;
+
     logger.info('POST article resp: ' + JSON.stringify(result));
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
