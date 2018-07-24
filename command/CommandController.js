@@ -168,7 +168,10 @@ router.post('/article2', VerifyToken, async function(req, res) {
     let audioUrl;
     if (req.body.article_id) {
       // we have a pocket item. do we already have the audio file?
-      audioUrl = await audioHelper.getAudioFileLocation(article, false);
+      audioUrl = await audioHelper.getAudioFileLocation(
+        req.body.article_id,
+        false
+      );
     } else {
       logger.info('error:  missing article_id');
     }
