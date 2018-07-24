@@ -160,9 +160,9 @@ router.post('/article', VerifyToken, async function(req, res) {
   }
 });
 
-router.post('/article2', VerifyToken, async function(req, res) {
-  logger.info(`POST /article2: ${req.body.url} ${req.body.article_id}`);
-  logMetric('article2', req.body.url, req.get('User-Agent'));
+router.post('/articleservice', VerifyToken, async function(req, res) {
+  logger.info(`POST /articleservice: ${req.body.url} ${req.body.article_id}`);
+  logMetric('articleservice', req.body.url, req.get('User-Agent'));
 
   try {
     let audioUrl;
@@ -196,7 +196,7 @@ router.post('/article2', VerifyToken, async function(req, res) {
     logger.info('POST article resp: ' + JSON.stringify(result));
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
-    logger.error('Error in /article2 ' + reason);
+    logger.error('Error in /articleservice ' + reason);
     const errSpeech = `There was an error processing the article. ${reason}`;
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
