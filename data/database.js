@@ -1,7 +1,7 @@
 const ScoutUser = require('./models/ScoutUser');
 const AudioFiles = require('./models/AudioFiles');
 const Hostname = require('./models/Hostname');
-const ApiUser = require('./models/ApiUser');
+const ApiUser = require('./models/APIUser');
 const logger = require('../logger');
 const uuidgen = require('node-uuid-generator');
 

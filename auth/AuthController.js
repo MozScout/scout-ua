@@ -13,7 +13,7 @@ const database = new Database();
 
 router.post('/token', async function(req, res) {
   try {
-    logger.info(`/register ${req.body.userid}`);
+    logger.info(`/token ${req.body.userid}`);
     // Lookup the API user info
     let apiUser = await database.getApiUser(req.body.userid);
     if (!apiUser) {
