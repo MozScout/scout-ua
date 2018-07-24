@@ -176,7 +176,7 @@ router.post('/article2', VerifyToken, async function(req, res) {
       logger.info('error:  missing article_id');
     }
 
-    let result;
+    let result = {};
     // if we didn't find it in the DB, create the audio file
     if (!audioUrl) {
       logger.info('Did not find the audio URL in DB: ' + req.body.article_id);
