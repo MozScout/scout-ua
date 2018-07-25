@@ -337,6 +337,38 @@ describe('CommandController - Endpoints', function() {
     });
   });
 
+  describe('/articleservice', function() {
+    before(function() {
+      userData.url = FIREFOX_ARTICLE_URL;
+      userData.article_id = 1234;
+    });
+    after(function() {
+      delete userData.url;
+    });
+    it('Returns data for article: firefox', done => {
+      chai
+        .request(app)
+        .post('/command/articleservice')
+        .set('x-access-token', 'token')
+        .send(userData)
+        .end((err, res) => {
+          expect(res).have.status(200);
+          expect(res.body).be.a('object');
+          fs.readFile(
+            MOCK_DATA_PATH + '/SearchAndPlayArticle_firefox.json',
+            'utf8',
+            function(err, data) {
+              if (err) {
+                return console.log(err);
+              }
+              expect(res.body).to.deep.equal(JSON.parse(data));
+              done();
+            }
+          );
+        });
+    });
+  });
+
   describe('/summary', function() {
     before(function() {
       userData.url = FIREFOX_ARTICLE_URL;
