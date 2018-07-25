@@ -652,7 +652,7 @@ async function buildAudioFromText(
   if (process.env.SYNTHESIS_PROVIDER == 'polly') {
     return polly_tts.getSpeechSynthUrl(chunkText, voiceType);
   } else {
-    return voicery_tts.getSpeechSynthUrl(chunkText, voiceType);
+    return voicery_tts.getSpeechSynthUrl(chunkText);
   }
 }
 

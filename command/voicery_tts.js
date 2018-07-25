@@ -4,7 +4,6 @@ var uuidgen = require('node-uuid-generator');
 var audioconcat = require('audioconcat');
 var glob = require('glob');
 const logger = require('../logger');
-const rp = require('request-promise');
 const request = require('request');
 
 const voiceryOpts = {
@@ -18,7 +17,7 @@ const voiceryOpts = {
 };
 
 var voicery_tts = {
-  getVoiceryChunk: function(text, filenameIndex, audio_file, voiceType) {
+  getVoiceryChunk: function(text, filenameIndex, audio_file) {
     return new Promise(function(resolve, reject) {
       let body = {
         text: text,
@@ -75,7 +74,7 @@ var voicery_tts = {
       Promise.all(promArray)
         .then(function(values) {
           logger.debug('resolved the big promise array');
-          return polly_tts.concatAudio(values, audio_file);
+          return voicery_tts.concatAudio(values, audio_file);
         })
         .then(function(newAudioFile) {
           logger.debug('NewAudioFil is: ' + newAudioFile);
@@ -109,7 +108,7 @@ var voicery_tts = {
               // Return the URL of the Mp3 in the S3 bucket.
               resolve(data.Location);
               // Remove the files locally.
-              polly_tts.deleteLocalFiles(audio_file, function(err) {
+              voicery_tts.deleteLocalFiles(audio_file, function(err) {
                 if (err) {
                   logger.error('Error removing files ' + err);
                 } else {
