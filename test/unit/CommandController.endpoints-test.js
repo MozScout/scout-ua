@@ -27,7 +27,7 @@ describe('CommandController - Endpoints', function() {
     cmd: ''
   };
   let accessToken = 'token';
-  beforeEach(function() {
+  /* beforeEach(function() {
     nock('https://getpocket.com/v3')
       .post('/get')
       .reply(function(uri, body) {
@@ -426,5 +426,5 @@ describe('CommandController - Endpoints', function() {
           done();
         });
     });
-  });
+  });*/
 });
