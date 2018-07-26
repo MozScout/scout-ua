@@ -5,10 +5,8 @@
   "scripts": {
     "start": "node ./bin/www",
     "test": "npm run lint && npm run unit-test && npm run integ-test",
-    "unit-test":
-      "nyc --reporter=text mocha test/unit && nyc report --reporter=html",
-    "travis-unit":
-      "nyc mocha test/unit && nyc report --reporter=text-lcov | coveralls",
+    "unit-test": "nyc --reporter=text mocha test/unit && nyc report --reporter=html",
+    "travis-unit": "nyc mocha test/unit && nyc report --reporter=text-lcov | coveralls",
     "lint": "eslint .",
     "integ-test": "mocha ./test/integration"
   },
@@ -54,8 +52,13 @@
   },
   "jest": {
     "coverageDirectory": "./coverage/",
-    "moduleFileExtensions": ["js", "json"],
-    "testMatch": ["**/test/**/*-test.(js)"],
+    "moduleFileExtensions": [
+      "js",
+      "json"
+    ],
+    "testMatch": [
+      "**/test/**/*-test.(js)"
+    ],
     "mapCoverage": true,
     "setupTestFrameworkScriptFile": "<rootDir>/test/common.js",
     "testEnvironment": "node"

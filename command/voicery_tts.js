@@ -33,9 +33,12 @@ var voicery_tts = {
           logger.info('Error:' + err);
           reject(err);
         })
+        .on('end', function() {
+          logger.debug('Done with chunk');
+          resolve(audioFile);
+        })
         .pipe(fs.createWriteStream(audioFile));
       logger.debug('Wrote chunk: ' + filenameIndex);
-      resolve(audioFile);
     });
   },
 
