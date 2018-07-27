@@ -356,6 +356,7 @@ describe('CommandController - Endpoints', function() {
           expect(res.body).be.a('object');
           expect(res.body.url).be.equal('audio_file_url');
         });
+      done();
     });
   });
 

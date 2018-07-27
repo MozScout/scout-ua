@@ -528,6 +528,7 @@ describe('POST /command/articleservice', function() {
           expect(res.body).be.a('object');
           expect(res.body).have.property('url');
         });
+      done();
     });
   });
   /*describe('Errors', function() {
