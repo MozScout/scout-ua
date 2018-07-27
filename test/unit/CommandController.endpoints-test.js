@@ -345,7 +345,7 @@ describe('CommandController - Endpoints', function() {
     after(function() {
       delete userData.url;
     });
-    it('Returns data for article: firefox', done => {
+    it('should return a url of the audio file', done => {
       chai
         .request(app)
         .post('/command/articleservice')
@@ -354,17 +354,7 @@ describe('CommandController - Endpoints', function() {
         .end((err, res) => {
           expect(res).have.status(200);
           expect(res.body).be.a('object');
-          fs.readFile(
-            MOCK_DATA_PATH + '/SearchAndPlayArticle_firefox.json',
-            'utf8',
-            function(err, data) {
-              if (err) {
-                return console.log(err);
-              }
-              expect(res.body).to.deep.equal(JSON.parse(data));
-              done();
-            }
-          );
+          expect(res.body.url).be.equal('audio_file_url');
         });
     });
   });
