@@ -160,6 +160,49 @@ router.post('/article', VerifyToken, async function(req, res) {
   }
 });
 
+router.post('/articleservice', VerifyToken, async function(req, res) {
+  logger.info(`POST /articleservice: ${req.body.url} ${req.body.article_id}`);
+  logMetric('articleservice', req.body.url, req.get('User-Agent'));
+  res.setHeader('Content-Type', 'application/json');
+
+  try {
+    let audioUrl;
+    if (req.body.article_id) {
+      // we have a pocket item. do we already have the audio file?
+      audioUrl = await audioHelper.getAudioFileLocation(
+        req.body.article_id,
+        false
+      );
+    } else {
+      logger.info('error:  missing article_id');
+    }
+
+    let result = {};
+    // if we didn't find it in the DB, create the audio file
+    if (!audioUrl) {
+      logger.info('Did not find the audio URL in DB: ' + req.body.article_id);
+      audioUrl = await buildAudioFromUrl(req.body.url);
+
+      if (audioUrl) {
+        logger.info('built audio');
+        await audioHelper.storeAudioFileLocation(
+          req.body.article_id,
+          false,
+          audioUrl
+        );
+      }
+    }
+    result.url = audioUrl;
+
+    logger.info('POST article resp: ' + JSON.stringify(result));
+    res.status(200).send(JSON.stringify(result));
+  } catch (reason) {
+    logger.error('Error in /articleservice ' + reason);
+    const errSpeech = `There was an error processing the article. ${reason}`;
+    res.status(404).send(JSON.stringify({ speech: errSpeech }));
+  }
+});
+
 router.post('/summary', VerifyToken, async function(req, res) {
   logger.info(`POST /summary: ${req.body.url}`);
   logMetric('summary', req.body.userid, req.get('User-Agent'));
