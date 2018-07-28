@@ -163,12 +163,12 @@ router.post('/article', VerifyToken, async function(req, res) {
 router.post('/articleservice', VerifyToken, async function(req, res) {
   logger.info(`POST /articleservice: ${req.body.url} ${req.body.article_id}`);
   logMetric('articleservice', req.body.url, req.get('User-Agent'));
+  res.setHeader('Content-Type', 'application/json');
 
   try {
     let audioUrl;
     if (req.body.article_id) {
       // we have a pocket item. do we already have the audio file?
-      console.log('BEFORE GET AUDIOFILELOCATION');
       audioUrl = await audioHelper.getAudioFileLocation(
         req.body.article_id,
         false
@@ -183,7 +183,6 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       logger.info('Did not find the audio URL in DB: ' + req.body.article_id);
       audioUrl = await buildAudioFromUrl(req.body.url);
 
-      console.log('after  buildAudioFromUrl');
       if (audioUrl) {
         logger.info('built audio');
         await audioHelper.storeAudioFileLocation(
@@ -196,7 +195,6 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
     result.url = audioUrl;
 
     logger.info('POST article resp: ' + JSON.stringify(result));
-    res.setHeader('Content-Type', 'application/json');
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
     logger.error('Error in /articleservice ' + reason);

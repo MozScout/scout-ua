@@ -531,7 +531,7 @@ describe('POST /command/articleservice', function() {
       done();
     });
   });
-  /*describe('Errors', function() {
+  describe('Errors', function() {
     it('should return 404 if no article_id', done => {
       data.url = constants.PIZZA_URL;
       chai
@@ -549,26 +549,7 @@ describe('POST /command/articleservice', function() {
           done();
         });
     });
-
-    it('should ', done => {
-      delete data.url;
-      chai
-        .request(API_URL)
-        .post('/command/article')
-        .set('x-access-token', accessToken)
-        .send(data)
-        .end((err, res) => {
-          expect(res).have.status(404);
-          expect(res.body).be.a('object');
-          expect(res.body).have.property('speech');
-          expect(Object.keys(res.body)).to.have.lengthOf(1);
-          expect(res.body.speech).contain(
-            'There was an error processing the article.'
-          );
-          done();
-        });
-    });
-  });*/
+  });
 });
 
 describe('POST /command/summary', function() {
