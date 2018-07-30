@@ -75,6 +75,12 @@ This can also be run on Heroku. Here are the instructions for running with Herok
 
 # Tests
 
-`npm test` runs the tests.
+`npm test` runs the tests (lint, unit tests, integration tests).
 
-For the integration tests, you need to add the `TEST_API_URL` and the `TEST_API_ACCESS_TOKEN` (JWT token) environment variables.
+To run lint individually: `npm run lint`.
+
+To run unit tests individually: `npm run unit-test`
+
+For the integration tests, you need to add the `TEST_API_URL` and the `TEST_API_ACCESS_TOKEN` (JWT token) environment variables. To run them: `npm run integ-test`.
+
+Travis runs automatically lint and unit-test. Integration tests need to be run manually.
