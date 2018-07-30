@@ -30,7 +30,8 @@ const constants = {
     'https://www.technologyreview.com/s/611424' +
     '/this-is-how-the-robot-uprising-finally-begins/',
   ALEXA_URL:
-    'https://www.wired.com/story/how-amazon-taught-alexa-to-speak-french/'
+    'https://www.wired.com/story/how-amazon-taught-alexa-to-speak-french/',
+  ARTICLEID: 1234
 };
 
 describe('POST /command/intent', function() {
@@ -498,6 +499,50 @@ describe('POST /command/article', function() {
           expect(res.body).be.a('object');
           expect(res.body).have.property('speech');
           expect(Object.keys(res.body)).to.have.lengthOf(1);
+          expect(res.body.speech).contain(
+            'There was an error processing the article.'
+          );
+          done();
+        });
+    });
+  });
+});
+
+describe('POST /command/articleservice', function() {
+  this.timeout(120 * 1000);
+
+  let data = {};
+  after(function() {});
+
+  describe('articleservice', function() {
+    it('should return a url of a synthesized file', done => {
+      data.url = constants.PIZZA_URL;
+      data.article_id = constants.ARTICLEID;
+      chai
+        .request(API_URL)
+        .post('/command/articleservice')
+        .set('x-access-token', accessToken)
+        .send(data)
+        .end((err, res) => {
+          expect(res).have.status(200);
+          expect(res.body).be.a('object');
+          expect(res.body).have.property('url');
+        });
+      done();
+    });
+  });
+  describe('Errors', function() {
+    it('should return 404 if no article_id', done => {
+      data.url = constants.PIZZA_URL;
+      chai
+        .request(API_URL)
+        .post('/command/articleservice')
+        .set('x-access-token', accessToken)
+        .send(data)
+        .end((err, res) => {
+          expect(res).have.status(404);
+          expect(res.body).be.a('object');
+          expect(res.body).have.property('speech');
           expect(res.body.speech).contain(
             'There was an error processing the article.'
           );
