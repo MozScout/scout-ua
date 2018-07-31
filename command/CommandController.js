@@ -5,6 +5,7 @@ const rp = require('request-promise');
 const VerifyToken = require('../VerifyToken');
 const texttools = require('./texttools');
 const polly_tts = require('./polly_tts');
+const voicery_tts = require('./voicery_tts');
 const AudioFileHelper = require('./AudioFileHelper');
 const audioHelper = new AudioFileHelper();
 const Database = require('../data/database');
@@ -691,7 +692,11 @@ async function buildAudioFromText(
   const cleanText = texttools.cleanText(textString);
   const chunkText = texttools.chunkText(cleanText);
   logger.debug('chunkText is: ', chunkText.length, chunkText);
-  return polly_tts.getSpeechSynthUrl(chunkText, voiceType);
+  if (process.env.SYNTHESIS_PROVIDER == 'polly') {
+    return polly_tts.getSpeechSynthUrl(chunkText, voiceType);
+  } else {
+    return voicery_tts.getSpeechSynthUrl(chunkText);
+  }
 }
 
 function findBestScoringTitle(searchPhrase, articleMetadataArray) {

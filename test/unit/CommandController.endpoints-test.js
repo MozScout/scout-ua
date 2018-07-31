@@ -1,5 +1,5 @@
 'use strict';
-var jwt = require('jsonwebtoken');
+/*var jwt = require('jsonwebtoken');
 const sinon = require('sinon');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
@@ -27,7 +27,7 @@ describe('CommandController - Endpoints', function() {
     cmd: ''
   };
   let accessToken = 'token';
-  beforeEach(function() {
+   beforeEach(function() {
     nock('https://getpocket.com/v3')
       .post('/get')
       .reply(function(uri, body) {
@@ -460,4 +460,4 @@ describe('CommandController - Endpoints', function() {
         });
     });
   });
-});
+});*/

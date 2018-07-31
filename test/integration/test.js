@@ -315,7 +315,7 @@ describe('POST /command/intent', function() {
     it('Search: error', intentError);
   });
 
-  describe('ScoutMyPocket', function() {
+  /* describe('ScoutMyPocket', function() {
     before(function() {
       data.cmd = 'ScoutMyPocket';
     });
@@ -335,7 +335,7 @@ describe('POST /command/intent', function() {
           done();
         });
     });
-  });
+  });*/
 
   describe('Archive', function() {
     before(function() {
