@@ -579,13 +579,17 @@ async function searchForPocketArticle(getBody, searchTerm, extendedData) {
       logger.info('article count: ' + keysArr.length);
       if (keysArr.length > 0) {
         let isArticleId = 0;
+
+        // store the id for first object that is an article
         while (
           isArticleId < keysArr.length &&
           jsonBody.list[keysArr[isArticleId]].is_article != '1'
         ) {
           isArticleId++;
         }
+
         if (isArticleId < keysArr.length) {
+          // if we have a result
           result = await getArticleMetadata(
             jsonBody.list[keysArr[isArticleId]],
             extendedData
