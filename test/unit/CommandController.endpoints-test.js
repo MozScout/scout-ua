@@ -162,11 +162,11 @@ describe('CommandController - Endpoints', function() {
     describe('SearchAndPlayArticle', function() {
       before(function() {
         userData.cmd = 'SearchAndPlayArticle';
-        userData.searchTerms = 'firefox';
+        userData.search_terms = 'firefox';
       });
       after(function() {
         userData.cmd = '';
-        delete userData.searchTerms;
+        delete userData.search_terms;
       });
       it('Return data when search term: firefox', done => {
         chai
@@ -192,7 +192,7 @@ describe('CommandController - Endpoints', function() {
       });
 
       it('Returns error when search term not found', done => {
-        userData.searchTerms = 'undefined';
+        userData.search_terms = 'undefined';
         chai
           .request(app)
           .post('/command/intent')
@@ -212,11 +212,11 @@ describe('CommandController - Endpoints', function() {
     describe('SearchAndSummarizeArticle', function() {
       before(function() {
         userData.cmd = 'SearchAndSummarizeArticle';
-        userData.searchTerms = 'firefox';
+        userData.search_terms = 'firefox';
       });
       after(function() {
         userData.cmd = '';
-        delete userData.searchTerms;
+        delete userData.search_terms;
       });
       it('Return data when search term: firefox', done => {
         chai
@@ -242,7 +242,7 @@ describe('CommandController - Endpoints', function() {
       });
 
       it('Returns error when search term not found', done => {
-        userData.searchTerms = 'undefined';
+        userData.search_terms = 'undefined';
         chai
           .request(app)
           .post('/command/intent')

@@ -8,10 +8,7 @@
         "https://www.nytimes.com/2018/06/20/technology/personaltech/firefox-chrome-browser-privacy.html",
       "title": "Firefox Is Back. It’s Time to Give It a Try.",
       "author": "BRIAN X. CHEN",
-      "lengthMinutes": 8,
       "length_minutes": 8,
-      "imageURL":
-        "https://static01.nyt.com/images/2018/06/21/business/21Techfix/merlin_139815324_5d0f3563-0071-4a44-926f-3841b7e7fb44-facebookJumbo.jpg",
       "image_url":
         "https://static01.nyt.com/images/2018/06/21/business/21Techfix/merlin_139815324_5d0f3563-0071-4a44-926f-3841b7e7fb44-facebookJumbo.jpg"
     },
@@ -23,10 +20,7 @@
       "title":
         "Blockchain Disciples Have a New Goal: Running Our Next Election",
       "author": "Aaron Gell",
-      "lengthMinutes": 0,
       "length_minutes": 0,
-      "imageURL":
-        "https://cdn-images-1.medium.com/max/1200/1*1eyW1vZGvrlArd8pULCdwA.jpeg",
       "image_url":
         "https://cdn-images-1.medium.com/max/1200/1*1eyW1vZGvrlArd8pULCdwA.jpeg"
     },
@@ -38,10 +32,7 @@
       "title":
         "Trump to Propose Government Reorganization, Targeting Safety Net Programs",
       "author": "GLENN THRUSH, Erica L. Green",
-      "lengthMinutes": 5,
       "length_minutes": 5,
-      "imageURL":
-        "https://static01.nyt.com/images/2018/06/21/us/politics/21dc-reorg/21dc-reorg-facebookJumbo.jpg",
       "image_url":
         "https://static01.nyt.com/images/2018/06/21/us/politics/21dc-reorg/21dc-reorg-facebookJumbo.jpg"
     },
@@ -52,9 +43,7 @@
         "https://www.wsj.com/articles/intel-ceo-brian-krzanich-resigns-after-violating-company-policy-1529586884",
       "title": "Intel CEO Krzanich Resigns Over Relationship With Employee",
       "author": "Jay Greene",
-      "lengthMinutes": 6,
       "length_minutes": 6,
-      "imageURL": "https://images.wsj.net/im-15156/social",
       "image_url": "https://images.wsj.net/im-15156/social"
     },
     {
@@ -64,10 +53,7 @@
         "https://www.wired.com/story/building-the-ultimate-burger-bot/",
       "title": "The Mission to Build the Ultimate Burger Bot",
       "author": "Lauren Smiley",
-      "lengthMinutes": 23,
       "length_minutes": 23,
-      "imageURL":
-        "https://media.wired.com/photos/5b2943e195e339080a7fcecf/191:100/pass/WI070118_MF_Burgerbots-diptych.jpg",
       "image_url":
         "https://media.wired.com/photos/5b2943e195e339080a7fcecf/191:100/pass/WI070118_MF_Burgerbots-diptych.jpg"
     },
@@ -78,10 +64,7 @@
         "https://www.theverge.com/2018/6/21/17484412/amazon-fire-tv-cube-review-alexa-echo",
       "title": "Amazon Fire TV Cube review: a smarter streaming box",
       "author": "Dan Seifert",
-      "lengthMinutes": 14,
       "length_minutes": 14,
-      "imageURL":
-        "https://cdn.vox-cdn.com/thumbor/L_SGyn9fex47U5EWOqMvwX9_xIw=/0x292:2040x1360/fit-in/1200x630/cdn.vox-cdn.com/uploads/chorus_asset/file/11565361/dseifert_180619_2669_0001.jpg",
       "image_url":
         "https://cdn.vox-cdn.com/thumbor/L_SGyn9fex47U5EWOqMvwX9_xIw=/0x292:2040x1360/fit-in/1200x630/cdn.vox-cdn.com/uploads/chorus_asset/file/11565361/dseifert_180619_2669_0001.jpg"
     },
@@ -92,10 +75,7 @@
         "https://www.theverge.com/2018/6/21/17481098/elon-musk-boring-company-flamethrower-video-photos",
       "title": "The joy of cooking with a Boring Company Not-A-Flamethrower",
       "author": "Elizabeth Lopatto",
-      "lengthMinutes": 5,
       "length_minutes": 5,
-      "imageURL":
-        "https://cdn.vox-cdn.com/thumbor/JrI7EtOuI3HWT9WbtMVRjjHgLow=/0x292:2040x1360/fit-in/1200x630/cdn.vox-cdn.com/uploads/chorus_asset/file/11565673/vpavic_180615_2677_0069.jpg",
       "image_url":
         "https://cdn.vox-cdn.com/thumbor/JrI7EtOuI3HWT9WbtMVRjjHgLow=/0x292:2040x1360/fit-in/1200x630/cdn.vox-cdn.com/uploads/chorus_asset/file/11565673/vpavic_180615_2677_0069.jpg"
     },
@@ -107,10 +87,7 @@
       "title":
         "Firefox makers working on voice-controlled web browser called Scout",
       "author": "Stephen Shankland",
-      "lengthMinutes": 2,
       "length_minutes": 2,
-      "imageURL":
-        "https://cnet3.cbsistatic.com/img/m620LXEBWSyjVEwRC95DcOOvFv8=/670x503/2018/05/08/0fc4cba8-6423-4f4b-8da1-9b3098681390/20180420-mozilla-firefox-logo-icon-4sts-02.jpg",
       "image_url":
         "https://cnet3.cbsistatic.com/img/m620LXEBWSyjVEwRC95DcOOvFv8=/670x503/2018/05/08/0fc4cba8-6423-4f4b-8da1-9b3098681390/20180420-mozilla-firefox-logo-icon-4sts-02.jpg"
     }
