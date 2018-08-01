@@ -19,8 +19,8 @@ const userid = 'scoutapitest@mailinator.com';
 chai.use(chaiHttp);
 
 const constants = {
-  NORMAL_LENGTH: 11,
-  EXTENDED_LENGTH: 13,
+  NORMAL_LENGTH: 9,
+  EXTENDED_LENGTH: 11,
   PIZZA_URL:
     'https://ny.eater.com/2015/8/7/9050099/new-york-pizza-styles-best-slice',
   MOZILLA_URL:

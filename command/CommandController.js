@@ -92,20 +92,16 @@ router.post('/intent', VerifyToken, async function(req, res) {
     res.setHeader('Content-Type', 'application/json');
     switch (req.body.cmd) {
       case 'ScoutTitles':
-        scoutTitles(
-          req.body.userid,
-          res,
-          req.body.extendedData == true || req.body.extended_data == true
-        );
+        scoutTitles(req.body.userid, res, req.body.extended_data == true);
         break;
       case 'SearchAndPlayArticle':
       case 'SearchAndSummarizeArticle':
         searchAndPlayArticle(
           res,
           req.body.userid,
-          req.body.searchTerms ? req.body.searchTerms : req.body.search_terms,
+          req.body.search_terms,
           req.body.cmd === 'SearchAndSummarizeArticle',
-          req.body.extendedData == true || req.body.extended_data == true
+          req.body.extended_data == true
         );
         break;
       case 'ScoutMyPocket':
@@ -139,7 +135,7 @@ router.post('/article', VerifyToken, async function(req, res) {
     const result = await processArticleRequest(
       req,
       false,
-      req.body.extendedData == true || req.body.extended_data == true,
+      req.body.extended_data == true,
       req.body.end_instructions == true
     );
     if (result.item_id) {
@@ -212,7 +208,7 @@ router.post('/summary', VerifyToken, async function(req, res) {
     const result = await processArticleRequest(
       req,
       true,
-      req.body.extendedData == true || req.body.extended_data == true,
+      req.body.extended_data == true,
       req.body.end_instructions == true
     );
     res.status(200).send(JSON.stringify(result));
@@ -229,7 +225,7 @@ router.get('/search', VerifyToken, async function(req, res) {
   try {
     const titles = await getTitlesFromPocket(
       req.query.userid,
-      req.query.extendedData == true || req.query.extended_data == true
+      req.query.extended_data == true
     );
     const article = await findBestScoringTitle(req.query.q, titles.articles);
     logger.info(
@@ -504,9 +500,7 @@ async function getArticleMetadata(pocketArticle, extendedData) {
     resolved_url: pocketArticle.resolved_url,
     title: pocketArticle.resolved_title,
     author,
-    lengthMinutes,
     length_minutes: lengthMinutes,
-    imageURL: pocketArticle.top_image_url,
     image_url: pocketArticle.top_image_url
   };
 
