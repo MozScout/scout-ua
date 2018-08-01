@@ -4,6 +4,7 @@ const ScoutUser = require('../data/models/ScoutUser');
 const VerifyToken = require('../VerifyToken');
 const Database = require('../data/database');
 const database = new Database();
+const logger = require('../logger');
 
 const router = express.Router();
 router.use(bodyParser.urlencoded({ extended: true }));
@@ -14,18 +15,18 @@ router.get('/scoutusers', VerifyToken, async function(req, res) {
     const articles = await ScoutUser.scan().exec();
     res.send(articles);
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.sendStatus(500);
   }
 });
 
 router.post('/scoutusers', VerifyToken, async function(req, res) {
   try {
-    console.log(req.body);
+    logger.debug(req.body);
     await database.processScoutUser(req.body.userid, req.body.access_token);
     res.send('ok');
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.sendStatus(500);
   }
 });

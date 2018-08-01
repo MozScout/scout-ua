@@ -3,9 +3,10 @@ var fs = require('fs');
 var uuidgen = require('node-uuid-generator');
 var audioconcat = require('audioconcat');
 var glob = require('glob');
+const logger = require('../logger');
 
 var polly_tts = {
-  getPollyChunk: function(text, filenameIndex, audio_file) {
+  getPollyChunk: function(text, filenameIndex, audio_file, voiceType) {
     return new Promise(function(resolve, reject) {
       let rate = process.env.PROSODY_RATE || 'medium';
       let vol = process.env.PROSODY_VOLUME || 'medium';
@@ -22,7 +23,7 @@ var polly_tts = {
         Text: ssmlText,
         OutputFormat: 'mp3',
         SampleRate: '16000',
-        VoiceId: process.env.POLLY_VOICE || 'Salli',
+        VoiceId: voiceType,
         TextType: 'ssml'
       };
 
@@ -31,9 +32,9 @@ var polly_tts = {
       });
 
       polly.synthesizeSpeech(params, (err, data) => {
-        console.log(params);
+        logger.debug(params);
         if (err) {
-          console.log(`ERROR: ${err.code}`);
+          logger.error(`ERROR: ${err.code}`);
           reject(err);
         } else if (data) {
           if (data.AudioStream instanceof Buffer) {
@@ -41,10 +42,10 @@ var polly_tts = {
             fs.writeFile(audioFile, data.AudioStream, function(err) {
               if (err) {
                 reject(err);
-                return console.log(err);
+                return logger.error(err);
               }
             });
-            console.log('Wrote chunk: ' + filenameIndex);
+            logger.debug('Wrote chunk: ' + filenameIndex);
             resolve(audioFile);
           } else {
             reject('Not a proper AudioStream');
@@ -60,37 +61,37 @@ var polly_tts = {
       audioconcat(parts)
         .concat(filename)
         .on('start', function(command) {
-          console.log('starting: ' + Date.now());
-          console.log('ffmpeg process started:', command);
+          logger.debug('starting: ' + Date.now());
+          logger.debug('ffmpeg process started:' + command);
         })
         .on('error', function(err, stdout, stderr) {
-          console.error('Error:', err);
-          console.error('ffmpeg stderr:', stderr);
+          logger.error('Error:' + err);
+          logger.error('ffmpeg stderr:' + stderr);
           reject(err);
         })
         .on('end', function(output) {
-          console.log('ending: ' + Date.now());
-          console.error('Audio created in:', output);
+          logger.debug('ending: ' + Date.now());
+          logger.debug('Audio created in:' + output);
           resolve(filename);
         });
     });
   },
 
-  getSpeechSynthUrl: function(parts) {
+  getSpeechSynthUrl: function(parts, voiceType) {
     return new Promise((resolve, reject) => {
       let audio_file = uuidgen.generate();
       let promArray = [];
       for (var i = 0; i < parts.length; i++) {
-        promArray.push(this.getPollyChunk(parts[i], i, audio_file));
+        promArray.push(this.getPollyChunk(parts[i], i, audio_file, voiceType));
       }
 
       Promise.all(promArray)
         .then(function(values) {
-          console.log('resolved the big promise array');
+          logger.debug('resolved the big promise array');
           return polly_tts.concatAudio(values, audio_file);
         })
         .then(function(newAudioFile) {
-          console.log('NewAudioFil is: ' + newAudioFile);
+          logger.debug('NewAudioFil is: ' + newAudioFile);
           var s3 = new AWS.S3({
             apiVersion: '2006-03-01'
           });
@@ -102,7 +103,7 @@ var polly_tts = {
 
           var fileStream = fs.createReadStream(newAudioFile);
           fileStream.on('error', function(err) {
-            console.log('File Error', err);
+            logger.error('File Error' + err);
             reject('File error:' + err);
             return;
           });
@@ -110,22 +111,22 @@ var polly_tts = {
           var path = require('path');
           bucketParams.Key = path.basename(newAudioFile);
 
-          console.log('startupload: ' + Date.now());
+          logger.debug('startupload: ' + Date.now());
           s3.upload(bucketParams, function(err, data) {
             if (err) {
-              console.log('error uploading');
+              logger.error('error uploading');
               reject('error uploading:' + err);
             } else {
-              console.log('Upload Success', data.Location);
-              console.log('Done uploading: ' + Date.now());
+              logger.debug('Upload Success' + data.Location);
+              logger.debug('Done uploading: ' + Date.now());
               // Return the URL of the Mp3 in the S3 bucket.
               resolve(data.Location);
               // Remove the files locally.
               polly_tts.deleteLocalFiles(audio_file, function(err) {
                 if (err) {
-                  console.log('Error removing files ' + err);
+                  logger.error('Error removing files ' + err);
                 } else {
-                  console.log('all files removed');
+                  logger.debug('all files removed');
                 }
               });
             }

@@ -4,6 +4,7 @@ const rp = require('request-promise');
 const url = require('url');
 const Database = require('../data/database');
 const database = new Database();
+const logger = require('../logger');
 
 var pocketConsumerKey, userAuthKey;
 
@@ -50,8 +51,8 @@ router.get('/login', function(req, res) {
 
     var redir =
       `https://getpocket.com/auth/authorize` +
-      `?request_token=${userAuthKey}&redirect_uri=${redirUri}`;
-    console.log(`redirecting to ${redir}...`);
+      `?force=login&request_token=${userAuthKey}&redirect_uri=${redirUri}`;
+    logger.debug(`redirecting to ${redir}...`);
     return res.redirect(redir);
   });
 });
@@ -62,7 +63,7 @@ router.get('/redirecturi', function(req, res) {
     code: userAuthKey
   };
   finalAuthorizeOptions.body = JSON.stringify(authBody);
-  console.log('calling redirect');
+  logger.debug('calling redirect');
 
   rp(finalAuthorizeOptions)
     .then(async function(body) {
@@ -71,12 +72,12 @@ router.get('/redirecturi', function(req, res) {
       const pocketUserId = jsonBody.username;
 
       // Save to the config to scoutuser data
-      console.log(`Authorized: ${pocketUserId}/${pocketUserAccessToken}`);
+      logger.info(`Authorized: ${pocketUserId}/${pocketUserAccessToken}`);
       await database.processScoutUser(pocketUserId, pocketUserAccessToken);
 
       // Send custom protocol redirect for use by Scout mobile app
       const location = `mozilla-skout://user/${pocketUserId}`;
-      console.log(`Redirecting to ${location}`);
+      logger.debug(`Redirecting to ${location}`);
       res.status(200).send(`
       <script>
         console.log('redirecting to ${location}')
@@ -84,7 +85,7 @@ router.get('/redirecturi', function(req, res) {
       </script>`);
     })
     .catch(function(err) {
-      console.log('Call failed' + err);
+      logger.error('Call failed' + err);
     });
 });
 

@@ -8,11 +8,23 @@ const polly_tts = require('./polly_tts');
 const AudioFileHelper = require('./AudioFileHelper');
 const audioHelper = new AudioFileHelper();
 const Database = require('../data/database');
+const ArticleStatusHelper = require('../articlestatus/ArticleStatusHelper.js');
+const astatHelper = new ArticleStatusHelper();
+const ua = require('universal-analytics');
+const logger = require('../logger');
 
 const router = express.Router();
 const database = new Database();
 const HostnameHelper = require('./HostnameHelper.js');
 const hostnameHelper = new HostnameHelper();
+
+var endInstructionsData = {
+  text:
+    'Your article is finished. ' +
+    'To listen to more articles say "Alexa, tell Scout to get titles"',
+  url: '',
+  date: 0
+};
 
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
@@ -49,7 +61,7 @@ const articleOptions = {
 
 const summaryLink =
   'https://api.smmry.com?SM_API_KEY=' + process.env.SM_API_KEY + '&SM_URL=';
-console.log('SummaryLink Creation is: ' + summaryLink);
+logger.info('SummaryLink Creation is: ' + summaryLink);
 const summaryOptions = {
   uri: '',
   method: 'GET',
@@ -68,13 +80,15 @@ async function buildPocketRequestBody(pocketUserId) {
     access_token: pocketToken,
     detailType: 'complete',
     sort: 'newest',
-    count: 50
+    count: 40
   };
 }
 
 router.post('/intent', VerifyToken, async function(req, res) {
+  logMetric(req.body.cmd, req.body.userid, req.get('User-Agent'));
+
   try {
-    console.log(`Command = ${req.body.cmd}`);
+    logger.info(`Command = ${req.body.cmd}`);
     res.setHeader('Content-Type', 'application/json');
     switch (req.body.cmd) {
       case 'ScoutTitles':
@@ -106,63 +120,144 @@ router.post('/intent', VerifyToken, async function(req, res) {
         break;
     }
   } catch (reason) {
-    console.log('database err: ', reason);
+    logger.error('database err: ' + reason);
     let errSpeech = 'Unable to connect to Pocket. Please relink your account.';
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 });
 
 router.post('/article', VerifyToken, async function(req, res) {
-  console.log(`GET /article: ${req.body.url}`);
+  logger.info(`POST /article: ${req.body.url}`);
+  logMetric('article', req.body.userid, req.get('User-Agent'));
+
   try {
     res.setHeader('Content-Type', 'application/json');
     const result = await processArticleRequest(
       req,
       false,
-      req.body.extended_data == true
+      req.body.extended_data == true,
+      req.body.end_instructions == true
     );
+    if (result.item_id) {
+      const astat = await astatHelper.getArticleStatus(
+        req.body.userid,
+        result.item_id
+      );
+      if (astat) {
+        result.offset_ms = astat.offset_ms;
+      }
+    }
+    logger.info('POST article resp: ' + JSON.stringify(result));
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
-    console.log('Error in /article ', reason);
+    logger.error('Error in /article ' + reason);
+    const errSpeech = `There was an error processing the article. ${reason}`;
+    res.status(404).send(JSON.stringify({ speech: errSpeech }));
+  }
+});
+
+router.post('/articleservice', VerifyToken, async function(req, res) {
+  logger.info(`POST /articleservice: ${req.body.url} ${req.body.article_id}`);
+  logMetric('articleservice', req.body.url, req.get('User-Agent'));
+  res.setHeader('Content-Type', 'application/json');
+
+  try {
+    let audioUrl;
+    if (req.body.article_id) {
+      // we have a pocket item. do we already have the audio file?
+      audioUrl = await audioHelper.getAudioFileLocation(
+        req.body.article_id,
+        false
+      );
+    } else {
+      logger.info('error:  missing article_id');
+    }
+
+    let result = {};
+    // if we didn't find it in the DB, create the audio file
+    if (!audioUrl) {
+      logger.info('Did not find the audio URL in DB: ' + req.body.article_id);
+      audioUrl = await buildAudioFromUrl(req.body.url);
+
+      if (audioUrl) {
+        logger.info('built audio');
+        await audioHelper.storeAudioFileLocation(
+          req.body.article_id,
+          false,
+          audioUrl
+        );
+      }
+    }
+    result.url = audioUrl;
+
+    logger.info('POST article resp: ' + JSON.stringify(result));
+    res.status(200).send(JSON.stringify(result));
+  } catch (reason) {
+    logger.error('Error in /articleservice ' + reason);
     const errSpeech = `There was an error processing the article. ${reason}`;
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 });
 
 router.post('/summary', VerifyToken, async function(req, res) {
-  console.log(`GET /summary: ${req.body.url}`);
+  logger.info(`POST /summary: ${req.body.url}`);
+  logMetric('summary', req.body.userid, req.get('User-Agent'));
+
   try {
     res.setHeader('Content-Type', 'application/json');
     const result = await processArticleRequest(
       req,
       true,
-      req.body.extended_data == true
+      req.body.extended_data == true,
+      req.body.end_instructions == true
     );
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
-    console.log('Error in /summary ', reason);
+    logger.error('Error in /summary ' + reason);
     const errSpeech = `There was an error processing the article. ${reason}`;
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 });
 
 router.get('/search', VerifyToken, async function(req, res) {
+  logMetric('search', req.query.userid, req.get('User-Agent'));
+
   try {
     const titles = await getTitlesFromPocket(
       req.query.userid,
-      req.body.extended_data == true
+      req.query.extended_data == true
     );
     const article = await findBestScoringTitle(req.query.q, titles.articles);
-    const result = `Search for: ${req.query.q}, identified article: ${
-      article.title
-    }`;
-    res.send(result);
+    logger.info(
+      `Search for: ${req.query.q}, identified article: ${article.title}`
+    );
+    res.send(article);
   } catch (err) {
+    logger.error('Error on /search: ' + err);
     res.sendStatus(404);
   }
 });
 
-async function processArticleRequest(req, summaryOnly, extendedData) {
+function logMetric(cmd, userid, agent) {
+  logger.info('User-Agent is: ' + agent);
+  if (process.env.GA_PROPERTY_ID) {
+    var visitor = ua(process.env.GA_PROPERTY_ID, userid);
+    var ga_params = {
+      ec: cmd,
+      ea: userid,
+      cd1: userid,
+      el: agent
+    };
+    visitor.event(ga_params).send();
+  }
+}
+
+async function processArticleRequest(
+  req,
+  summaryOnly,
+  extendedData,
+  endInstructions
+) {
   const getBody = await buildPocketRequestBody(req.body.userid);
   let result = await searchForPocketArticle(
     getBody,
@@ -172,15 +267,19 @@ async function processArticleRequest(req, summaryOnly, extendedData) {
 
   let audioUrl;
   if (result && result.item_id) {
+    logger.info('Found result: ' + result.item_id);
     // we have a matching pocket item. do we already have the audio file?
     audioUrl = await audioHelper.getAudioFileLocation(
       result.item_id,
       summaryOnly
     );
+  } else {
+    logger.info('error:  no result returned from searchForPocketArticle');
   }
 
   // if we didn't find it in the DB, create the audio file
   if (!audioUrl) {
+    logger.info('Did not find the audio URL in DB: ' + result.item_id);
     if (summaryOnly) {
       audioUrl = await buildSummaryAudioFromUrl(req.body.url);
     } else {
@@ -201,6 +300,30 @@ async function processArticleRequest(req, summaryOnly, extendedData) {
   } else {
     result = { url: audioUrl };
   }
+  logger.debug('result.url is: ' + result.url);
+
+  if (endInstructions) {
+    let expireDate = new Date();
+    // Set the expire_date to 30 days ago as S3 deletes expired files
+    expireDate.setDate(expireDate.getDate() - 30);
+    if (new Date(endInstructionsData.date) < expireDate) {
+      if (process.env.META_VOICE) {
+        endInstructionsData.url = await buildAudioFromText(
+          endInstructionsData.text,
+          process.env.META_VOICE
+        );
+      } else {
+        endInstructionsData.url = await buildAudioFromText(
+          endInstructionsData.text
+        );
+      }
+      endInstructionsData.date = Date.now();
+    }
+    result.instructions_url = endInstructionsData.url;
+  }
+  // Initially set offset to 0 (overwrite later if necessary)
+  result.offset_ms = 0;
+
   return result;
 }
 
@@ -210,8 +333,8 @@ async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
   getBody.count = '3';
   getOptions.body = JSON.stringify(getBody);
 
-  console.log('jsonboddyattr=', jsonBodyAttr);
-  console.log('urlattr=', urlAttr);
+  logger.debug('jsonboddyattr=' + jsonBodyAttr);
+  logger.debug('urlattr=' + urlAttr);
   rp(getOptions)
     .then(function(body) {
       const jsonBody = JSON.parse(body);
@@ -221,7 +344,7 @@ async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
           let arrJson = jsonBody[jsonBodyAttr];
           Object.keys(arrJson).forEach(key => {
             summaryOptions.uri = summaryLink + arrJson[key][urlAttr];
-            console.log('Summary uri is: ' + summaryOptions.uri);
+            logger.debug('Summary uri is: ' + summaryOptions.uri);
             promiseArray.push(
               rp(summaryOptions)
                 .then(sumResults => {
@@ -230,12 +353,12 @@ async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
                   return sumResultsJson;
                 })
                 .catch(function(err) {
-                  console.log('Caught an error: ' + err);
+                  logger.error('Caught an error: ' + err);
                   return JSON.stringify({});
                 })
             );
           });
-          console.log('RETURNING PROMISE.ALL ' + Date.now());
+          logger.debug('RETURNING PROMISE.ALL ' + Date.now());
           return Promise.all(promiseArray);
         };
 
@@ -253,30 +376,30 @@ async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
                   element.sm_api_content
                 );
               } else {
-                console.log('no data.  Summary must have failed.');
+                logger.warn('no data.  Summary must have failed.');
               }
             });
-            console.log('Text response is: ' + textResponse);
-            console.log('Time to get summaries: ' + Date.now());
+            logger.debug('Text response is: ' + textResponse);
+            logger.debug('Time to get summaries: ' + Date.now());
             return buildAudioFromText(textResponse);
           })
           .then(function(url) {
-            console.log('Time to buildAudioFromText ' + Date.now());
+            logger.debug('Time to buildAudioFromText ' + Date.now());
             res.status(200).send(JSON.stringify({ url: url }));
           })
           .catch(function(err) {
             res
               .status(500)
               .send(JSON.stringify({ speech: 'Summary Engine error' }));
-            console.log('Error parsing: ' + err);
+            logger.error('Error parsing: ' + err);
           });
       } else {
-        console.log('Searching for the article failed to find a match');
+        logger.warn('Searching for the article failed to find a match');
         throw 'NoSearchMatch';
       }
     })
     .catch(reason => {
-      console.log('caught an error: ', reason);
+      logger.error('caught an error: ' + reason);
       let errSpeech = '';
       switch (reason) {
         case 'NoSearchMatch':
@@ -349,7 +472,7 @@ async function scoutTitles(userid, res, extendedData) {
     res
       .status(404)
       .send(JSON.stringify({ speech: `Error getting titles: ${err}` }));
-    console.log(`Error getting titles: ${err}`);
+    logger.error(`Error getting titles: ${err}`);
   }
 }
 
@@ -432,25 +555,28 @@ async function archiveTitle(userId, itemId, res) {
  * and if found, returns metadata for it. Otherwise undefined.
  */
 async function searchForPocketArticle(getBody, searchTerm, extendedData) {
-  console.log('Search term is: ', searchTerm);
-  getBody.search = searchTerm;
-  getOptions.body = JSON.stringify(getBody);
-  const body = await rp(getOptions);
-  const jsonBody = JSON.parse(body);
   let result;
-  if (jsonBody.status == '1') {
-    const keysArr = Object.keys(jsonBody.list);
-    console.log('keysarr = ', keysArr);
-    if (keysArr.length > 0) {
-      result = await getArticleMetadata(
-        jsonBody.list[keysArr[0]],
-        extendedData
+  if (searchTerm) {
+    logger.info('Search term is: ' + searchTerm);
+    getBody.search = searchTerm;
+    getOptions.body = JSON.stringify(getBody);
+    const body = await rp(getOptions);
+    const jsonBody = JSON.parse(body);
+    if (jsonBody.status == '1') {
+      const keysArr = Object.keys(jsonBody.list);
+      logger.debug('keysarr = ' + keysArr);
+      logger.info('article count: ' + keysArr.length);
+      if (keysArr.length > 0) {
+        result = await getArticleMetadata(
+          jsonBody.list[keysArr[0]],
+          extendedData
+        );
+      }
+    } else {
+      logger.warn(
+        `Searching for '${searchTerm}' failed to find a matching article.`
       );
     }
-  } else {
-    console.log(
-      `Searching for '${searchTerm}' failed to find a matching article.`
-    );
   }
   return result;
 }
@@ -463,12 +589,12 @@ async function searchAndPlayArticle(
   extendedData
 ) {
   try {
-    console.log('Search term is: ', searchTerm);
+    logger.info('Search term is: ' + searchTerm);
     const titles = await getTitlesFromPocket(pocketuserid, extendedData);
     const articleInfo = await findBestScoringTitle(searchTerm, titles.articles);
 
     if (articleInfo) {
-      console.log(articleInfo);
+      logger.debug(articleInfo);
 
       // do we already have the audio file?
       let audioUrl = await audioHelper.getAudioFileLocation(
@@ -491,12 +617,23 @@ async function searchAndPlayArticle(
         );
       }
       articleInfo.url = audioUrl;
+
+      articleInfo.offset_ms = 0;
+      if (!summaryOnly) {
+        const astat = await astatHelper.getArticleStatus(
+          pocketuserid,
+          articleInfo.item_id
+        );
+        if (astat) {
+          articleInfo.offset_ms = astat.offset_ms;
+        }
+      }
       res.status(200).send(JSON.stringify(articleInfo));
     } else {
       throw 'NoSearchMatch';
     }
   } catch (reason) {
-    console.log('searchAndPlayArticle error: ', reason);
+    logger.error('searchAndPlayArticle error: ' + reason);
     let errSpeech = '';
     switch (reason) {
       case 'NoSearchMatch':
@@ -519,7 +656,9 @@ async function buildAudioFromUrl(url) {
     refresh: '0',
     output: 'json'
   };
+  logger.info('Getting article from pocket API: ' + url);
   const article = JSON.parse(await rp(articleOptions));
+  logger.info('Returned article from pocket API: ' + article.title);
   return buildAudioFromText(`${article.title}. ${article.article}`);
 }
 
@@ -539,11 +678,14 @@ async function buildSummaryAudioFromUrl(url) {
   }
 }
 
-async function buildAudioFromText(textString) {
+async function buildAudioFromText(
+  textString,
+  voiceType = process.env.POLLY_VOICE || 'Salli'
+) {
   const cleanText = texttools.cleanText(textString);
   const chunkText = texttools.chunkText(cleanText);
-  console.log('chunkText is: ', chunkText.length, chunkText);
-  return polly_tts.getSpeechSynthUrl(chunkText);
+  logger.debug('chunkText is: ', chunkText.length, chunkText);
+  return polly_tts.getSpeechSynthUrl(chunkText, voiceType);
 }
 
 function findBestScoringTitle(searchPhrase, articleMetadataArray) {
@@ -555,7 +697,7 @@ function findBestScoringTitle(searchPhrase, articleMetadataArray) {
     let tfidf = new natural.TfIdf();
     //tokenize and Stem each title and then add to our dataset
     for (var i = 0; i < articleMetadataArray.length; i++) {
-      console.log(articleMetadataArray[i].title);
+      logger.debug(articleMetadataArray[i].title);
       let stemmed = articleMetadataArray[i].title.tokenizeAndStem();
       tfidf.addDocument(stemmed);
     }
@@ -564,16 +706,16 @@ function findBestScoringTitle(searchPhrase, articleMetadataArray) {
     let curMaxIndex = 0;
     let iCount = 0;
     tfidf.tfidfs(wordsStem, function(i, measure) {
-      console.log('document #' + i + ' is ' + measure);
+      logger.debug('document #' + i + ' is ' + measure);
       if (measure > maxValue) {
         maxValue = measure;
         curMaxIndex = i;
       }
       iCount++;
       if (iCount >= articleMetadataArray.length) {
-        console.log('Done getting results.');
-        console.log('Max Score is: ' + maxValue);
-        console.log('Article is: ' + articleMetadataArray[curMaxIndex].title);
+        logger.debug('Done getting results.');
+        logger.debug('Max Score is: ' + maxValue);
+        logger.info('Article is: ' + articleMetadataArray[curMaxIndex].title);
         if (maxValue === 0) {
           reject('NoMatchFound');
         }

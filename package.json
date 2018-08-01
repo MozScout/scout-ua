@@ -4,10 +4,13 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "test": "npm run lint && npm run mocha",
+    "test": "npm run lint && npm run unit-test && npm run integ-test",
+    "unit-test":
+      "nyc --reporter=text mocha test/unit && nyc report --reporter=html",
+    "travis-unit":
+      "nyc mocha test/unit && nyc report --reporter=text-lcov | coveralls",
     "lint": "eslint .",
-    "mocha": "./test/run-tests.sh",
-    "cov": "jest --coverage"
+    "integ-test": "mocha ./test/integration"
   },
   "dependencies": {
     "audioconcat": "^0.1.3",
@@ -27,9 +30,7 @@
     "glob": "^7.1.2",
     "html-metadata": "^1.7.0",
     "jade": "~1.11.0",
-    "jest": "^22.4.2",
     "jsonwebtoken": "^8.2.0",
-    "mocha": "^5.0.4",
     "morgan": "~1.9.0",
     "natural": "^0.6.1",
     "node-uuid-generator": "^1.0.0",
@@ -37,20 +38,24 @@
     "readability-js": "^1.0.7",
     "request-promise": "^4.2.2",
     "serve-favicon": "~2.4.5",
-    "url": "^0.11.0"
+    "universal-analytics": "^0.4.17",
+    "url": "^0.11.0",
+    "winston": "^3.0.0"
   },
   "devDependencies": {
-    "eslint-config-google": "^0.9.1"
+    "chai-http": "^4.0.0",
+    "coveralls": "^3.0.2",
+    "eslint-config-google": "^0.9.1",
+    "mocha-lcov-reporter": "^1.3.0",
+    "mocha": "^5.2.0",
+    "nock": "^9.4.1",
+    "rewire": "^4.0.1",
+    "sinon": "^6.1.3"
   },
   "jest": {
     "coverageDirectory": "./coverage/",
-    "moduleFileExtensions": [
-      "js",
-      "json"
-    ],
-    "testMatch": [
-      "**/test/**/*-test.(js)"
-    ],
+    "moduleFileExtensions": ["js", "json"],
+    "testMatch": ["**/test/**/*-test.(js)"],
     "mapCoverage": true,
     "setupTestFrameworkScriptFile": "<rootDir>/test/common.js",
     "testEnvironment": "node"

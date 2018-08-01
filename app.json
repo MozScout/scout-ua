@@ -3,33 +3,59 @@
   "scripts": {},
   "env": {
     "AWS_REGION": {
+      "description": "AWS Region",
       "required": true
     },
     "AWS_ACCESS_KEY_ID": {
+      "description": "AWS Credentials",
       "required": true
     },
     "AWS_SECRET_ACCESS_KEY": {
+      "description": "AWS Credentials",
       "required": true
     },
     "JWT_SECRET": {
+      "description": "Secret used for JWT",
+      "required": true
+    },
+    "DYNAMODB_USE_LOCAL": {
+      "description": "Use local DynamoDB",
       "required": true
     },
     "POCKET_KEY": {
+      "description": "Pocket Consumer Key",
       "required": true
     },
     "POLLY_S3_BUCKET": {
+      "description": "S3 Bucket for streaming files",
       "required": true
     },
     "POLLY_VOICE": {
+      "description": "Reading voice",
+      "required": true
+    },
+    "META_VOICE": {
+      "description": "Voice for intro/outro",
       "required": true
     },
     "SM_API_KEY": {
+      "description": "Partner API key for SMMRY",
       "required": true
     },
     "PROSODY_RATE": {
+      "description": "Voice speed",
       "required": true
     },
     "PROSODY_VOLUME": {
+      "description": "Voice volume",
+      "required": true
+    },
+    "GA_PROPERTY_ID": {
+      "description": "Google Analytics property",
+      "required": true
+    },
+    "LOG_LEVEL": {
+      "description": "Winston logging level",
       "required": true
     }
   },
