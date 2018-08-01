@@ -512,7 +512,10 @@ describe('POST /command/articleservice', function() {
   this.timeout(120 * 1000);
 
   let data = {};
-  after(function() {});
+  afterEach(function() {
+    delete data.article_id;
+    delete data.url;
+  });
 
   describe('articleservice', function() {
     it('should return a url of a synthesized file', done => {

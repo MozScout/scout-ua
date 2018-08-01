@@ -79,7 +79,7 @@ This can also be run on Heroku. Here are the instructions for running with Herok
 
 To run lint individually: `npm run lint`.
 
-To run unit tests individually: `npm run unit-test`
+To run unit tests individually: `npm run unit-test`.  You must have the variable AWS_REGION defined in order to run the unit tests.  You can run `export AWS_REGION=us-east-1`.
 
 For the integration tests, you need to add the `TEST_API_URL` and the `TEST_API_ACCESS_TOKEN` (JWT token) environment variables. To run them: `npm run integ-test`.
 
