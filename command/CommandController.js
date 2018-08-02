@@ -130,6 +130,11 @@ router.post('/intent', VerifyToken, async function(req, res) {
   }
 });
 
+// Request body parameters:
+// url: article url
+// userid
+// extended_data: 1 (optional) to have publisher name and favicon
+// meta_audio: 1 (optional) to have intro/outro/instructions audiofiles
 router.post('/article', VerifyToken, async function(req, res) {
   logger.info(`POST /article: ${req.body.url}`);
   logMetric('article', req.body.userid, req.get('User-Agent'));
@@ -140,7 +145,7 @@ router.post('/article', VerifyToken, async function(req, res) {
       req,
       false,
       req.body.extendedData == true || req.body.extended_data == true,
-      req.body.end_instructions == true
+      req.body.meta_audio == true // returns false is meta_audio is not defined
     );
     if (result.item_id) {
       const astat = await astatHelper.getArticleStatus(
@@ -203,6 +208,11 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
   }
 });
 
+// Request body parameters:
+// url: article url
+// userid
+// extended_data: 1 (optional) to have publisher name and favicon
+// meta_audio: 1 (optional) to have intro/outro/instructions audiofiles
 router.post('/summary', VerifyToken, async function(req, res) {
   logger.info(`POST /summary: ${req.body.url}`);
   logMetric('summary', req.body.userid, req.get('User-Agent'));
@@ -213,7 +223,7 @@ router.post('/summary', VerifyToken, async function(req, res) {
       req,
       true,
       req.body.extendedData == true || req.body.extended_data == true,
-      req.body.end_instructions == true
+      req.body.meta_audio == true
     );
     res.status(200).send(JSON.stringify(result));
   } catch (reason) {
@@ -260,13 +270,14 @@ async function processArticleRequest(
   req,
   summaryOnly,
   extendedData,
-  endInstructions
+  metaAudioRequested
 ) {
   const getBody = await buildPocketRequestBody(req.body.userid);
   let result = await searchForPocketArticle(
     getBody,
     req.body.url,
-    extendedData
+    extendedData || metaAudioRequested
+    // metaAudio requires to have the publisher name
   );
 
   let audioUrl;
@@ -306,29 +317,108 @@ async function processArticleRequest(
   }
   logger.debug('result.url is: ' + result.url);
 
-  if (endInstructions) {
-    let expireDate = new Date();
-    // Set the expire_date to 30 days ago as S3 deletes expired files
-    expireDate.setDate(expireDate.getDate() - 30);
-    if (new Date(endInstructionsData.date) < expireDate) {
-      if (process.env.META_VOICE) {
-        endInstructionsData.url = await buildAudioFromText(
-          endInstructionsData.text,
-          process.env.META_VOICE
-        );
-      } else {
-        endInstructionsData.url = await buildAudioFromText(
-          endInstructionsData.text
-        );
-      }
-      endInstructionsData.date = Date.now();
-    }
-    result.instructions_url = endInstructionsData.url;
+  if (metaAudioRequested) {
+    let metaAudio = await generateMetaAudio(result, summaryOnly);
+
+    result.instructions_url = metaAudio.instructions_url;
+    result.intro_url = metaAudio.intro_url;
+    result.outro_url = metaAudio.outro_url;
   }
   // Initially set offset to 0 (overwrite later if necessary)
   result.offset_ms = 0;
 
   return result;
+}
+
+// generateMetaAudio returns urls to intro/outro/instructions audio files.
+// It tries to fetch them from the database
+// It regenerates them if they are in db but they were deleted from S3
+// or generates them if they are not in db
+// Summary Intros, Full article intros, and outros are stored in Dynamo
+async function generateMetaAudio(data, summaryOnly) {
+  // MetaAudio is an audiofile related to metadata
+  // (summary intro, full article intro or outro)
+  let metaAudio = await audioHelper.getMetaAudioLocation(data.item_id);
+  let intro;
+  let outro;
+  let voice = process.env.META_VOICE || process.env.POLLY_VOICE || 'Salli';
+
+  let introFullText = data.publisher
+    ? `From ${data.publisher}, ${data.title}`
+    : `${data.title}`;
+  let introSummaryText = data.publisher
+    ? `A summary of ${data.publisher}, ${data.title}`
+    : `A summary of ${data.title}`;
+
+  // 4 cases depending on what we want:
+  // - we want a summary intro:
+  //   (1) and the file is in db and exists: return it
+  //   (2) and the file is not in db or doesn't exist anymore: generate/store it
+  // - we want a full article intro:
+  //   (3) and the file is in db and exists: return it
+  //   (4) and the file is not in db or doesn't exist anymore: generate/store it
+  if (
+    summaryOnly &&
+    metaAudio &&
+    (await audioHelper.checkFileExistence(metaAudio.intro_summary_location))
+  ) {
+    intro = metaAudio.intro_summary_location;
+  } else if (summaryOnly) {
+    logger.info('Generating summary intro for item:' + data.item_id);
+    intro = await buildAudioFromText(`${introSummaryText}`, voice);
+    await audioHelper.storeIntroLocation(data.item_id, intro, summaryOnly);
+  } else if (
+    metaAudio &&
+    (await audioHelper.checkFileExistence(metaAudio.intro_full_location))
+  ) {
+    intro = metaAudio.intro_full_location;
+  } else {
+    logger.info('Generating full article intro for item:' + data.item_id);
+    intro = await buildAudioFromText(`${introFullText}`, voice);
+    await audioHelper.storeIntroLocation(data.item_id, intro, summaryOnly);
+  }
+
+  // We do the same thing for the outro
+  if (
+    metaAudio &&
+    (await audioHelper.checkFileExistence(metaAudio.outro_location))
+  ) {
+    outro = metaAudio.outro_location;
+  } else {
+    logger.info('Generating outro for item:' + data.item_id);
+    articleOptions.formData = {
+      consumer_key: process.env.POCKET_KEY,
+      url: data.resolved_url,
+      images: '0',
+      videos: '0',
+      refresh: '0',
+      output: 'json'
+    };
+    const article = JSON.parse(await rp(articleOptions));
+    var dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+    let publishedDate = new Date(article.timePublished * 1000);
+    let dateString =
+      'Published on ' + publishedDate.toLocaleDateString('en-US', dateOptions);
+    let authorString = data.author ? `Written by ${data.author}. ` : '';
+    outro = await buildAudioFromText(`${authorString}${dateString}`, voice);
+
+    await audioHelper.storeOutroLocation(data.item_id, outro);
+  }
+
+  // regenerate end_instructions if file doesn't exist anymore
+  if (!await audioHelper.checkFileExistence(endInstructionsData.url)) {
+    endInstructionsData.url = await buildAudioFromText(
+      endInstructionsData.text,
+      voice
+    );
+    endInstructionsData.date = Date.now();
+  }
+
+  return {
+    intro_url: intro,
+    outro_url: outro,
+    instructions_url: endInstructionsData.url
+  };
 }
 
 async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
@@ -665,7 +755,7 @@ async function buildAudioFromUrl(url) {
   logger.info('Getting article from pocket API: ' + url);
   const article = JSON.parse(await rp(articleOptions));
   logger.info('Returned article from pocket API: ' + article.title);
-  return buildAudioFromText(`${article.title}. ${article.article}`);
+  return buildAudioFromText(`${article.article}`);
 }
 
 async function buildSummaryAudioFromUrl(url) {
