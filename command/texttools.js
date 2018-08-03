@@ -49,10 +49,7 @@ const texttools = {
   },
 
   buildSummaryText: function(title, content) {
-    return `Here is a summary of: ${title.replace(
-      '\\',
-      ''
-    )}.  ${content.replace('\\', '')}`;
+    return content.replace('\\', '');
   }
 };
 

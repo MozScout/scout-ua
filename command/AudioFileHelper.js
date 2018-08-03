@@ -14,9 +14,17 @@ class CommandHelper {
       summaryOnly ? 'summary' : 'full'
     );
 
-    // then see if that file still exists at s3
+    if (!await this.checkFileExistence(fileUrl)) {
+      fileUrl = '';
+    }
+
+    return fileUrl;
+  }
+
+  async checkFileExistence(fileUrl) {
+    // checks if that file still exists at s3
     if (fileUrl) {
-      logger.info(`Checking location for item=${articleId}: ${fileUrl}`);
+      logger.info(`Checking location for: ${fileUrl}`);
       const path = url.parse(fileUrl).path;
       const params = {
         Bucket: process.env.POLLY_S3_BUCKET,
@@ -27,13 +35,13 @@ class CommandHelper {
         const s3request = s3.headObject(params);
         await s3request.promise();
         logger.debug('Verified existing file');
+        return true;
       } catch (err) {
         logger.warn('File no longer exists');
-        fileUrl = '';
+        return false;
       }
     }
-
-    return fileUrl;
+    return false;
   }
 
   async storeAudioFileLocation(articleId, summaryOnly, location) {
@@ -42,6 +50,22 @@ class CommandHelper {
       summaryOnly ? 'summary' : 'full',
       location
     );
+  }
+
+  async getMetaAudioLocation(articleId) {
+    return await database.getMetaAudioLocation(articleId);
+  }
+
+  async storeIntroLocation(articleId, introLocation, summaryOnly) {
+    return await database.storeIntroLocation(
+      articleId,
+      introLocation,
+      summaryOnly
+    );
+  }
+
+  async storeOutroLocation(articleId, outroLocation) {
+    return await database.storeOutroLocation(articleId, outroLocation);
   }
 }
 

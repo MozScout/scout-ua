@@ -8,6 +8,7 @@ chai.use(chaiHttp);
 const AudioFileHelper = require('../../command/AudioFileHelper');
 const polly_tts = require('../../command/polly_tts');
 const statusHelper = require('../../articlestatus/ArticleStatusHelper.js');
+const HostnameHelper = require('../../command/HostnameHelper.js');
 
 const expect = chai.expect;
 const fs = require('fs');
@@ -53,6 +54,7 @@ describe('CommandController - Endpoints', function() {
         return { action_results: [true], status: 1 };
       });
     nock('https://text.getpocket.com/v3')
+      .persist()
       .post('/text')
       .reply(function() {
         console.log('Fake Pocket API called on /text');
@@ -62,6 +64,7 @@ describe('CommandController - Endpoints', function() {
         ];
       });
     nock('https://api.smmry.com')
+      .persist()
       .get('/')
       .query(true)
       .reply(200, function(uri) {
@@ -74,6 +77,14 @@ describe('CommandController - Endpoints', function() {
         };
       });
 
+    sinon.replace(
+      HostnameHelper.prototype,
+      'getHostnameData',
+      sinon.fake(function() {
+        console.log('Calling fake getHostnameData');
+        return { publisher_name: 'publisher', favicon_url: 'favicon' };
+      })
+    );
     sinon.replace(
       db.prototype,
       'getAccessToken',
@@ -104,6 +115,35 @@ describe('CommandController - Endpoints', function() {
       'storeAudioFileLocation',
       sinon.fake(function() {
         console.log('Calling fake storeAudioFileLocation');
+      })
+    );
+    sinon.replace(
+      AudioFileHelper.prototype,
+      'checkFileExistence',
+      sinon.fake(function(url) {
+        console.log('Calling fake checkFileExistence');
+        return url == 'audio_file_url';
+      })
+    );
+    sinon.replace(
+      AudioFileHelper.prototype,
+      'getMetaAudioLocation',
+      sinon.fake(function() {
+        console.log('Calling fake getMetaAudioLocation');
+      })
+    );
+    sinon.replace(
+      AudioFileHelper.prototype,
+      'storeOutroLocation',
+      sinon.fake(function() {
+        console.log('Calling fake storeOutroLocation');
+      })
+    );
+    sinon.replace(
+      AudioFileHelper.prototype,
+      'storeIntroLocation',
+      sinon.fake(function() {
+        console.log('Calling fake storeIntroLocation');
       })
     );
     sinon.replace(
@@ -312,6 +352,7 @@ describe('CommandController - Endpoints', function() {
     });
     after(function() {
       delete userData.url;
+      delete userData.meta_audio;
     });
     it('Returns data for article: firefox', done => {
       chai
@@ -324,6 +365,31 @@ describe('CommandController - Endpoints', function() {
           expect(res.body).be.a('object');
           fs.readFile(
             MOCK_DATA_PATH + '/SearchAndPlayArticle_firefox.json',
+            'utf8',
+            function(err, data) {
+              if (err) {
+                return console.log(err);
+              }
+              expect(res.body).to.deep.equal(JSON.parse(data));
+              done();
+            }
+          );
+        });
+    });
+
+    it('With meta_audio flag', done => {
+      userData.meta_audio = 1;
+      chai
+        .request(app)
+        .post('/command/article')
+        .set('x-access-token', 'token')
+        .send(userData)
+        .end((err, res) => {
+          console.log(res.body);
+          expect(res).have.status(200);
+          expect(res.body).be.a('object');
+          fs.readFile(
+            MOCK_DATA_PATH + '/ArticleMetaAudio_firefox.json',
             'utf8',
             function(err, data) {
               if (err) {
@@ -376,6 +442,7 @@ describe('CommandController - Endpoints', function() {
     });
     after(function() {
       delete userData.url;
+      delete userData.meta_audio;
     });
     it('Returns data for article: firefox', done => {
       chai
@@ -388,6 +455,30 @@ describe('CommandController - Endpoints', function() {
           expect(res.body).be.a('object');
           fs.readFile(
             MOCK_DATA_PATH + '/SearchAndPlayArticle_firefox.json',
+            'utf8',
+            function(err, data) {
+              if (err) {
+                return console.log(err);
+              }
+              expect(res.body).to.deep.equal(JSON.parse(data));
+              done();
+            }
+          );
+        });
+    });
+
+    it('With meta_audio flag', done => {
+      userData.meta_audio = 1;
+      chai
+        .request(app)
+        .post('/command/article')
+        .set('x-access-token', 'token')
+        .send(userData)
+        .end((err, res) => {
+          expect(res).have.status(200);
+          expect(res.body).be.a('object');
+          fs.readFile(
+            MOCK_DATA_PATH + '/ArticleMetaAudio_firefox.json',
             'utf8',
             function(err, data) {
               if (err) {
