@@ -3,6 +3,9 @@
 const chunk = require('chunk-text');
 const logger = require('../logger');
 
+const Entities = require('html-entities').AllHtmlEntities;
+const entities = new Entities();
+
 const texttools = {
   truncateArticle: function(str, length, ending) {
     logger.debug('Truncating article');
@@ -37,6 +40,7 @@ const texttools = {
       .replace(/&nbsp;/g, ' ')
       .replace(/&thinsp;/g, '');
 
+    strippedHtml = entities.decode(strippedHtml);
     //Clean up any last html codes and diacriticals that
     //contain & so it doesn't choke ssml.
     strippedHtml = strippedHtml.replace(/&[^\s]*/g, '');
