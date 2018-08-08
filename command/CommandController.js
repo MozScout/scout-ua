@@ -273,7 +273,7 @@ async function processArticleRequest(
   metaAudioRequested
 ) {
   const getBody = await buildPocketRequestBody(req.body.userid);
-  let result = await searchForPocketArticle(
+  let result = await searchForPocketArticleByUrl(
     getBody,
     req.body.url,
     extendedData || metaAudioRequested
@@ -289,7 +289,7 @@ async function processArticleRequest(
       summaryOnly
     );
   } else {
-    logger.info('error:  no result returned from searchForPocketArticle');
+    logger.info('error:  no result returned from searchForPocketArticleByUrl');
   }
 
   // if we didn't find it in the DB, create the audio file
@@ -652,14 +652,14 @@ async function archiveTitle(userId, itemId, res) {
 }
 
 /**
- * Looks for an article in user's account that matches the searchTerm,
+ * Looks for an article in user's account that matches the url,
  * and if found, returns metadata for it. Otherwise undefined.
  */
-async function searchForPocketArticle(getBody, searchTerm, extendedData) {
+async function searchForPocketArticleByUrl(getBody, url, extendedData) {
   let result;
-  if (searchTerm) {
-    logger.info('Search term is: ' + searchTerm);
-    getBody.search = searchTerm;
+  if (url) {
+    logger.info('Search for article matching url: ' + url);
+    getBody.search = url;
     getOptions.body = JSON.stringify(getBody);
     const body = await rp(getOptions);
     const jsonBody = JSON.parse(body);
@@ -686,14 +686,12 @@ async function searchForPocketArticle(getBody, searchTerm, extendedData) {
           );
         } else {
           logger.warn(
-            `Searching for '${searchTerm}' failed to find a matching article.`
+            `Searching for '${url}' failed to find a matching article.`
           );
         }
       }
     } else {
-      logger.warn(
-        `Searching for '${searchTerm}' failed to find a matching article.`
-      );
+      logger.warn(`Searching for '${url}' failed to find a matching article.`);
     }
   }
   return result;
