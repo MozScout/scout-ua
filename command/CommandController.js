@@ -273,7 +273,7 @@ async function processArticleRequest(
   metaAudioRequested
 ) {
   const getBody = await buildPocketRequestBody(req.body.userid);
-  let result = await searchForPocketArticle(
+  let result = await searchForPocketArticleByUrl(
     getBody,
     req.body.url,
     extendedData || metaAudioRequested
@@ -289,7 +289,7 @@ async function processArticleRequest(
       summaryOnly
     );
   } else {
-    logger.info('error:  no result returned from searchForPocketArticle');
+    logger.info('error:  no result returned from searchForPocketArticleByUrl');
   }
 
   // if we didn't find it in the DB, create the audio file
@@ -437,20 +437,22 @@ async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
           let promiseArray = [];
           let arrJson = jsonBody[jsonBodyAttr];
           Object.keys(arrJson).forEach(key => {
-            summaryOptions.uri = summaryLink + arrJson[key][urlAttr];
-            logger.debug('Summary uri is: ' + summaryOptions.uri);
-            promiseArray.push(
-              rp(summaryOptions)
-                .then(sumResults => {
-                  let sumResultsJson = JSON.parse(sumResults);
-                  sumResultsJson['title'] = arrJson[key][titleAttr];
-                  return sumResultsJson;
-                })
-                .catch(function(err) {
-                  logger.error('Caught an error: ' + err);
-                  return JSON.stringify({});
-                })
-            );
+            if (arrJson[key].is_article == '1') {
+              summaryOptions.uri = summaryLink + arrJson[key][urlAttr];
+              logger.debug('Summary uri is: ' + summaryOptions.uri);
+              promiseArray.push(
+                rp(summaryOptions)
+                  .then(sumResults => {
+                    let sumResultsJson = JSON.parse(sumResults);
+                    sumResultsJson['title'] = arrJson[key][titleAttr];
+                    return sumResultsJson;
+                  })
+                  .catch(function(err) {
+                    logger.error('Caught an error: ' + err);
+                    return JSON.stringify({});
+                  })
+              );
+            }
           });
           logger.debug('RETURNING PROMISE.ALL ' + Date.now());
           return Promise.all(promiseArray);
@@ -521,7 +523,10 @@ async function getTitlesFromPocket(userid, extendedData) {
 
       // process list of articles
       Object.keys(jsonBody.list).forEach(key => {
-        if (jsonBody.list[key].resolved_title) {
+        if (
+          jsonBody.list[key].resolved_title &&
+          jsonBody.list[key].is_article == '1'
+        ) {
           articlesPromises.push(
             getArticleMetadata(jsonBody.list[key], extendedData)
           );
@@ -647,14 +652,14 @@ async function archiveTitle(userId, itemId, res) {
 }
 
 /**
- * Looks for an article in user's account that matches the searchTerm,
+ * Looks for an article in user's account that matches the url,
  * and if found, returns metadata for it. Otherwise undefined.
  */
-async function searchForPocketArticle(getBody, searchTerm, extendedData) {
+async function searchForPocketArticleByUrl(getBody, url, extendedData) {
   let result;
-  if (searchTerm) {
-    logger.info('Search term is: ' + searchTerm);
-    getBody.search = searchTerm;
+  if (url) {
+    logger.info('Search for article matching url: ' + url);
+    getBody.search = url;
     getOptions.body = JSON.stringify(getBody);
     const body = await rp(getOptions);
     const jsonBody = JSON.parse(body);
@@ -663,15 +668,30 @@ async function searchForPocketArticle(getBody, searchTerm, extendedData) {
       logger.debug('keysarr = ' + keysArr);
       logger.info('article count: ' + keysArr.length);
       if (keysArr.length > 0) {
-        result = await getArticleMetadata(
-          jsonBody.list[keysArr[0]],
-          extendedData
-        );
+        let isArticleId = 0;
+
+        // store the id for first object that is an article
+        while (
+          isArticleId < keysArr.length &&
+          jsonBody.list[keysArr[isArticleId]].is_article != '1'
+        ) {
+          isArticleId++;
+        }
+
+        if (isArticleId < keysArr.length) {
+          // if we have a result
+          result = await getArticleMetadata(
+            jsonBody.list[keysArr[isArticleId]],
+            extendedData
+          );
+        } else {
+          logger.warn(
+            `Searching for '${url}' failed to find a matching article.`
+          );
+        }
       }
     } else {
-      logger.warn(
-        `Searching for '${searchTerm}' failed to find a matching article.`
-      );
+      logger.warn(`Searching for '${url}' failed to find a matching article.`);
     }
   }
   return result;
@@ -811,10 +831,10 @@ function findBestScoringTitle(searchPhrase, articleMetadataArray) {
       if (iCount >= articleMetadataArray.length) {
         logger.debug('Done getting results.');
         logger.debug('Max Score is: ' + maxValue);
-        logger.info('Article is: ' + articleMetadataArray[curMaxIndex].title);
         if (maxValue === 0) {
           reject('NoMatchFound');
         }
+        logger.info('Article is: ' + articleMetadataArray[curMaxIndex].title);
         resolve(articleMetadataArray[curMaxIndex]);
       }
     });
