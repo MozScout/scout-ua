@@ -4,6 +4,7 @@ var uuidgen = require('node-uuid-generator');
 var audioconcat = require('audioconcat');
 var glob = require('glob');
 const logger = require('../logger');
+const xcodeQueue = require('./xcodeQueue');
 
 var polly_tts = {
   getPollyChunk: function(text, filenameIndex, audio_file, voiceType) {
@@ -118,7 +119,6 @@ var polly_tts = {
               reject('error uploading:' + err);
             } else {
               logger.debug('Upload Success' + data.Location);
-              logger.debug('Done uploading: ' + Date.now());
               // Return the URL of the Mp3 in the S3 bucket.
               resolve(data.Location);
               // Remove the files locally.
@@ -129,6 +129,8 @@ var polly_tts = {
                   logger.debug('all files removed');
                 }
               });
+              //Put the file in queue for transcoding.
+              xcodeQueue.add(audio_file + '.mp3');
             }
           });
         });
