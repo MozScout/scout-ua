@@ -406,7 +406,7 @@ async function generateMetaAudio(data, summaryOnly) {
   }
 
   // regenerate end_instructions if file doesn't exist anymore
-  if (!await audioHelper.checkFileExistence(endInstructionsData.url)) {
+  if (!(await audioHelper.checkFileExistence(endInstructionsData.url))) {
     endInstructionsData.url = await buildAudioFromText(
       endInstructionsData.text,
       voice
