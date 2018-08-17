@@ -79,7 +79,7 @@ var polly_tts = {
   },
 
   synthesizeSpeechFile(parts, voiceType) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       let audio_file = uuidgen.generate();
       let promArray = [];
       for (var i = 0; i < parts.length; i++) {
@@ -109,16 +109,19 @@ var polly_tts = {
   *    upload intro & body separately for Alexa.
   */
   processPocketAudio(introFile, articleFile) {
-    concatAudio([introFile, articleFile], uuidgen.generate())
-      .then(function(audio_file) {
-        return uploadFile(audio_file);
-      })
-      .then(function(audio_url) {
-        resolve(audio_url);
-      });
+    return new Promise(resolve => {
+      polly_tts
+        .concatAudio([introFile, articleFile], uuidgen.generate())
+        .then(function(audio_file) {
+          return polly_tts.uploadFile(audio_file);
+        })
+        .then(function(audio_url) {
+          resolve(audio_url);
+        });
+    });
   },
 
-  uploadFile: function(localFile) {
+  uploadFile: function(newAudioFile) {
     return new Promise((resolve, reject) => {
       var s3 = new AWS.S3({
         apiVersion: '2006-03-01'
