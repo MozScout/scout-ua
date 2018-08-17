@@ -78,6 +78,81 @@ var polly_tts = {
     });
   },
 
+  synthesizeSpeechFile(parts, voiceType) {
+    return new Promise((resolve, reject) => {
+      let audio_file = uuidgen.generate();
+      let promArray = [];
+      for (var i = 0; i < parts.length; i++) {
+        promArray.push(this.getPollyChunk(parts[i], i, audio_file, voiceType));
+      }
+
+      Promise.all(promArray)
+        .then(function(values) {
+          logger.debug('resolved the big promise array');
+          return polly_tts.concatAudio(values, audio_file);
+        })
+        .then(function(newAudioFile) {
+          resolve(newAudioFile);
+        });
+    });
+  },
+
+  /* This is special handling for the Pocket audio file.
+  * It stitches together the intro and outro for the clients.
+  *   
+  *    concat intro + body
+  *    upload stitched file
+  *    resolve stitched file
+  *    ... then the rest can be done after the promise resolves
+  *    fire xcode request to sqs
+  *    handle db writes
+  *    upload intro & body separately for Alexa.
+  */
+  processPocketAudio(introFile, articleFile) {
+    concatAudio([introFile, articleFile], uuidgen.generate())
+      .then(function(audio_file) {
+        return uploadFile(audio_file);
+      })
+      .then(function(audio_url) {
+        resolve(audio_url);
+      });
+  },
+
+  uploadFile: function(localFile) {
+    return new Promise((resolve, reject) => {
+      var s3 = new AWS.S3({
+        apiVersion: '2006-03-01'
+      });
+      var bucketParams = {
+        Bucket: process.env.POLLY_S3_BUCKET,
+        Key: '',
+        Body: ''
+      };
+
+      var fileStream = fs.createReadStream(newAudioFile);
+      fileStream.on('error', function(err) {
+        logger.error('File Error' + err);
+        reject('File error:' + err);
+        return;
+      });
+      bucketParams.Body = fileStream;
+      var path = require('path');
+      bucketParams.Key = path.basename(newAudioFile);
+
+      logger.debug('startupload: ' + Date.now());
+      s3.upload(bucketParams, function(err, data) {
+        if (err) {
+          logger.error('error uploading');
+          reject('error uploading:' + err);
+        } else {
+          logger.debug('Upload Success' + data.Location);
+          // Return the URL of the Mp3 in the S3 bucket.
+          resolve(data.Location);
+        }
+      });
+    });
+  },
+
   getSpeechSynthUrl: function(parts, voiceType) {
     return new Promise((resolve, reject) => {
       let audio_file = uuidgen.generate();
