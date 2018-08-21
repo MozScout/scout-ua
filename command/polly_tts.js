@@ -117,6 +117,17 @@ var polly_tts = {
         })
         .then(function(audio_url) {
           resolve(audio_url);
+          // Delete the local file now that it's uploaded.
+          let audio_file = audio_url.substr(audio_url.lastIndexOf('/') + 1);
+          polly_tts.deleteLocalFiles(audio_file, function(err) {
+            if (err) {
+              logger.error('Error removing files ' + err);
+            } else {
+              logger.debug('all files removed');
+            }
+          });
+          // Send the stitched file off for transcoding.
+          xcodeQueue.add(audio_file);
         });
     });
   },
@@ -212,6 +223,36 @@ var polly_tts = {
             }
           });
         });
+    });
+  },
+
+  postProcessPocketPart: function(audio_file) {
+    logger.debug('postProcessPocketPart: ' + audio_file);
+    xcodeQueue.add(audio_file + '.mp3');
+    polly_tts.deleteLocalFiles(audio_file, function(err) {
+      if (err) {
+        logger.error('Error removing files ' + err);
+      } else {
+        logger.debug('all files removed');
+      }
+    });
+  },
+
+  postProcessPart: function(audio_file) {
+    return new Promise(resolve => {
+      polly_tts.uploadFile(audioFile).then(function(audio_url) {
+        //Put the file in queue for transcoding.
+        logger.debug('audio_file is: ' + audio_file);
+        xcodeQueue.add(audio_file + '.mp3');
+        resolve(audio_url);
+        polly_tts.deleteLocalFiles(audio_file, function(err) {
+          if (err) {
+            logger.error('Error removing files ' + err);
+          } else {
+            logger.debug('all files removed');
+          }
+        });
+      });
     });
   },
 

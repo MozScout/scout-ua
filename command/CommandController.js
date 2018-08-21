@@ -174,10 +174,8 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
     let audioUrl;
     if (req.body.article_id) {
       // we have a pocket item. do we already have the audio file?
-      audioUrl = await audioHelper.getAudioFileLocation(
-        req.body.article_id,
-        false
-      );
+      audioUrl = await audioHelper.getMobileFileLocation(req.body.article_id);
+      logger.info('audioUrl: ' + audioUrl);
     } else {
       logger.info('error:  missing article_id');
     }
@@ -189,13 +187,34 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       // Create the body as a local file.
       let article = await getPocketArticleTextFromUrl(req.body.url);
       if (article) {
+        // Build the stitched file first
         let articleFile = await createAudioFileFromText(`${article.article}`);
         let introFile = await createAudioFileFromText(buildIntro(article));
         let audioUrl = await buildPocketAudio(introFile, articleFile);
+        await audioHelper.storeMobileLocation(req.body.article_id, audioUrl);
         result.url = audioUrl;
+        // Send it back to the mobile as quick as possible.
         logger.info('POST article resp: ' + JSON.stringify(result));
         res.status(200).send(JSON.stringify(result));
+
+        // Upload the individual parts for use by Alexa later & cleanup.
+        let introUrl = await polly_tts.postProcessPart(introFile);
+        let articleUrl = await polly_tts.postProcessPart(articleFile);
+        await audioHelper.storeIntroLocation(
+          req.body.article_id,
+          introUrl,
+          false
+        );
+        await audioHelper.storeAudioFileLocation(
+          req.body.article_id,
+          articleUrl,
+          false
+        );
       }
+    } else {
+      result.url = audioUrl;
+      logger.info('POST article resp: ' + JSON.stringify(result));
+      res.status(200).send(JSON.stringify(result));
     }
   } catch (reason) {
     logger.error('Error in /articleservice ' + reason);
