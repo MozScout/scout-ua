@@ -240,7 +240,7 @@ var polly_tts = {
 
   postProcessPart: function(audio_file) {
     return new Promise(resolve => {
-      polly_tts.uploadFile(audioFile).then(function(audio_url) {
+      polly_tts.uploadFile(audio_file).then(function(audio_url) {
         //Put the file in queue for transcoding.
         logger.debug('audio_file is: ' + audio_file);
         xcodeQueue.add(audio_file + '.mp3');
