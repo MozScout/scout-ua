@@ -11,6 +11,7 @@
 
 var uuidgen = require('node-uuid-generator');
 var AWS = require('aws-sdk');
+const logger = require('../logger');
 AWS.config.update({ region: process.env.AWS_REGION });
 
 // Create an SQS service object
