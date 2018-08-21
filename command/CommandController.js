@@ -194,6 +194,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
         let articleFile = await createAudioFileFromText(`${article.article}`);
         let introFile = await createAudioFileFromText(buildIntro(article));
         let audioUrl = await buildPocketAudio(introFile, articleFile);
+        logger.debug('Calling StoreMobileLocation: ' + audioUrl);
         await audioHelper.storeMobileLocation(req.body.article_id, audioUrl);
         result.url = audioUrl;
         // Send it back to the mobile as quick as possible.

@@ -87,7 +87,7 @@ class CommandHelper {
   * file.  
   */
   async storeMobileLocation(articleId, FileLocation) {
-    return await database.storeMobileLocation;
+    return await database.storeMobileLocation(articleId, FileLocation);
   }
 }
 
