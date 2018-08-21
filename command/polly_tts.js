@@ -226,18 +226,6 @@ var polly_tts = {
     });
   },
 
-  /*  postProcessPocketPart: async function(audio_file) {
-    logger.debug('postProcessPocketPart: ' + audio_file);
-    xcodeQueue.add(audio_file.replace(/^.*[\\\/]/, ''));
-    polly_tts.deleteLocalFiles(audio_file, function(err) {
-      if (err) {
-        logger.error('Error removing files ' + err);
-      } else {
-        logger.debug('all files removed');
-      }
-    });
-  },*/
-
   postProcessPart: function(audio_file) {
     return new Promise(resolve => {
       polly_tts.uploadFile(audio_file).then(function(audio_url) {
