@@ -226,7 +226,7 @@ var polly_tts = {
     });
   },
 
-  postProcessPocketPart: async function(audio_file) {
+  /*  postProcessPocketPart: async function(audio_file) {
     logger.debug('postProcessPocketPart: ' + audio_file);
     xcodeQueue.add(audio_file.replace(/^.*[\\\/]/, ''));
     polly_tts.deleteLocalFiles(audio_file, function(err) {
@@ -236,14 +236,14 @@ var polly_tts = {
         logger.debug('all files removed');
       }
     });
-  },
+  },*/
 
   postProcessPart: function(audio_file) {
     return new Promise(resolve => {
       polly_tts.uploadFile(audio_file).then(function(audio_url) {
         //Put the file in queue for transcoding.
         logger.debug('audio_file is: ' + audio_file);
-        xcodeQueue.add(audio_file + '.mp3');
+        xcodeQueue.add(audio_file.replace(/^.*[\\\/]/, ''));
         resolve(audio_url);
         polly_tts.deleteLocalFiles(audio_file, function(err) {
           if (err) {
