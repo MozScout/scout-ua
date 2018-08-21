@@ -228,7 +228,7 @@ var polly_tts = {
 
   postProcessPocketPart: function(audio_file) {
     logger.debug('postProcessPocketPart: ' + audio_file);
-    xcodeQueue.add(audio_file + '.mp3');
+    xcodeQueue.add(audio_file.replace(/^.*[\\\/]/, ''));
     polly_tts.deleteLocalFiles(audio_file, function(err) {
       if (err) {
         logger.error('Error removing files ' + err);
