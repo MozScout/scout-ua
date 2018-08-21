@@ -23,10 +23,7 @@ class CommandHelper {
 
   async getMobileFileLocation(articleId, summaryOnly) {
     // first check if we have this file in the DB
-    let fileUrl = await database.getAudioFileLocation(
-      articleId,
-      summaryOnly ? 'summary' : 'full'
-    );
+    let fileUrl = await database.getMobileFileLocation(articleId);
 
     if (!(await this.checkFileExistence(fileUrl))) {
       fileUrl = '';
