@@ -21,7 +21,7 @@ class CommandHelper {
     return fileUrl;
   }
 
-  async getMobileFileLocation(articleId, summaryOnly) {
+  async getMobileFileLocation(articleId) {
     // first check if we have this file in the DB
     let fileUrl = await database.getMobileFileLocation(articleId);
 
