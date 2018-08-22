@@ -245,8 +245,10 @@ var polly_tts = {
   },
 
   deleteLocalFiles: function(rootFile, callback) {
+    logger.debug('Entereing deleteLocalFiles: ' + rootFile);
     let files = glob.sync('./' + rootFile + '*.*');
     var i = files.length;
+    logger.debug('FOUND ' + i + ' FILES.');
     files.forEach(function(filepath) {
       fs.unlink(filepath, function(err) {
         i--;
