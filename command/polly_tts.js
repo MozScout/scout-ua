@@ -40,6 +40,8 @@ var polly_tts = {
         } else if (data) {
           if (data.AudioStream instanceof Buffer) {
             let audioFile = './' + audio_file + '-' + filenameIndex + '.mp3';
+            logger.debug('CWD:  ' + process.cwd());
+            logger.debug('DIRNAME:  ' + __dirname);
             fs.writeFile(audioFile, data.AudioStream, function(err) {
               if (err) {
                 reject(err);
