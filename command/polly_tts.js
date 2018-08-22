@@ -248,8 +248,8 @@ var polly_tts = {
 
   deleteLocalFiles: function(rootFile, callback) {
     logger.debug('Entereing deleteLocalFiles: ' + rootFile);
-    logger.debug('GLOB PATTERN: ' + rootFile + '*.*');
-    let files = glob.sync(rootFile + '*.*');
+    logger.debug('GLOB PATTERN: ' + rootFile.replace('.mp3', '*.*'));
+    let files = glob.sync(rootFile.replace('.mp3', '*.*'));
     var i = files.length;
     logger.debug('FOUND ' + i + ' FILES.');
     files.forEach(function(filepath) {
