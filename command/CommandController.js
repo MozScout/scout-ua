@@ -174,10 +174,11 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
     let audioUrl;
     if (req.body.article_id) {
       // we have a pocket item. do we already have the audio file?
-      audioUrl = await audioHelper.getAudioFileLocation(
+      audioUrl = await audioHelper.getMobileFileLocation(
         req.body.article_id,
         false
       );
+      logger.info('audioUrl: ' + audioUrl);
     } else {
       logger.info('error:  missing article_id');
     }
@@ -186,21 +187,39 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
     // if we didn't find it in the DB, create the audio file
     if (!audioUrl) {
       logger.info('Did not find the audio URL in DB: ' + req.body.article_id);
-      audioUrl = await buildAudioFromUrl(req.body.url);
+      // Create the body as a local file.
+      let article = await getPocketArticleTextFromUrl(req.body.url);
+      if (article) {
+        // Build the stitched file first
+        let articleFile = await createAudioFileFromText(`${article.article}`);
+        let introFile = await createAudioFileFromText(buildIntro(article));
+        let audioUrl = await buildPocketAudio(introFile, articleFile);
+        logger.debug('Calling StoreMobileLocation: ' + audioUrl);
+        await audioHelper.storeMobileLocation(req.body.article_id, audioUrl);
+        result.url = audioUrl;
+        // Send it back to the mobile as quick as possible.
+        logger.info('POST article resp: ' + JSON.stringify(result));
+        res.status(200).send(JSON.stringify(result));
 
-      if (audioUrl) {
-        logger.info('built audio');
+        // Upload the individual parts for use by Alexa later & cleanup.
+        let introUrl = await polly_tts.postProcessPart(introFile);
+        let articleUrl = await polly_tts.postProcessPart(articleFile);
+        await audioHelper.storeIntroLocation(
+          req.body.article_id,
+          introUrl,
+          false
+        );
         await audioHelper.storeAudioFileLocation(
           req.body.article_id,
-          false,
-          audioUrl
+          articleUrl,
+          false
         );
       }
+    } else {
+      result.url = audioUrl;
+      logger.info('POST article resp: ' + JSON.stringify(result));
+      res.status(200).send(JSON.stringify(result));
     }
-    result.url = audioUrl;
-
-    logger.info('POST article resp: ' + JSON.stringify(result));
-    res.status(200).send(JSON.stringify(result));
   } catch (reason) {
     logger.error('Error in /articleservice ' + reason);
     const errSpeech = `There was an error processing the article. ${reason}`;
@@ -386,15 +405,7 @@ async function generateMetaAudio(data, summaryOnly) {
     outro = metaAudio.outro_location;
   } else {
     logger.info('Generating outro for item:' + data.item_id);
-    articleOptions.formData = {
-      consumer_key: process.env.POCKET_KEY,
-      url: data.resolved_url,
-      images: '0',
-      videos: '0',
-      refresh: '0',
-      output: 'json'
-    };
-    const article = JSON.parse(await rp(articleOptions));
+    let article = await getPocketArticleTextFromUrl(data.resolved_url);
     var dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
     let publishedDate = new Date(article.timePublished * 1000);
     let dateString =
@@ -764,6 +775,31 @@ async function searchAndPlayArticle(
 }
 
 async function buildAudioFromUrl(url) {
+  let article = await getPocketArticleTextFromUrl(url);
+  return buildAudioFromText(`${article.article}`);
+}
+
+function buildIntro(article) {
+  //Intro: “article title, published by host, on publish date"
+  let introFullText;
+  if (article.timePublished) {
+    var dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+    let publishedDate = new Date(article.timePublished * 1000);
+    let dateString = publishedDate.toLocaleDateString('en-US', dateOptions);
+
+    introFullText = article.publisher
+      ? `${article.title}, published by ${article.host}, on ${dateString}`
+      : `${article.title}, published on ${dateString}`;
+  } else {
+    // The case where date is not available.
+    introFullText = article.publisher
+      ? `${article.title}, published by ${article.host}.`
+      : `${article.title}.`;
+  }
+  return introFullText;
+}
+
+async function getPocketArticleTextFromUrl(url) {
   articleOptions.formData = {
     consumer_key: process.env.POCKET_KEY,
     url,
@@ -775,7 +811,17 @@ async function buildAudioFromUrl(url) {
   logger.info('Getting article from pocket API: ' + url);
   const article = JSON.parse(await rp(articleOptions));
   logger.info('Returned article from pocket API: ' + article.title);
-  return buildAudioFromText(`${article.article}`);
+  return article;
+}
+
+async function createAudioFileFromText(
+  textString,
+  voiceType = process.env.POLLY_VOICE || 'Salli'
+) {
+  const cleanText = texttools.cleanText(textString);
+  const chunkText = texttools.chunkText(cleanText);
+  logger.debug('chunkText is: ', chunkText.length, chunkText);
+  return polly_tts.synthesizeSpeechFile(chunkText, voiceType);
 }
 
 async function buildSummaryAudioFromUrl(url) {
@@ -802,6 +848,10 @@ async function buildAudioFromText(
   const chunkText = texttools.chunkText(cleanText);
   logger.debug('chunkText is: ', chunkText.length, chunkText);
   return polly_tts.getSpeechSynthUrl(chunkText, voiceType);
+}
+
+async function buildPocketAudio(introFile, articleFile) {
+  return polly_tts.processPocketAudio(introFile, articleFile);
 }
 
 function findBestScoringTitle(searchPhrase, articleMetadataArray) {

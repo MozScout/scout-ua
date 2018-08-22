@@ -54,6 +54,15 @@ class Database {
     return '';
   }
 
+  async getMobileFileLocation(articleId) {
+    logger.info(`getMobileFileLocation for ${articleId}`);
+    const fileLocation = await AudioFileLocation.get({ item_id: articleId });
+    if (fileLocation && fileLocation.mobile_audio_location) {
+      return fileLocation.mobile_audio_location;
+    }
+    return '';
+  }
+
   async storeAudioFileLocation(articleId, audioType, location) {
     logger.info(
       `storeAudioFileLocation for ${articleId}/${audioType}: ${location}`
@@ -71,6 +80,20 @@ class Database {
       fileLocation.summary_audio_location = location;
       fileLocation.summary_audio_date = Date.now();
     }
+    await fileLocation.save();
+  }
+
+  async storeMobileLocation(articleId, location) {
+    logger.info(`storeMobileLocation for ${articleId}: ${location}`);
+    let fileLocation = await AudioFileLocation.get({ item_id: articleId });
+    if (!fileLocation) {
+      fileLocation = new AudioFileLocation({
+        item_id: articleId
+      });
+    }
+    fileLocation.mobile_audio_location = location;
+    fileLocation.mobile_audio_date = Date.now();
+
     await fileLocation.save();
   }
 

@@ -11,6 +11,7 @@
 
 var uuidgen = require('node-uuid-generator');
 var AWS = require('aws-sdk');
+const logger = require('../logger');
 AWS.config.update({ region: process.env.AWS_REGION });
 
 // Create an SQS service object
@@ -18,6 +19,7 @@ var sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 
 const xcodeQueue = {
   add: function(file) {
+    logger.debug('XCODE: filename: ' + file);
     var jsonBody = {
       filename: file,
       targetCodec: 'opus 24'

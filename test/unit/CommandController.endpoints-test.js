@@ -119,6 +119,14 @@ describe('CommandController - Endpoints', function() {
     );
     sinon.replace(
       AudioFileHelper.prototype,
+      'getMobileFileLocation',
+      sinon.fake(function() {
+        console.log('Calling fake getMobileFileLocation');
+        return 'audio_file_url';
+      })
+    );
+    sinon.replace(
+      AudioFileHelper.prototype,
       'checkFileExistence',
       sinon.fake(function(url) {
         console.log('Calling fake checkFileExistence');
