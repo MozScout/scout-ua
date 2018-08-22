@@ -405,15 +405,7 @@ async function generateMetaAudio(data, summaryOnly) {
     outro = metaAudio.outro_location;
   } else {
     logger.info('Generating outro for item:' + data.item_id);
-    articleOptions.formData = {
-      consumer_key: process.env.POCKET_KEY,
-      url: data.resolved_url,
-      images: '0',
-      videos: '0',
-      refresh: '0',
-      output: 'json'
-    };
-    const article = JSON.parse(await rp(articleOptions));
+    let article = await getPocketArticleTextFromUrl(data.resolved_url);
     var dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
     let publishedDate = new Date(article.timePublished * 1000);
     let dateString =
@@ -783,17 +775,7 @@ async function searchAndPlayArticle(
 }
 
 async function buildAudioFromUrl(url) {
-  articleOptions.formData = {
-    consumer_key: process.env.POCKET_KEY,
-    url,
-    images: '0',
-    videos: '0',
-    refresh: '0',
-    output: 'json'
-  };
-  logger.info('Getting article from pocket API: ' + url);
-  const article = JSON.parse(await rp(articleOptions));
-  logger.info('Returned article from pocket API: ' + article.title);
+  let article = await getPocketArticleTextFromUrl(url);
   return buildAudioFromText(`${article.article}`);
 }
 
@@ -830,7 +812,6 @@ async function getPocketArticleTextFromUrl(url) {
   const article = JSON.parse(await rp(articleOptions));
   logger.info('Returned article from pocket API: ' + article.title);
   return article;
-  // return createAudioFileFromText(`${article.article}`);
 }
 
 async function createAudioFileFromText(
