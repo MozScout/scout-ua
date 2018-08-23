@@ -906,7 +906,7 @@ async function buildPocketResponseFromMetadata(mobileMetadata) {
   if (opus) {
     response = [mp3, opus];
   } else {
-    [mp3];
+    response = [mp3];
   }
 
   return response;
