@@ -102,7 +102,7 @@ class Database {
     }
     fileLocation.mobile_audio_location = location;
     fileLocation.mobile_audio_date = Date.now();
-    fileLocation.mobile_audio_date = duration;
+    fileLocation.mobile_audio_duration = duration;
 
     await fileLocation.save();
   }
