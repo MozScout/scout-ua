@@ -218,6 +218,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
         );
       }
     } else {
+      logger.debug('Found the file in the database');
       let response = buildPocketResponseFromMetadata(mobileMetadata);
       logger.info('POST article resp: ' + JSON.stringify(response));
       res.status(200).send(JSON.stringify(response));
@@ -873,7 +874,7 @@ function buildPocketResponse(audioMetadata) {
 }
 
 async function buildPocketResponseFromMetadata(mobileMetadata) {
-  let mp3Size = await polly_tts.getFileMetadata(mobileMetadata.fileUrl);
+  let mp3Size = await polly_tts.getFileSizeFromUrl(mobileMetadata.fileUrl);
   logger.debug('size is: ' + mp3Size);
   let mp3 = {
     format: 'mp3',
@@ -889,7 +890,7 @@ async function buildPocketResponseFromMetadata(mobileMetadata) {
   let opusFileUrl = mobileMetadata.fileUrl.replace('.mp3', 'opus');
   if (AudioFileHelper.checkFileExistence(opusFileUrl)) {
     logger.debug('Opus file found');
-    let opusSize = await polly_tts.getFileMetadata(opusFileUrl);
+    let opusSize = await polly_tts.getFileSizeFromUrl(opusFileUrl);
     logger.debug('OpusSize is: ' + opusSize);
     opus = {
       format: 'opus',
