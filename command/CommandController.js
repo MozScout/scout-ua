@@ -219,7 +219,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       }
     } else {
       logger.debug('Found the file in the database');
-      let response = buildPocketResponseFromMetadata(mobileMetadata);
+      let response = await buildPocketResponseFromMetadata(mobileMetadata);
       logger.info('POST article resp: ' + JSON.stringify(response));
       res.status(200).send(JSON.stringify(response));
     }
@@ -901,7 +901,10 @@ async function buildPocketResponseFromMetadata(mobileMetadata) {
       duration: mobileMetadata.duration,
       size: opusSize
     };
+  } else {
+    logger.debug('opus file not found');
   }
+
   let response;
   if (opus) {
     response = [mp3, opus];
