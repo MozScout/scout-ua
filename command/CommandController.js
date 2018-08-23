@@ -888,7 +888,7 @@ async function buildPocketResponseFromMetadata(mobileMetadata) {
 
   let opus;
   let opusFileUrl = mobileMetadata.fileUrl.replace('.mp3', 'opus');
-  if (AudioFileHelper.checkFileExistence(opusFileUrl)) {
+  if (audioHelper.checkFileExistence(opusFileUrl)) {
     logger.debug('Opus file found');
     let opusSize = await polly_tts.getFileSizeFromUrl(opusFileUrl);
     logger.debug('OpusSize is: ' + opusSize);
