@@ -1,5 +1,5 @@
 class Utils {
-  UrlToFile(url) {
+  urlToFile(url) {
     return url.substr(url.lastIndexOf('/') + 1);
   }
 }
