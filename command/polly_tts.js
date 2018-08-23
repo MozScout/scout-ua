@@ -7,6 +7,8 @@ const logger = require('../logger');
 const xcodeQueue = require('./xcodeQueue');
 const ffmpeg = require('fluent-ffmpeg');
 const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
+const Utils = require('./utils');
+const utils = new Utils();
 
 var polly_tts = {
   /* Sends a chunk of text to be synthesized by Polly.
@@ -378,7 +380,8 @@ var polly_tts = {
   * size of the file.
   */
   getFileSizeFromUrl: async function(audio_url) {
-    let file = audio_url.replace(/\//, '');
+    logger.debug('getFileSizeFromUrl');
+    let file = utils.urlToFile(audio_url);
     logger.debug('file is: ' + file);
     try {
       return s3
