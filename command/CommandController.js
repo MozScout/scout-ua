@@ -858,9 +858,10 @@ async function buildPocketAudio(introFile, articleFile) {
 }
 
 function buildPocketResponse(audioMetadata) {
+  logger.debug('Entering buildPocketResponse');
   let opus_metadata = {
     format: 'opus',
-    url: audioMetadata.fileUrl.replace('mp3', 'opus'),
+    url: audioMetadata.url.replace('.mp3', '.opus'),
     status: 'processing',
     voice: audioMetadata.voice,
     sample_rate: 48000,
