@@ -169,64 +169,69 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
   logger.info(`POST /articleservice: ${req.body.url} ${req.body.article_id}`);
   logMetric('articleservice', req.body.url, req.get('User-Agent'));
   res.setHeader('Content-Type', 'application/json');
+  let version = req.body.version;
 
-  try {
-    let mobileMetadata;
-    if (req.body.article_id) {
-      // we have a pocket item. do we already have the audio file?
-      mobileMetadata = await audioHelper.getMobileFileMetadata(
-        req.body.article_id
-      );
-      logger.info('audioUrl: ' + mobileMetadata.fileUrl);
-    } else {
-      logger.info('error:  missing article_id');
-    }
-
-    // if we didn't find it in the DB, create the audio file
-    if (!mobileMetadata || !mobileMetadata.fileUrl) {
-      logger.info('Did not find the audio URL in DB: ' + req.body.article_id);
-      // Create the body as a local file.
-      let article = await getPocketArticleTextFromUrl(req.body.url);
-      if (article) {
-        // Build the stitched file first
-        let articleFile = await createAudioFileFromText(`${article.article}`);
-        let introFile = await createAudioFileFromText(buildIntro(article));
-        let audioMetadata = await buildPocketAudio(introFile, articleFile);
-        logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
-        await audioHelper.storeMobileLocation(
-          req.body.article_id,
-          audioMetadata.url,
-          audioMetadata.duration
+  if (version && version == '2') {
+    try {
+      let mobileMetadata;
+      if (req.body.article_id) {
+        // we have a pocket item. do we already have the audio file?
+        mobileMetadata = await audioHelper.getMobileFileMetadata(
+          req.body.article_id
         );
-        let response = buildPocketResponse(audioMetadata);
-        // Send it back to the mobile as quick as possible.
+        logger.info('audioUrl: ' + mobileMetadata.fileUrl);
+      } else {
+        logger.info('error:  missing article_id');
+      }
+
+      // if we didn't find it in the DB, create the audio file
+      if (!mobileMetadata || !mobileMetadata.fileUrl) {
+        logger.info('Did not find the audio URL in DB: ' + req.body.article_id);
+        // Create the body as a local file.
+        let article = await getPocketArticleTextFromUrl(req.body.url);
+        if (article) {
+          // Build the stitched file first
+          let articleFile = await createAudioFileFromText(`${article.article}`);
+          let introFile = await createAudioFileFromText(buildIntro(article));
+          let audioMetadata = await buildPocketAudio(introFile, articleFile);
+          logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
+          await audioHelper.storeMobileLocation(
+            req.body.article_id,
+            audioMetadata.url,
+            audioMetadata.duration
+          );
+          let response = buildPocketResponse(audioMetadata);
+          // Send it back to the mobile as quick as possible.
+          logger.info('POST article resp: ' + JSON.stringify(response));
+          res.status(200).send(JSON.stringify(response));
+
+          // Upload the individual parts for use by Alexa later & cleanup.
+          let introUrl = await polly_tts.postProcessPart(introFile);
+          let articleUrl = await polly_tts.postProcessPart(articleFile);
+          await audioHelper.storeIntroLocation(
+            req.body.article_id,
+            introUrl,
+            false
+          );
+          await audioHelper.storeAudioFileLocation(
+            req.body.article_id,
+            articleUrl,
+            false
+          );
+        }
+      } else {
+        logger.debug('Found the file in the database');
+        let response = await buildPocketResponseFromMetadata(mobileMetadata);
         logger.info('POST article resp: ' + JSON.stringify(response));
         res.status(200).send(JSON.stringify(response));
-
-        // Upload the individual parts for use by Alexa later & cleanup.
-        let introUrl = await polly_tts.postProcessPart(introFile);
-        let articleUrl = await polly_tts.postProcessPart(articleFile);
-        await audioHelper.storeIntroLocation(
-          req.body.article_id,
-          introUrl,
-          false
-        );
-        await audioHelper.storeAudioFileLocation(
-          req.body.article_id,
-          articleUrl,
-          false
-        );
       }
-    } else {
-      logger.debug('Found the file in the database');
-      let response = await buildPocketResponseFromMetadata(mobileMetadata);
-      logger.info('POST article resp: ' + JSON.stringify(response));
-      res.status(200).send(JSON.stringify(response));
+    } catch (reason) {
+      logger.error('Error in /articleservice ' + reason);
+      const errSpeech = `There was an error processing the article. ${reason}`;
+      res.status(404).send(JSON.stringify({ speech: errSpeech }));
     }
-  } catch (reason) {
-    logger.error('Error in /articleservice ' + reason);
-    const errSpeech = `There was an error processing the article. ${reason}`;
-    res.status(404).send(JSON.stringify({ speech: errSpeech }));
+  } else {
+    v1ArticleService(req, res);
   }
 });
 
@@ -285,6 +290,63 @@ function logMetric(cmd, userid, agent) {
       el: agent
     };
     visitor.event(ga_params).send();
+  }
+}
+
+function v1ArticleService(req, res) {
+  try {
+    let audioUrl;
+    if (req.body.article_id) {
+      // we have a pocket item. do we already have the audio file?
+      audioUrl = await audioHelper.getMobileFileLocation(
+        req.body.article_id,
+        false
+      );
+      logger.info('audioUrl: ' + audioUrl);
+    } else {
+      logger.info('error:  missing article_id');
+    }
+    let result = {};
+    // if we didn't find it in the DB, create the audio file
+    if (!audioUrl) {
+      logger.info('Did not find the audio URL in DB: ' + req.body.article_id);
+      // Create the body as a local file.
+      let article = await getPocketArticleTextFromUrl(req.body.url);
+      if (article) {
+        // Build the stitched file first
+        let articleFile = await createAudioFileFromText(`${article.article}`);
+        let introFile = await createAudioFileFromText(buildIntro(article));
+        let audioUrl = await buildPocketAudio(introFile, articleFile);
+        logger.debug('Calling StoreMobileLocation: ' + audioUrl);
+        await audioHelper.storeMobileLocation(req.body.article_id, audioUrl);
+        result.url = audioUrl;
+        // Send it back to the mobile as quick as possible.
+        logger.info('POST article resp: ' + JSON.stringify(result));
+        res.status(200).send(JSON.stringify(result));
+  
+        // Upload the individual parts for use by Alexa later & cleanup.
+        let introUrl = await polly_tts.postProcessPart(introFile);
+        let articleUrl = await polly_tts.postProcessPart(articleFile);
+        await audioHelper.storeIntroLocation(
+          req.body.article_id,
+          introUrl,
+          false
+        );
+        await audioHelper.storeAudioFileLocation(
+          req.body.article_id,
+          articleUrl,
+          false
+        );
+      }
+    } else {
+      result.url = audioUrl;
+      logger.info('POST article resp: ' + JSON.stringify(result));
+      res.status(200).send(JSON.stringify(result));
+    }
+  } catch (reason) {
+    logger.error('Error in /articleservice ' + reason);
+    const errSpeech = `There was an error processing the article. ${reason}`;
+    res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 }
 
