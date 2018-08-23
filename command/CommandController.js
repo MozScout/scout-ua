@@ -231,7 +231,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       res.status(404).send(JSON.stringify({ speech: errSpeech }));
     }
   } else {
-    v1ArticleService(req, res);
+    await v1ArticleService(req, res);
   }
 });
 
@@ -293,7 +293,7 @@ function logMetric(cmd, userid, agent) {
   }
 }
 
-function v1ArticleService(req, res) {
+async function v1ArticleService(req, res) {
   try {
     let audioUrl;
     if (req.body.article_id) {
@@ -323,7 +323,7 @@ function v1ArticleService(req, res) {
         // Send it back to the mobile as quick as possible.
         logger.info('POST article resp: ' + JSON.stringify(result));
         res.status(200).send(JSON.stringify(result));
-  
+
         // Upload the individual parts for use by Alexa later & cleanup.
         let introUrl = await polly_tts.postProcessPart(introFile);
         let articleUrl = await polly_tts.postProcessPart(articleFile);
