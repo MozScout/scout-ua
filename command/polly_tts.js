@@ -5,6 +5,8 @@ var audioconcat = require('audioconcat');
 var glob = require('glob');
 const logger = require('../logger');
 const xcodeQueue = require('./xcodeQueue');
+const ffmpeg = require('fluent-ffmpeg');
+const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
 var polly_tts = {
   /* Sends a chunk of text to be synthesized by Polly.
@@ -139,9 +141,14 @@ var polly_tts = {
           return polly_tts.uploadFile(audio_file);
         })
         .then(function(audio_url) {
-          resolve(audio_url);
+          return polly_tts.getFileMetadata(audio_url);
+        })
+        .then(function(audio_metadata) {
+          resolve(audio_metadata);
           // Delete the local file now that it's uploaded.
-          let audio_file = audio_url.substr(audio_url.lastIndexOf('/') + 1);
+          let audio_file = audio_metadata.url.substr(
+            audio_metadata.url.lastIndexOf('/') + 1
+          );
           polly_tts.deleteLocalFiles(audio_file, function(err) {
             if (err) {
               logger.error('Error removing files ' + err);
@@ -326,6 +333,58 @@ var polly_tts = {
         }
       });
     });
+  },
+
+  /* 
+  * Takes an audio_url in S3:
+  * Gets the size, sample rate, duration, format, voice
+  * for the given file
+  *
+  * 1. Convert URL to local filename
+  * 2. Get the filesize.
+  * 3. Get the audio attributes using ffmpeg
+  *
+  * resolve: metadata object
+  * reject: err
+  */
+  getFileMetadata: function(audio_url) {
+    let audio_file = './' + audio_url.substr(audio_url.lastIndexOf('/') + 1);
+    return new Promise((resolve, reject) => {
+      // Get the filesize first:
+      let stats = fs.statSync(audio_file);
+      var fileSizeInBytes = stats['size'];
+      // Now get the audio attributes
+      try {
+        ffmpeg.ffprobe(audio_file, function(err, audioInfo) {
+          let metadata = {
+            format: 'mp3',
+            url: audio_url,
+            status: 'available',
+            voice: 'Joanna',
+            sample_rate: audioInfo.streams.sample_rate,
+            duration: Math.floor(audioInfo.format.duration),
+            size: fileSizeInBytes
+          };
+          resolve(metadata);
+        });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  },
+
+  /*
+  * Given an audio_url in an S3 bucket, returns the
+  * size of the file.
+  */
+  getFileSizeFromUrl: async function(audio_url) {
+    return s3
+      .headObject({
+        Key: audio_url.replace(/\//, ''),
+        Bucket: process.env.POLLY_S3_BUCKET
+      })
+      .promise()
+      .then(res => res.ContentLength);
   }
 };
 

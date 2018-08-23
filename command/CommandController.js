@@ -171,21 +171,19 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
   res.setHeader('Content-Type', 'application/json');
 
   try {
-    let audioUrl;
+    let mobileMetadata;
     if (req.body.article_id) {
       // we have a pocket item. do we already have the audio file?
-      audioUrl = await audioHelper.getMobileFileLocation(
-        req.body.article_id,
-        false
+      mobileMetadata = await audioHelper.getMobileFileMetadata(
+        req.body.article_id
       );
-      logger.info('audioUrl: ' + audioUrl);
+      logger.info('audioUrl: ' + mobileMetadata.fileUrl);
     } else {
       logger.info('error:  missing article_id');
     }
 
-    let result = {};
     // if we didn't find it in the DB, create the audio file
-    if (!audioUrl) {
+    if (!mobileMetadata || !mobileMetadata.fileUrl) {
       logger.info('Did not find the audio URL in DB: ' + req.body.article_id);
       // Create the body as a local file.
       let article = await getPocketArticleTextFromUrl(req.body.url);
@@ -193,13 +191,17 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
         // Build the stitched file first
         let articleFile = await createAudioFileFromText(`${article.article}`);
         let introFile = await createAudioFileFromText(buildIntro(article));
-        let audioUrl = await buildPocketAudio(introFile, articleFile);
-        logger.debug('Calling StoreMobileLocation: ' + audioUrl);
-        await audioHelper.storeMobileLocation(req.body.article_id, audioUrl);
-        result.url = audioUrl;
+        let audioMetadata = await buildPocketAudio(introFile, articleFile);
+        logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
+        await audioHelper.storeMobileLocation(
+          req.body.article_id,
+          audioMetadata.url,
+          audioMetadata.duration
+        );
+        let response = buildPocketResponse(audioMetadata);
         // Send it back to the mobile as quick as possible.
-        logger.info('POST article resp: ' + JSON.stringify(result));
-        res.status(200).send(JSON.stringify(result));
+        logger.info('POST article resp: ' + JSON.stringify(response));
+        res.status(200).send(JSON.stringify(response));
 
         // Upload the individual parts for use by Alexa later & cleanup.
         let introUrl = await polly_tts.postProcessPart(introFile);
@@ -216,9 +218,9 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
         );
       }
     } else {
-      result.url = audioUrl;
-      logger.info('POST article resp: ' + JSON.stringify(result));
-      res.status(200).send(JSON.stringify(result));
+      let response = buildPocketResponseFromMetadata(mobileMetadata);
+      logger.info('POST article resp: ' + JSON.stringify(response));
+      res.status(200).send(JSON.stringify(response));
     }
   } catch (reason) {
     logger.error('Error in /articleservice ' + reason);
@@ -852,6 +854,61 @@ async function buildAudioFromText(
 
 async function buildPocketAudio(introFile, articleFile) {
   return polly_tts.processPocketAudio(introFile, articleFile);
+}
+
+function buildPocketResponse(audioMetadata) {
+  let opus_metadata = {
+    format: 'opus',
+    url: audioMetadata.fileUrl.replace('mp3', 'opus'),
+    status: 'processing',
+    voice: audioMetadata.voice,
+    sample_rate: 48000,
+    duration: audioMetadata.duration,
+    size: null
+  };
+
+  let response = [audioMetadata, opus_metadata];
+  logger.debug('JSON RESPONSE IS: ' + response);
+  return response;
+}
+
+async function buildPocketResponseFromMetadata(mobileMetadata) {
+  let mp3Size = await polly_tts.getFileMetadata(mobileMetadata.fileUrl);
+  logger.debug('size is: ' + mp3Size);
+  let mp3 = {
+    format: 'mp3',
+    url: mobileMetadata.fileUrl,
+    status: 'available',
+    voice: 'Joanna',
+    sample_rate: 44000,
+    duration: mobileMetadata.duration,
+    size: mp3Size
+  };
+
+  let opus;
+  let opusFileUrl = mobileMetadata.fileUrl.replace('.mp3', 'opus');
+  if (AudioFileHelper.checkFileExistence(opusFileUrl)) {
+    logger.debug('Opus file found');
+    let opusSize = await polly_tts.getFileMetadata(opusFileUrl);
+    logger.debug('OpusSize is: ' + opusSize);
+    opus = {
+      format: 'opus',
+      url: opusFileUrl,
+      status: 'available',
+      voice: 'Joanna',
+      sample_rate: 48000,
+      duration: mobileMetadata.duration,
+      size: opusSize
+    };
+  }
+  let response;
+  if (opus) {
+    response = [mp3, opus];
+  } else {
+    [mp3];
+  }
+
+  return response;
 }
 
 function findBestScoringTitle(searchPhrase, articleMetadataArray) {

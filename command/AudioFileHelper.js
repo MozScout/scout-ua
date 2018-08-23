@@ -21,15 +21,17 @@ class CommandHelper {
     return fileUrl;
   }
 
-  async getMobileFileLocation(articleId) {
+  async getMobileFileMetadata(articleId) {
     // first check if we have this file in the DB
-    let fileUrl = await database.getMobileFileLocation(articleId);
-
-    if (!(await this.checkFileExistence(fileUrl))) {
-      fileUrl = '';
+    let result = {};
+    result.fileUrl = await database.getMobileFileLocation(articleId);
+    if (!(await this.checkFileExistence(result.fileUrl))) {
+      result.fileUrl = '';
+    } else {
+      result.duration = await database.getMobileFileDuration(articleId);
     }
 
-    return fileUrl;
+    return result;
   }
 
   async checkFileExistence(fileUrl) {
@@ -83,8 +85,12 @@ class CommandHelper {
   * Mobile file has the stitched intro and the body of the
   * file.  
   */
-  async storeMobileLocation(articleId, FileLocation) {
-    return await database.storeMobileLocation(articleId, FileLocation);
+  async storeMobileLocation(articleId, FileLocation, duration) {
+    return await database.storeMobileLocation(
+      articleId,
+      FileLocation,
+      duration
+    );
   }
 }
 

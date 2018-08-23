@@ -63,6 +63,15 @@ class Database {
     return '';
   }
 
+  async getMobileFileDuration(articleId) {
+    logger.info(`getMobileFileLocation for ${articleId}`);
+    const fileLocation = await AudioFileLocation.get({ item_id: articleId });
+    if (fileLocation && fileLocation.mobile_audio_duration) {
+      return fileLocation.mobile_audio_duration;
+    }
+    return '';
+  }
+
   async storeAudioFileLocation(articleId, audioType, location) {
     logger.info(
       `storeAudioFileLocation for ${articleId}/${audioType}: ${location}`
@@ -83,7 +92,7 @@ class Database {
     await fileLocation.save();
   }
 
-  async storeMobileLocation(articleId, location) {
+  async storeMobileLocation(articleId, location, duration) {
     logger.info(`storeMobileLocation for ${articleId}: ${location}`);
     let fileLocation = await AudioFileLocation.get({ item_id: articleId });
     if (!fileLocation) {
@@ -93,6 +102,7 @@ class Database {
     }
     fileLocation.mobile_audio_location = location;
     fileLocation.mobile_audio_date = Date.now();
+    fileLocation.mobile_audio_date = duration;
 
     await fileLocation.save();
   }
