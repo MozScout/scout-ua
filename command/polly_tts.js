@@ -378,13 +378,20 @@ var polly_tts = {
   * size of the file.
   */
   getFileSizeFromUrl: async function(audio_url) {
-    return s3
-      .headObject({
-        Key: audio_url.replace(/\//, ''),
-        Bucket: process.env.POLLY_S3_BUCKET
-      })
-      .promise()
-      .then(res => res.ContentLength);
+    let file = audio_url.replace(/\//, '');
+    logger.debug('file is: ' + file);
+    try {
+      return s3
+        .headObject({
+          Key: file,
+          Bucket: process.env.POLLY_S3_BUCKET
+        })
+        .promise()
+        .then(res => res.ContentLength);
+    } catch (err) {
+      logger.error('error: ' + err);
+      return 0;
+    }
   }
 };
 
