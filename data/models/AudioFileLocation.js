@@ -15,7 +15,8 @@ const schema = new dynamoose.Schema({
   summary_audio_location: String,
   summary_audio_date: Date,
   mobile_audio_location: String,
-  mobile_audio_date: String
+  mobile_audio_date: String,
+  mobile_audio_duration: Number
 });
 
 const AudioFileLocation = dynamoose.model('AudioFileLocations', schema);
