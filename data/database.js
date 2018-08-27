@@ -67,17 +67,22 @@ class Database {
 
   async getMobileMetadata(articleId) {
     logger.info(`getMobileMetadata for ${articleId}`);
-    const fileMetadata = await AudioFiles.query({
-      item_id: articleId,
-      type: 'mobile'
-    });
-    logger.debug('After AudioFiles.query');
+    const fileMetadata = await AudioFiles.query(
+      {
+        item_id: articleId,
+        type: 'mobile'
+      },
+      function(err, data) {
+        logger.debug(JSON.stringify(data));
+      }
+    );
+    /*    logger.debug('After AudioFiles.query');
     if (fileMetadata) {
       logger.debug(JSON.stringify(fileMetadata));
       return fileMetadata;
     } else {
       logger.debug('getMobileMetadata file not found');
-    }
+    }*/
     return '';
   }
 
