@@ -67,10 +67,11 @@ class Database {
 
   async getMobileMetadata(articleId) {
     logger.info(`getMobileMetadata for ${articleId}`);
-    const fileMetatdata = await AudioFiles.get({
-      item_id: articleId
+    const fileMetatdata = await AudioFiles.query({
+      item_id: articleId,
+      type: 'mobile'
     });
-    logger.debug('After AudioFiles.get');
+    logger.debug('After AudioFiles.query');
     if (fileMetatdata) {
       logger.debug(fileMetatdata);
       return fileMetatdata;
