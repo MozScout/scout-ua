@@ -68,7 +68,7 @@ class Database {
   async getMobileMetadata(articleId) {
     logger.info(`getMobileMetadata for ${articleId}`);
     return new Promise((resolve, reject) => {
-      const fileMetadata = await AudioFiles.query(
+      const fileMetadata = AudioFiles.query(
         {
           item_id: articleId,
           type: 'mobile'
