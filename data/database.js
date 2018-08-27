@@ -4,6 +4,7 @@ const MetaAudioLocation = require('./models/MetaAudioLocation');
 const AudioFiles = require('./models/AudioFiles');
 const Hostname = require('./models/Hostname');
 const logger = require('../logger');
+const uuidgen = require('node-uuid-generator');
 
 class Database {
   async processScoutUser(userid, access_token) {
@@ -66,20 +67,24 @@ class Database {
 
   async getMobileMetadata(articleId) {
     logger.info(`getMobileFileLocation for ${articleId}`);
-    const fileLocation = await AudioFiles.get({
+    const fileMetatdata = await AudioFiles.get({
       item_id: articleId,
       type: 'mobile'
     });
-    if (fileLocation) {
-      logger.debug(fileLocation);
-      return fileLocation.url;
+    if (fileMetatdata) {
+      logger.debug(fileMetatdata);
+      return fileMetatdata;
+    } else {
+      logger.debug('getMobileMetadata file not found');
     }
     return '';
   }
 
   async getMobileFileDuration(articleId) {
     logger.info(`getMobileFileLocation for ${articleId}`);
-    const fileLocation = await AudioFileLocation.get({ item_id: articleId });
+    const fileLocation = await AudioFileLocation.get({
+      item_id: articleId
+    });
     if (fileLocation && fileLocation.mobile_audio_duration) {
       return fileLocation.mobile_audio_duration;
     }
@@ -106,19 +111,44 @@ class Database {
     await fileLocation.save();
   }
 
-  async storeMobileLocation(articleId, location, duration) {
+  async storeMobileLocation(articleId, lang, voice, audioMetadata) {
     logger.info(`storeMobileLocation for ${articleId}: ${location}`);
-    let fileLocation = await AudioFileLocation.get({ item_id: articleId });
+    let fileLocation = await AudioFiles.get({
+      item_id: articleId,
+      type: 'mobile'
+    });
     if (!fileLocation) {
-      fileLocation = new AudioFileLocation({
-        item_id: articleId
+      let mp3 = new AudioFiles({
+        item_id: articleId,
+        uuid: uuidgen.generate(),
+        lang: audioMetadata.lang,
+        voice: voice,
+        codec: audioMetadata.codec,
+        bitrate: audioMetadata.bitrate,
+        duration: audioMetadata.duration,
+        samplerate: audioMetadata.samplerate,
+        size: audioMetadata.size,
+        type: 'mobile',
+        url: audioMetadata.url,
+        date: Date.now()
       });
-    }
-    fileLocation.mobile_audio_location = location;
-    fileLocation.mobile_audio_date = Date.now();
-    fileLocation.mobile_audio_duration = duration;
+      await mp3.save();
 
-    await fileLocation.save();
+      let opus = new AudioFiles({
+        item_id: articleId,
+        uuid: uuidgen.generate(),
+        lang: audioMetadata.lang,
+        voice: voice,
+        codec: 'opus',
+        bitrate: audioMetadata.bitrate,
+        duration: audioMetadata.duration,
+        samplerate: 48000,
+        type: 'mobile',
+        url: audioMetadata.url.replace('.mp3', '.opus'),
+        date: Date.now()
+      });
+      await opus.save();
+    }
   }
 
   async getHostnameData(hostname) {

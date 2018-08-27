@@ -12,6 +12,7 @@ const ArticleStatusHelper = require('../articlestatus/ArticleStatusHelper.js');
 const astatHelper = new ArticleStatusHelper();
 const ua = require('universal-analytics');
 const logger = require('../logger');
+const vc = require('./voiceChoice');
 
 const router = express.Router();
 const database = new Database();
@@ -177,26 +178,35 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       mobileMetadata = await audioHelper.getMobileFileMetadata(
         req.body.article_id
       );
-      logger.info('audioUrl: ' + mobileMetadata.fileUrl);
+      logger.info('mobileMetadata: ' + mobileMetadata);
     } else {
       logger.info('error:  missing article_id');
     }
 
     // if we didn't find it in the DB, create the audio file
-    if (!mobileMetadata || !mobileMetadata.fileUrl) {
+    if (!mobileMetadata) {
       logger.info('Did not find the audio URL in DB: ' + req.body.article_id);
       // Create the body as a local file.
       let article = await getPocketArticleTextFromUrl(req.body.url);
       if (article) {
         // Build the stitched file first
-        let articleFile = await createAudioFileFromText(`${article.article}`);
-        let introFile = await createAudioFileFromText(buildIntro(article));
+        let voice = vc.findVoice(article.lang);
+        let articleFile = await createAudioFileFromText(
+          `${article.article}`,
+          voice
+        );
+
+        let introFile = await createAudioFileFromText(
+          buildIntro(article),
+          voice
+        );
         let audioMetadata = await buildPocketAudio(introFile, articleFile);
         logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
         await audioHelper.storeMobileLocation(
           req.body.article_id,
-          audioMetadata.url,
-          audioMetadata.duration
+          article.lang,
+          voice,
+          audioMetadata
         );
         let response = buildPocketResponse(audioMetadata);
         // Send it back to the mobile as quick as possible.
