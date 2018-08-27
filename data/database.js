@@ -1,6 +1,7 @@
 const ScoutUser = require('./models/ScoutUser');
 const AudioFileLocation = require('./models/AudioFileLocation');
 const MetaAudioLocation = require('./models/MetaAudioLocation');
+const AudioFiles = require('./models/AudioFiles');
 const Hostname = require('./models/Hostname');
 const logger = require('../logger');
 
