@@ -28,7 +28,7 @@ class CommandHelper {
     if (!(await this.checkFileExistence(result.fileUrl))) {
       result.fileUrl = '';
     } else {
-      result.duration = await database.getMobileFileDuration(articleId);
+      result = await database.getMobileMetadata(articleId);
     }
 
     return result;

@@ -63,6 +63,19 @@ class Database {
     return '';
   }
 
+  async getMobileMetadata(articleId) {
+    logger.info(`getMobileFileLocation for ${articleId}`);
+    const fileLocation = await AudioFiles.get({
+      item_id: articleId,
+      type: 'mobile'
+    });
+    if (fileLocation) {
+      logger.debug(fileLocation);
+      return fileLocation.url;
+    }
+    return '';
+  }
+
   async getMobileFileDuration(articleId) {
     logger.info(`getMobileFileLocation for ${articleId}`);
     const fileLocation = await AudioFileLocation.get({ item_id: articleId });
