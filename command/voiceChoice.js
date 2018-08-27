@@ -73,6 +73,8 @@ const voiceChoice = {
         voice = 'Salli';
         break;
     }
+    logger.debug('Voice is: ' + voice);
+    return voice;
   }
 };
 
