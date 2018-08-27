@@ -33,6 +33,6 @@ const schema = new dynamoose.Schema({
   date: Date // Date the file was uploaded
 });
 
-const MetaAudioLocation = dynamoose.model('AudioFiles', schema);
+const AudioFiles = dynamoose.model('AudioFiles', schema);
 
 module.exports = AudioFiles;
