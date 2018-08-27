@@ -66,11 +66,12 @@ class Database {
   }
 
   async getMobileMetadata(articleId) {
-    logger.info(`getMobileFileLocation for ${articleId}`);
+    logger.info(`getMobileMetadata for ${articleId}`);
     const fileMetatdata = await AudioFiles.get({
       item_id: articleId,
       type: 'mobile'
     });
+    logger.debug('After AudioFiles.get');
     if (fileMetatdata) {
       logger.debug(fileMetatdata);
       return fileMetatdata;
@@ -114,8 +115,7 @@ class Database {
   async storeMobileLocation(articleId, lang, voice, audioMetadata) {
     logger.info(`storeMobileLocation for ${articleId}: ${location}`);
     let fileLocation = await AudioFiles.get({
-      item_id: articleId,
-      type: 'mobile'
+      item_id: articleId
     });
     if (!fileLocation) {
       let mp3 = new AudioFiles({
