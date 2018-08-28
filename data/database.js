@@ -137,7 +137,7 @@ class Database {
       lang: audioMetadata.lang,
       voice: voice,
       codec: 'opus',
-      bitrate: audioMetadata.bitrate,
+      bitrate: 24000,
       duration: audioMetadata.duration,
       samplerate: 48000,
       type: 'mobile',
