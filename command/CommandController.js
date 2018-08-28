@@ -885,26 +885,24 @@ function buildPocketResponse(audioMetadata) {
 }
 
 async function buildPocketResponseFromMetadata(mobileMetadata) {
-  let mp3Size = await polly_tts.getFileSizeFromUrl(mobileMetadata.fileUrl);
-  logger.debug('size is: ' + mp3Size);
   let resp = {};
   for (var i in mobileMetadata) {
     //TODO: We should check if file exists once we have the policy around this.
-    let size = mobileMetadata.size;
-    if (!mobileMetadata.size) {
-      mobileMetadata.size = await polly_tts.getFileSizeFromUrl(
-        mobileMetadata.url
+    let size = mobileMetadata[i].size;
+    if (!mobileMetadata[i].size) {
+      mobileMetadata[i].size = await polly_tts.getFileSizeFromUrl(
+        mobileMetadata[i].url
       );
     }
 
     let item = {
-      format: mobileMetadata.codec,
-      url: mobileMetadata.url,
+      format: mobileMetadata[i].codec,
+      url: mobileMetadata[i].url,
       status: 'available',
-      voice: mobileMetadata.voice,
-      sample_rate: mobileMetadata.sample_rate,
-      duration: mobileMetadata.duration,
-      size: mobileMetadata.size
+      voice: mobileMetadata[i].voice,
+      sample_rate: mobileMetadata[i].sample_rate,
+      duration: mobileMetadata[i].duration,
+      size: mobileMetadata[i].size
     };
     resp.push(item);
   }
