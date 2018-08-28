@@ -68,13 +68,22 @@ class Database {
   async getMobileMetadata(articleId) {
     logger.info(`getMobileMetadata for ${articleId}`);
     return new Promise((resolve, reject) => {
-      const fileMetadata = AudioFiles.query(
+      let results = AudioFiles.query('item_id')
+        .eq(articleId)
+        .where('type')
+        .eq('mobile');
+
+      logger.debug(JSON.stringify(results));
+      resolve(results);
+
+      /*  const fileMetadata = AudioFiles.query(
         {
           item_id: articleId,
           type: 'mobile'
         },
         function(err, data) {
           logger.debug(JSON.stringify(data));
+          logger.debug(err);
           if (!data) {
             logger.debug('Data not found');
             resolve('');
@@ -83,7 +92,7 @@ class Database {
             resolve(data);
           }
         }
-      );
+      );*/
     });
   }
 
