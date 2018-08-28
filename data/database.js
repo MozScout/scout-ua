@@ -113,7 +113,7 @@ class Database {
   }
 
   async storeMobileLocation(articleId, lang, voice, audioMetadata) {
-    logger.info(`storeMobileLocation for ${articleId}: ${location}`);
+    logger.info(`storeMobileLocation for ${articleId}: ${audioMetadata.url}`);
     let fileLocation = await AudioFiles.get({
       item_id: articleId
     });
