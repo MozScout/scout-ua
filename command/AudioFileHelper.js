@@ -80,7 +80,7 @@ class CommandHelper {
   * Mobile file has the stitched intro and the body of the
   * file.  
   */
-  async storeMobileLocation(articleId, lang, audioMetadata) {
+  async storeMobileLocation(articleId, lang, voice, audioMetadata) {
     return await database.storeMobileLocation(
       articleId,
       lang,
