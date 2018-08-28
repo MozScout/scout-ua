@@ -118,6 +118,7 @@ class Database {
       item_id: articleId
     });
     if (!fileLocation) {
+      logger.debug('File not found');
       let mp3 = new AudioFiles({
         item_id: articleId,
         uuid: uuidgen.generate(),
@@ -133,7 +134,7 @@ class Database {
         date: Date.now()
       });
       await mp3.save();
-
+      logger.debug('Before opus save');
       let opus = new AudioFiles({
         item_id: articleId,
         uuid: uuidgen.generate(),
@@ -148,6 +149,8 @@ class Database {
         date: Date.now()
       });
       await opus.save();
+    } else {
+      logger.debug('File found');
     }
   }
 

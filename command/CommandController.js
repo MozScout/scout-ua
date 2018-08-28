@@ -212,6 +212,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
           voice,
           audioMetadata
         );
+        logger.debug('Before buildPocketResponse');
         let response = buildPocketResponse(audioMetadata);
         // Send it back to the mobile as quick as possible.
         logger.info('POST article resp: ' + JSON.stringify(response));
