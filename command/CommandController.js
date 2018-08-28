@@ -891,23 +891,34 @@ function buildPocketResponse(audioMetadata) {
 
 async function buildPocketResponseFromMetadata(mobileMetadata) {
   let resp = [];
+
   for (var i in mobileMetadata) {
     //TODO: We should check if file exists once we have the policy around this.
+    let status = 'available';
     let size = mobileMetadata[i].size;
     if (!mobileMetadata[i].size) {
-      mobileMetadata[i].size = await polly_tts.getFileSizeFromUrl(
-        mobileMetadata[i].url
-      );
+      if (
+        await audioHelper.checkFileExistence(
+          utils.urlToFile(mobileMetadata[i].url)
+        )
+      ) {
+        mobileMetadata[i].size = await polly_tts.getFileSizeFromUrl(
+          mobileMetadata[i].url
+        );
+      } else {
+        size = 0;
+        status = 'processing';
+      }
     }
 
     let item = {
       format: mobileMetadata[i].codec,
       url: mobileMetadata[i].url,
-      status: 'available',
+      status: status,
       voice: mobileMetadata[i].voice,
       sample_rate: mobileMetadata[i].sample_rate,
       duration: mobileMetadata[i].duration,
-      size: mobileMetadata[i].size
+      size: size
     };
     resp.push(item);
   }
