@@ -114,44 +114,38 @@ class Database {
 
   async storeMobileLocation(articleId, lang, voice, audioMetadata) {
     logger.info(`storeMobileLocation for ${articleId}: ${audioMetadata.url}`);
-    let fileLocation = await AudioFiles.get({
-      item_id: articleId
+    let mp3 = new AudioFiles({
+      item_id: articleId,
+      uuid: uuidgen.generate(),
+      lang: audioMetadata.lang,
+      voice: voice,
+      codec: audioMetadata.codec,
+      bitrate: audioMetadata.bitrate,
+      duration: audioMetadata.duration,
+      samplerate: audioMetadata.samplerate,
+      size: audioMetadata.size,
+      type: 'mobile',
+      url: audioMetadata.url,
+      date: Date.now()
     });
-    if (!fileLocation) {
-      logger.debug('File not found');
-      let mp3 = new AudioFiles({
-        item_id: articleId,
-        uuid: uuidgen.generate(),
-        lang: audioMetadata.lang,
-        voice: voice,
-        codec: audioMetadata.codec,
-        bitrate: audioMetadata.bitrate,
-        duration: audioMetadata.duration,
-        samplerate: audioMetadata.samplerate,
-        size: audioMetadata.size,
-        type: 'mobile',
-        url: audioMetadata.url,
-        date: Date.now()
-      });
-      await mp3.save();
-      logger.debug('Before opus save');
-      let opus = new AudioFiles({
-        item_id: articleId,
-        uuid: uuidgen.generate(),
-        lang: audioMetadata.lang,
-        voice: voice,
-        codec: 'opus',
-        bitrate: audioMetadata.bitrate,
-        duration: audioMetadata.duration,
-        samplerate: 48000,
-        type: 'mobile',
-        url: audioMetadata.url.replace('.mp3', '.opus'),
-        date: Date.now()
-      });
-      await opus.save();
-    } else {
-      logger.debug('File found');
-    }
+    await mp3.save();
+
+    logger.debug('Before opus save');
+    let opus = new AudioFiles({
+      item_id: articleId,
+      uuid: uuidgen.generate(),
+      lang: audioMetadata.lang,
+      voice: voice,
+      codec: 'opus',
+      bitrate: audioMetadata.bitrate,
+      duration: audioMetadata.duration,
+      samplerate: 48000,
+      type: 'mobile',
+      url: audioMetadata.url.replace('.mp3', '.opus'),
+      date: Date.now()
+    });
+    await opus.save();
+    logger.debug('after opus save');
   }
 
   async getHostnameData(hostname) {
