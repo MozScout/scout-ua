@@ -71,10 +71,11 @@ class Database {
       let results = AudioFiles.query('item_id')
         .eq(articleId)
         .where('type')
-        .eq('mobile');
-
-      logger.debug(JSON.stringify(results));
-      resolve(results);
+        .eq('mobile')
+        .exec(function(err, results) {
+          logger.debug(JSON.stringify(results));
+          resolve(results);
+        });
 
       /*  const fileMetadata = AudioFiles.query(
         {
