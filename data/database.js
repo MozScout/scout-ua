@@ -70,8 +70,8 @@ class Database {
     return new Promise((resolve, reject) => {
       let results = AudioFiles.query('item_id')
         .eq(articleId)
-        .where('type')
-        .eq('mobile')
+        //        .where('type')
+        //      .eq('mobile')
         .exec(function(err, results) {
           logger.debug(JSON.stringify(results));
           resolve(results);
