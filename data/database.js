@@ -70,30 +70,14 @@ class Database {
     return new Promise((resolve, reject) => {
       let results = AudioFiles.query('item_id')
         .eq(articleId)
-        //        .where('type')
-        //      .eq('mobile')
-        .exec(function(err, results) {
-          logger.debug(JSON.stringify(results));
-          resolve(results);
+        .filter('type')
+        .eq('mobile')
+        .exec()
+        .then(function(data) {
+          console.log(data);
+          console.log(JSON.stringify(data));
+          resolve(data);
         });
-
-      /*  const fileMetadata = AudioFiles.query(
-        {
-          item_id: articleId,
-          type: 'mobile'
-        },
-        function(err, data) {
-          logger.debug(JSON.stringify(data));
-          logger.debug(err);
-          if (!data) {
-            logger.debug('Data not found');
-            resolve('');
-          } else {
-            logger.debug('Data found');
-            resolve(data);
-          }
-        }
-      );*/
     });
   }
 

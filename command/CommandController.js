@@ -887,43 +887,29 @@ function buildPocketResponse(audioMetadata) {
 async function buildPocketResponseFromMetadata(mobileMetadata) {
   let mp3Size = await polly_tts.getFileSizeFromUrl(mobileMetadata.fileUrl);
   logger.debug('size is: ' + mp3Size);
-  let mp3 = {
-    format: 'mp3',
-    url: mobileMetadata.fileUrl,
-    status: 'available',
-    voice: 'Joanna',
-    sample_rate: 44000,
-    duration: mobileMetadata.duration,
-    size: mp3Size
-  };
+  let resp = {};
+  for (var i in mobileMetadata) {
+    //TODO: We should check if file exists once we have the policy around this.
+    let size = mobileMetadata.size;
+    if (!mobileMetadata.size) {
+      mobileMetadata.size = await polly_tts.getFileSizeFromUrl(
+        mobileMetadata.url
+      );
+    }
 
-  let opus;
-  let opusFileUrl = mobileMetadata.fileUrl.replace('.mp3', '.opus');
-  if (await audioHelper.checkFileExistence(opusFileUrl)) {
-    logger.debug('Opus file found');
-    let opusSize = await polly_tts.getFileSizeFromUrl(opusFileUrl);
-    logger.debug('OpusSize is: ' + opusSize);
-    opus = {
-      format: 'opus',
-      url: opusFileUrl,
+    let item = {
+      format: mobileMetadata.codec,
+      url: mobileMetadata.url,
       status: 'available',
-      voice: 'Joanna',
-      sample_rate: 48000,
+      voice: mobileMetadata.voice,
+      sample_rate: mobileMetadata.sample_rate,
       duration: mobileMetadata.duration,
-      size: opusSize
+      size: mobileMetadata.size
     };
-  } else {
-    logger.debug('opus file not found');
+    resp.push(item);
   }
-
-  let response;
-  if (opus) {
-    response = [mp3, opus];
-  } else {
-    response = [mp3];
-  }
-
-  return response;
+  console.log(resp);
+  return resp;
 }
 
 function findBestScoringTitle(searchPhrase, articleMetadataArray) {
