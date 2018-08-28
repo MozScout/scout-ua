@@ -890,7 +890,7 @@ function buildPocketResponse(audioMetadata) {
 }
 
 async function buildPocketResponseFromMetadata(mobileMetadata) {
-  let resp = {};
+  let resp = [];
   for (var i in mobileMetadata) {
     //TODO: We should check if file exists once we have the policy around this.
     let size = mobileMetadata[i].size;
