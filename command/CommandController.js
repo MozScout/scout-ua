@@ -183,8 +183,12 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       logger.info('error:  missing article_id');
     }
 
-    // if we didn't find it in the DB, create the audio file
     if (!mobileMetadata) {
+      throw 'No Metadata';
+    }
+
+    // if we didn't find it in the DB, create the audio file
+    if (!mobileMetadata.count) {
       logger.info('Did not find the audio URL in DB: ' + req.body.article_id);
       // Create the body as a local file.
       let article = await getPocketArticleTextFromUrl(req.body.url);
