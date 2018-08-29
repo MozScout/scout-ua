@@ -39,7 +39,7 @@ class Database {
   }
 
   async getAudioFileLocation(articleId, type, voice) {
-    logger.info(`getAudioFileLocation for ${articleId}/${audioType}`);
+    logger.info(`getAudioFileLocation for ${articleId}/${type}`);
     return new Promise((resolve, reject) => {
       let results = AudioFiles.query('item_id')
         .eq(articleId)
@@ -54,7 +54,10 @@ class Database {
           console.log(data);
           console.log(JSON.stringify(data));
           if (data.count) {
-            resolve(data.url);
+            resolve(data[0].url);
+            if (data.count > 1) {
+              logger.warn('duplicate entries!!!');
+            }
           } else {
             resolve('');
           }
@@ -79,9 +82,7 @@ class Database {
   }
 
   async storeAudioFileLocation(articleId, type, voice, location) {
-    logger.info(
-      `storeAudioFileLocation for ${articleId}/${audioType}: ${location}`
-    );
+    logger.info(`storeAudioFileLocation for ${articleId}/${type}: ${location}`);
     let mp3 = new AudioFiles({
       item_id: articleId,
       uuid: uuidgen.generate(),
@@ -104,7 +105,7 @@ class Database {
       bitrate: 24000,
       samplerate: 48000,
       type: type,
-      url: audioMetadata.url.replace('.mp3', '.opus'),
+      url: location.replace('.mp3', '.opus'),
       date: Date.now()
     });
     await opus.save();
