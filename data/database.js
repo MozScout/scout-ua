@@ -272,7 +272,7 @@ class Database {
       bitrate: 40000,
       samplerate: 16000,
       type: 'outro',
-      url: introLocation,
+      url: outroLocation,
       date: Date.now()
     });
     await mp3.save();
@@ -286,7 +286,7 @@ class Database {
       bitrate: 24000,
       samplerate: 48000,
       type: 'outro',
-      url: introLocation.replace('.mp3', '.opus'),
+      url: outroLocation.replace('.mp3', '.opus'),
       date: Date.now()
     });
     await opus.save();
