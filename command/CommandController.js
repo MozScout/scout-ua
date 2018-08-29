@@ -226,11 +226,13 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
         await audioHelper.storeIntroLocation(
           req.body.article_id,
           introUrl,
+          voice,
           false
         );
         await audioHelper.storeAudioFileLocation(
           req.body.article_id,
           articleUrl,
+          voice,
           false
         );
       }
@@ -325,7 +327,8 @@ async function processArticleRequest(
     // we have a matching pocket item. do we already have the audio file?
     audioUrl = await audioHelper.getAudioFileLocation(
       result.item_id,
-      summaryOnly
+      summaryOnly,
+      process.env.POLLY_VOICE
     );
   } else {
     logger.info('error:  no result returned from searchForPocketArticleByUrl');
@@ -344,6 +347,7 @@ async function processArticleRequest(
       await audioHelper.storeAudioFileLocation(
         result.item_id,
         summaryOnly,
+        process.env.POLLY_VOICE,
         audioUrl
       );
     }
@@ -382,13 +386,6 @@ async function generateMetaAudio(data, summaryOnly) {
   let outro;
   let voice = process.env.META_VOICE || process.env.POLLY_VOICE || 'Salli';
 
-  let introFullText = data.publisher
-    ? `From ${data.publisher}, ${data.title}`
-    : `${data.title}`;
-  let introSummaryText = data.publisher
-    ? `A summary of ${data.publisher}, ${data.title}`
-    : `A summary of ${data.title}`;
-
   // 4 cases depending on what we want:
   // - we want a summary intro:
   //   (1) and the file is in db and exists: return it
@@ -396,33 +393,49 @@ async function generateMetaAudio(data, summaryOnly) {
   // - we want a full article intro:
   //   (3) and the file is in db and exists: return it
   //   (4) and the file is not in db or doesn't exist anymore: generate/store it
-  if (
-    summaryOnly &&
-    metaAudio &&
-    (await audioHelper.checkFileExistence(metaAudio.intro_summary_location))
-  ) {
-    intro = metaAudio.intro_summary_location;
-  } else if (summaryOnly) {
-    logger.info('Generating summary intro for item:' + data.item_id);
-    intro = await buildAudioFromText(`${introSummaryText}`, voice);
-    await audioHelper.storeIntroLocation(data.item_id, intro, summaryOnly);
-  } else if (
-    metaAudio &&
-    (await audioHelper.checkFileExistence(metaAudio.intro_full_location))
-  ) {
-    intro = metaAudio.intro_full_location;
+  let md = await audioHelper.getMetaAudioLocation(
+    data.item_id,
+    voice,
+    summaryOnly
+  );
+  if (md.intro) {
+    // Intro is already in the database & s3.
+    intro = md.intro;
   } else {
-    logger.info('Generating full article intro for item:' + data.item_id);
-    intro = await buildAudioFromText(`${introFullText}`, voice);
-    await audioHelper.storeIntroLocation(data.item_id, intro, summaryOnly);
+    // It's a summary
+    if (summaryOnly) {
+      logger.info('Generating summary intro for item:' + data.item_id);
+      let introSummaryText = data.publisher
+        ? `A summary of ${data.publisher}, ${data.title}`
+        : `A summary of ${data.title}`;
+
+      intro = await buildAudioFromText(`${introSummaryText}`, voice);
+      await audioHelper.storeIntroLocation(
+        data.item_id,
+        intro,
+        voice,
+        summaryOnly
+      );
+    } else {
+      // It's a full article
+      let introFullText = data.publisher
+        ? `From ${data.publisher}, ${data.title}`
+        : `${data.title}`;
+      logger.info('Generating full intro for item:' + data.item_id);
+      intro = await buildAudioFromText(`${introSummaryText}`, voice);
+      await audioHelper.storeIntroLocation(
+        data.item_id,
+        intro,
+        voice,
+        summaryOnly
+      );
+    }
   }
 
   // We do the same thing for the outro
-  if (
-    metaAudio &&
-    (await audioHelper.checkFileExistence(metaAudio.outro_location))
-  ) {
-    outro = metaAudio.outro_location;
+  if (md.outro) {
+    // Intro is already in the database & s3.
+    outro = md.outro;
   } else {
     logger.info('Generating outro for item:' + data.item_id);
     let article = await getPocketArticleTextFromUrl(data.resolved_url);
@@ -433,9 +446,8 @@ async function generateMetaAudio(data, summaryOnly) {
     let authorString = data.author ? `Written by ${data.author}. ` : '';
     outro = await buildAudioFromText(`${authorString}${dateString}`, voice);
 
-    await audioHelper.storeOutroLocation(data.item_id, outro);
+    await audioHelper.storeOutroLocation(data.item_id, outro, voice);
   }
-
   // regenerate end_instructions if file doesn't exist anymore
   if (!(await audioHelper.checkFileExistence(endInstructionsData.url))) {
     endInstructionsData.url = await buildAudioFromText(
@@ -746,7 +758,8 @@ async function searchAndPlayArticle(
       // do we already have the audio file?
       let audioUrl = await audioHelper.getAudioFileLocation(
         articleInfo.item_id,
-        summaryOnly
+        summaryOnly,
+        process.env.POLLY_VOICE
       );
 
       // if we didn't find it in the DB, create the audio file
@@ -760,6 +773,7 @@ async function searchAndPlayArticle(
         await audioHelper.storeAudioFileLocation(
           articleInfo.item_id,
           summaryOnly,
+          process.env.POLLY_VOICE,
           audioUrl
         );
       }
@@ -891,26 +905,23 @@ function buildPocketResponse(audioMetadata) {
   return response;
 }
 
-async function buildPocketResponseFromMetadata(mobileMetadata) {
+async function buildPocketResponseFromMetadata(mmd) {
   let resp = [];
-
+  let mobileMetadata = JSON.parse(JSON.stringify(mmd));
   for (var i in mobileMetadata) {
     //TODO: We should check if file exists once we have the policy around this.
+    logger.debug(mobileMetadata[i]);
     let status = 'available';
-    let size = mobileMetadata[i].size;
-    if (!mobileMetadata[i].size) {
-      if (
-        await audioHelper.checkFileExistence(
-          utils.urlToFile(mobileMetadata[i].url)
-        )
-      ) {
-        mobileMetadata[i].size = await polly_tts.getFileSizeFromUrl(
-          mobileMetadata[i].url
-        );
-      } else {
-        size = 0;
-        status = 'processing';
-      }
+    let size = 0;
+    if (!mobileMetadata[i].hasOwnProperty('size')) {
+      size = await polly_tts.getFileSizeFromUrl(mobileMetadata[i].url);
+      logger.debug('size is: ' + size);
+    } else {
+      size = mobileMetadata[i].size;
+    }
+
+    if (!size) {
+      status = 'processing';
     }
 
     let item = {

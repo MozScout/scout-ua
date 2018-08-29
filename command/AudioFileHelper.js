@@ -7,11 +7,12 @@ const logger = require('../logger');
 const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
 class CommandHelper {
-  async getAudioFileLocation(articleId, summaryOnly) {
+  async getAudioFileLocation(articleId, summaryOnly, voice) {
     // first check if we have this file in the DB
     let fileUrl = await database.getAudioFileLocation(
       articleId,
-      summaryOnly ? 'summary' : 'full'
+      summaryOnly ? 'summary' : 'full',
+      voice
     );
 
     if (!(await this.checkFileExistence(fileUrl))) {
@@ -21,6 +22,7 @@ class CommandHelper {
     return fileUrl;
   }
 
+  //DONE
   async getMobileFileMetadata(articleId) {
     // first check if we have this file in the DB
     let result = {};
@@ -52,34 +54,55 @@ class CommandHelper {
     return false;
   }
 
-  async storeAudioFileLocation(articleId, summaryOnly, location) {
+  //DONE
+  async storeAudioFileLocation(articleId, summaryOnly, voice, location) {
     await database.storeAudioFileLocation(
       articleId,
       summaryOnly ? 'summary' : 'full',
+      voice,
       location
     );
   }
 
-  async getMetaAudioLocation(articleId) {
-    return await database.getMetaAudioLocation(articleId);
+  async getMetaAudioLocation(articleId, voice, summaryOnly) {
+    let metaAudio = {};
+    let introLocation = await database.getIntroAudioLocation(
+      articleId,
+      voice,
+      summaryOnly
+    );
+    if (checkFileExistence(introLocation)) {
+      metaAudio.intro = introLocation;
+    }
+
+    let outroLocation = await database.getOutroAudioLocation(articleId, voice);
+    if (checkFileExistence(outroLocation)) {
+      metaAudio.outro = outroLocation;
+    }
+
+    return metaAudio;
   }
 
-  async storeIntroLocation(articleId, introLocation, summaryOnly) {
+  //DONE
+  async storeIntroLocation(articleId, introLocation, voice, summaryOnly) {
     return await database.storeIntroLocation(
       articleId,
       introLocation,
+      voice,
       summaryOnly
     );
   }
 
-  async storeOutroLocation(articleId, outroLocation) {
-    return await database.storeOutroLocation(articleId, outroLocation);
+  //DONE
+  async storeOutroLocation(articleId, outroLocation, voice) {
+    return await database.storeOutroLocation(articleId, outroLocation, voice);
   }
 
   /*
   * Mobile file has the stitched intro and the body of the
   * file.  
   */
+  //DONE
   async storeMobileLocation(articleId, lang, voice, audioMetadata) {
     return await database.storeMobileLocation(
       articleId,

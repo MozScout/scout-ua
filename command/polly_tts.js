@@ -380,21 +380,24 @@ var polly_tts = {
   * size of the file.
   */
   getFileSizeFromUrl: async function(audio_url) {
-    logger.debug('getFileSizeFromUrl');
-    let file = utils.urlToFile(audio_url);
-    logger.debug('file is: ' + file);
-    try {
-      return s3
-        .headObject({
+    return new Promise((resolve, reject) => {
+      logger.debug('getFileSizeFromUrl');
+      let file = utils.urlToFile(audio_url);
+      logger.debug('file is: ' + file);
+      s3.headObject(
+        {
           Key: file,
           Bucket: process.env.POLLY_S3_BUCKET
-        })
-        .promise()
-        .then(res => res.ContentLength);
-    } catch (err) {
-      logger.error('error: ' + err);
-      return 0;
-    }
+        },
+        function(err, data) {
+          if (data && data.ContentLength) {
+            resolve(data.ContentLength);
+          } else {
+            resolve(0);
+          }
+        }
+      );
+    });
   }
 };
 
