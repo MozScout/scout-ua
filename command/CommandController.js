@@ -421,7 +421,7 @@ async function generateMetaAudio(data, summaryOnly) {
         ? `From ${data.publisher}, ${data.title}`
         : `${data.title}`;
       logger.info('Generating full intro for item:' + data.item_id);
-      intro = await buildAudioFromText(`${introSummaryText}`, voice);
+      intro = await buildAudioFromText(`${introFullText}`, voice);
       await audioHelper.storeIntroLocation(
         data.item_id,
         intro,
