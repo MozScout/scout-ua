@@ -71,12 +71,14 @@ class CommandHelper {
       voice,
       summaryOnly
     );
-    if (checkFileExistence(introLocation)) {
+    logger.debug('introLocation is: ' + introLocation);
+    if (introLocation && checkFileExistence(introLocation)) {
       metaAudio.intro = introLocation;
     }
 
     let outroLocation = await database.getOutroAudioLocation(articleId, voice);
-    if (checkFileExistence(outroLocation)) {
+    logger.debug('outroLocation is: ' + outroLocation);
+    if (outroLocation && checkFileExistence(outroLocation)) {
       metaAudio.outro = outroLocation;
     }
 

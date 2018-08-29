@@ -381,7 +381,6 @@ async function processArticleRequest(
 async function generateMetaAudio(data, summaryOnly) {
   // MetaAudio is an audiofile related to metadata
   // (summary intro, full article intro or outro)
-  let metaAudio = await audioHelper.getMetaAudioLocation(data.item_id);
   let intro;
   let outro;
   let voice = process.env.META_VOICE || process.env.POLLY_VOICE || 'Salli';

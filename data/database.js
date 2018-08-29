@@ -184,7 +184,7 @@ class Database {
   }
 
   async getIntroAudioLocation(articleId, voice, summaryOnly) {
-    logger.info(`getMetaAudioLocation for ${articleId}`);
+    logger.info(`getIntroAudioLocation for ${articleId}`);
     let type = summaryOnly ? 'summaryIntro' : 'fullIntro';
     return new Promise((resolve, reject) => {
       let results = AudioFiles.query('item_id')
