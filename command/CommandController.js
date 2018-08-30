@@ -174,6 +174,9 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
   res.setHeader('Content-Type', 'application/json');
 
   try {
+    // Set the version
+    let version = req.body.v ? req.body.v : 1;
+    console.log('Version is: ' + version);
     let mobileMetadata;
     if (req.body.article_id) {
       // we have a pocket item. do we already have the audio file?
@@ -215,7 +218,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
           audioMetadata
         );
         logger.debug('Before buildPocketResponse');
-        let response = buildPocketResponse(audioMetadata);
+        let response = buildPocketResponse(audioMetadata, version);
         // Send it back to the mobile as quick as possible.
         logger.info('POST article resp: ' + JSON.stringify(response));
         res.status(200).send(JSON.stringify(response));
@@ -238,7 +241,10 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       }
     } else {
       logger.debug('Found the file in the database');
-      let response = await buildPocketResponseFromMetadata(mobileMetadata);
+      let response = await buildPocketResponseFromMetadata(
+        mobileMetadata,
+        version
+      );
       logger.info('POST article resp: ' + JSON.stringify(response));
       res.status(200).send(JSON.stringify(response));
     }
@@ -887,24 +893,32 @@ async function buildPocketAudio(introFile, articleFile) {
   return polly_tts.processPocketAudio(introFile, articleFile);
 }
 
-function buildPocketResponse(audioMetadata) {
+function buildPocketResponse(audioMetadata, version) {
   logger.debug('Entering buildPocketResponse');
-  let opus_metadata = {
-    format: 'opus',
-    url: audioMetadata.url.replace('.mp3', '.opus'),
-    status: 'processing',
-    voice: audioMetadata.voice,
-    sample_rate: 48000,
-    duration: audioMetadata.duration,
-    size: null
-  };
+  let response;
+  if (version == 2) {
+    let opus_metadata = {
+      format: 'opus',
+      url: audioMetadata.url.replace('.mp3', '.opus'),
+      status: 'processing',
+      voice: audioMetadata.voice,
+      sample_rate: 48000,
+      duration: audioMetadata.duration,
+      size: null
+    };
 
-  let response = [audioMetadata, opus_metadata];
+    response = [audioMetadata, opus_metadata];
+  } else {
+    response = {
+      url: audioMetadata.url
+    };
+  }
   logger.debug('JSON RESPONSE IS: ' + response);
   return response;
 }
 
-async function buildPocketResponseFromMetadata(mmd) {
+async function buildPocketResponseFromMetadata(mmd, version) {
+  let v1Url;
   let resp = [];
   let mobileMetadata = JSON.parse(JSON.stringify(mmd));
   for (var i in mobileMetadata) {
@@ -932,10 +946,18 @@ async function buildPocketResponseFromMetadata(mmd) {
       duration: mobileMetadata[i].duration,
       size: size
     };
+    if (version == 1 && mobileMetadata[i].url.indexOf('.mp3') != -1) {
+      v1Url = mobileMetadata[i].url;
+    }
     resp.push(item);
   }
-  console.log(resp);
-  return resp;
+
+  if (version == 1) {
+    return { url: v1Url };
+  } else {
+    console.log(resp);
+    return resp;
+  }
 }
 
 function findBestScoringTitle(searchPhrase, articleMetadataArray) {
