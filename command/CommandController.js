@@ -83,7 +83,7 @@ async function buildPocketRequestBody(pocketUserId) {
     access_token: pocketToken,
     detailType: 'complete',
     sort: 'newest',
-    count: 40
+    count: 30
   };
 }
 
@@ -231,9 +231,9 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
         );
         await audioHelper.storeAudioFileLocation(
           req.body.article_id,
-          articleUrl,
+          false,
           voice,
-          false
+          articleUrl
         );
       }
     } else {
