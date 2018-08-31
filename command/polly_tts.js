@@ -380,7 +380,7 @@ var polly_tts = {
   * size of the file.
   */
   getFileSizeFromUrl: async function(audio_url) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       logger.debug('getFileSizeFromUrl');
       let file = utils.urlToFile(audio_url);
       logger.debug('file is: ' + file);

@@ -40,8 +40,8 @@ class Database {
 
   async getAudioFileLocation(articleId, type, voice) {
     logger.info(`getAudioFileLocation for ${articleId}/${type}`);
-    return new Promise((resolve, reject) => {
-      let results = AudioFiles.query('item_id')
+    return new Promise(resolve => {
+      AudioFiles.query('item_id')
         .eq(articleId)
         .filter('type')
         .eq(type)
@@ -67,8 +67,8 @@ class Database {
 
   async getMobileMetadata(articleId) {
     logger.info(`getMobileMetadata for ${articleId}`);
-    return new Promise((resolve, reject) => {
-      let results = AudioFiles.query('item_id')
+    return new Promise(resolve => {
+      AudioFiles.query('item_id')
         .eq(articleId)
         .filter('type')
         .eq('mobile')
@@ -186,8 +186,8 @@ class Database {
   async getIntroAudioLocation(articleId, voice, summaryOnly) {
     logger.info(`getIntroAudioLocation for ${articleId}`);
     let type = summaryOnly ? 'summaryIntro' : 'fullIntro';
-    return new Promise((resolve, reject) => {
-      let results = AudioFiles.query('item_id')
+    return new Promise(resolve => {
+      AudioFiles.query('item_id')
         .eq(articleId)
         .filter('type')
         .eq(type)
@@ -204,14 +204,12 @@ class Database {
           }
         });
     });
-
-    return await AudioFiles.get({ item_id: articleId });
   }
 
   async getOutroAudioLocation(articleId, voice) {
     logger.info(`getOutroAudioLocation for ${articleId}`);
-    return new Promise((resolve, reject) => {
-      let results = AudioFiles.query('item_id')
+    return new Promise(resolve => {
+      AudioFiles.query('item_id')
         .eq(articleId)
         .filter('type')
         .eq('outro')

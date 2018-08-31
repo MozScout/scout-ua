@@ -141,8 +141,21 @@ describe('CommandController - Endpoints', function() {
       'getMetaAudioLocation',
       sinon.fake(function() {
         console.log('Calling fake getMetaAudioLocation');
+        return {
+          intro: 'audio_file_url',
+          outro: 'audio_file_url'
+        };
       })
     );
+    sinon.replace(
+      AudioFileHelper.prototype,
+      'storeMobileLocation',
+      sinon.fake(function() {
+        console.log('Calling fake AudioFileHelper.storeMobileLocation');
+        return;
+      })
+    );
+
     sinon.replace(
       AudioFileHelper.prototype,
       'storeOutroLocation',
@@ -169,6 +182,46 @@ describe('CommandController - Endpoints', function() {
       'getSpeechSynthUrl',
       sinon.fake(function() {
         console.log('Calling fake getSpeechSynthUrl');
+        return 'audio_file_url';
+      })
+    );
+    sinon.replace(
+      polly_tts,
+      'synthesizeSpeechFile',
+      sinon.fake(function() {
+        console.log('Calling fake synthesizeSpeechFile');
+        return 'audio_file_url';
+      })
+    );
+    sinon.replace(
+      polly_tts,
+      'processPocketAudio',
+      sinon.fake(function() {
+        console.log('Calling fake processPocketAudio');
+        return {
+          format: 'mp3',
+          url: 'audio_url',
+          status: 'available',
+          voice: 'Joanna',
+          sample_rate: '48000',
+          duration: 50,
+          size: 10000
+        };
+      })
+    );
+    sinon.replace(
+      polly_tts,
+      'uploadFile',
+      sinon.fake(function() {
+        console.log('Calling fake uploadFile');
+        return 'audio_file_url';
+      })
+    );
+    sinon.replace(
+      polly_tts,
+      'postProcessPart',
+      sinon.fake(function() {
+        console.log('Calling fake uploadFile');
         return 'audio_file_url';
       })
     );
@@ -525,6 +578,30 @@ describe('CommandController - Endpoints', function() {
         .query({ q: 'nomatch', userid: userData.userid })
         .end((err, res) => {
           expect(res).have.status(404);
+          done();
+        });
+    });
+  });
+
+  describe('/articleservice', function() {
+    before(function() {
+      userData.url = FIREFOX_ARTICLE_URL;
+      userData.article_id = '1234';
+    });
+    after(function() {
+      delete userData.url;
+      delete userData.article_id;
+    });
+
+    it('should return metadata for the article', done => {
+      chai
+        .request(app)
+        .post('/command/articleservice')
+        .set('x-access-token', 'token')
+        .send(userData)
+        .end((err, res) => {
+          expect(res).have.status(200);
+          expect(res.body).be.a('object');
           done();
         });
     });
