@@ -119,17 +119,6 @@ describe('CommandController - Endpoints', function() {
     );
     sinon.replace(
       AudioFileHelper.prototype,
-      'getMobileFileMetadata',
-      sinon.fake(function() {
-        console.log('Calling fake getMobileFileMetadata');
-        return {
-          fileUrl: 'audio_file_url',
-          duration: 300
-        };
-      })
-    );
-    sinon.replace(
-      AudioFileHelper.prototype,
       'checkFileExistence',
       sinon.fake(function(url) {
         console.log('Calling fake checkFileExistence');
@@ -584,16 +573,25 @@ describe('CommandController - Endpoints', function() {
   });
 
   describe('/articleservice', function() {
-    before(function() {
+    beforeEach(function() {
       userData.url = FIREFOX_ARTICLE_URL;
       userData.article_id = '1234';
     });
-    after(function() {
+    afterEach(function() {
       delete userData.url;
       delete userData.article_id;
     });
 
     it('should return metadata for the article', done => {
+      var getMobileStub = sinon.stub(
+        AudioFileHelper.prototype,
+        'getMobileFileMetadata'
+      );
+      getMobileStub.returns({
+        fileUrl: 'audio_file_url',
+        duration: 300
+      });
+
       chai
         .request(app)
         .post('/command/articleservice')
@@ -601,6 +599,21 @@ describe('CommandController - Endpoints', function() {
         .send(userData)
         .end((err, res) => {
           expect(res).have.status(200);
+          expect(res.body).be.a('object');
+          done();
+        });
+      getMobileStub.restore();
+    });
+
+    it('should return 404 when no article_id is sent', done => {
+      delete userData.article_id;
+      chai
+        .request(app)
+        .post('/command/articleservice')
+        .set('x-access-token', 'token')
+        .send(userData)
+        .end((err, res) => {
+          expect(res).have.status(404);
           expect(res.body).be.a('object');
           done();
         });

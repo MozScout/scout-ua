@@ -181,7 +181,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       mobileMetadata = await audioHelper.getMobileFileMetadata(
         req.body.article_id
       );
-      logger.info('mobileMetadata: ' + mobileMetadata);
+      logger.info('mobileMetadata: ' + JSON.stringify(mobileMetadata));
     } else {
       logger.info('error:  missing article_id');
     }
@@ -916,12 +916,14 @@ function buildPocketResponse(audioMetadata, version) {
 }
 
 async function buildPocketResponseFromMetadata(mmd, version) {
+  logger.debug('Calling buildPocketResponseFromMetatdata');
   let v1Url;
   let resp = [];
   let mobileMetadata = JSON.parse(JSON.stringify(mmd));
+  logger.debug(mobileMetadata.length);
   for (var i in mobileMetadata) {
     //TODO: We should check if file exists once we have the policy around this.
-    logger.debug(mobileMetadata[i]);
+    logger.debug(JSON.stringify(mobileMetadata[i]));
     let status = 'available';
     let size = 0;
     if (!mobileMetadata[i].hasOwnProperty('size')) {
