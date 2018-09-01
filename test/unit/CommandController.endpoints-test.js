@@ -127,6 +127,17 @@ describe('CommandController - Endpoints', function() {
     );
     sinon.replace(
       AudioFileHelper.prototype,
+      'getMobileFileMetadata',
+      sinon.fake(function() {
+        console.log('Calling fake getMobileFileMetadata');
+        return {
+          fileUrl: 'audio_file_url',
+          duration: 300
+        };
+      })
+    );
+    sinon.replace(
+      AudioFileHelper.prototype,
       'getMetaAudioLocation',
       sinon.fake(function() {
         console.log('Calling fake getMetaAudioLocation');
@@ -583,15 +594,6 @@ describe('CommandController - Endpoints', function() {
     });
 
     it('should return metadata for the article', done => {
-      var getMobileStub = sinon.stub(
-        AudioFileHelper.prototype,
-        'getMobileFileMetadata'
-      );
-      getMobileStub.returns({
-        fileUrl: 'audio_file_url',
-        duration: 300
-      });
-
       chai
         .request(app)
         .post('/command/articleservice')
@@ -602,7 +604,6 @@ describe('CommandController - Endpoints', function() {
           expect(res.body).be.a('object');
           done();
         });
-      getMobileStub.restore();
     });
 
     it('should return 404 when no article_id is sent', done => {
