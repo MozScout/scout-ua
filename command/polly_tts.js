@@ -148,9 +148,7 @@ var polly_tts = {
         .then(function(audio_metadata) {
           resolve(audio_metadata);
           // Delete the local file now that it's uploaded.
-          let audio_file = audio_metadata.url.substr(
-            audio_metadata.url.lastIndexOf('/') + 1
-          );
+          let audio_file = utils.urlToFile(audio_metadata.url);
           polly_tts.deleteLocalFiles(audio_file, function(err) {
             if (err) {
               logger.error('Error removing files ' + err);
@@ -350,7 +348,7 @@ var polly_tts = {
   * reject: err
   */
   getFileMetadata: function(audio_url) {
-    let audio_file = './' + audio_url.substr(audio_url.lastIndexOf('/') + 1);
+    let audio_file = './' + utils.urlToFile(audio_url);
     return new Promise((resolve, reject) => {
       // Get the filesize first:
       let stats = fs.statSync(audio_file);
@@ -362,7 +360,6 @@ var polly_tts = {
             format: 'mp3',
             url: audio_url,
             status: 'available',
-            voice: 'Joanna',
             sample_rate: audioInfo.streams.sample_rate,
             duration: Math.floor(audioInfo.format.duration),
             size: fileSizeInBytes

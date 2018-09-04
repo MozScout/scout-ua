@@ -208,6 +208,9 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
           voice
         );
         let audioMetadata = await buildPocketAudio(introFile, articleFile);
+        // Add the correct voice:
+        audioMetadata['voice'] = voice;
+
         logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
         await audioHelper.storeMobileLocation(
           req.body.article_id,

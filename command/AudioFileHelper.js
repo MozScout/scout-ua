@@ -22,7 +22,6 @@ class CommandHelper {
     return fileUrl;
   }
 
-  //DONE
   async getMobileFileMetadata(articleId) {
     // first check if we have this file in the DB
     let result = {};
@@ -54,7 +53,6 @@ class CommandHelper {
     return false;
   }
 
-  //DONE
   async storeAudioFileLocation(articleId, summaryOnly, voice, location) {
     await database.storeAudioFileLocation(
       articleId,
@@ -83,7 +81,6 @@ class CommandHelper {
     return metaAudio;
   }
 
-  //DONE
   async storeIntroLocation(articleId, introLocation, voice, summaryOnly) {
     return await database.storeIntroLocation(
       articleId,
@@ -93,7 +90,6 @@ class CommandHelper {
     );
   }
 
-  //DONE
   async storeOutroLocation(articleId, outroLocation, voice) {
     return await database.storeOutroLocation(articleId, outroLocation, voice);
   }
@@ -102,7 +98,6 @@ class CommandHelper {
   * Mobile file has the stitched intro and the body of the
   * file.  
   */
-  //DONE
   async storeMobileLocation(articleId, lang, voice, audioMetadata) {
     return await database.storeMobileLocation(
       articleId,
