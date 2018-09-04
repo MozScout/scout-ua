@@ -1,8 +1,8 @@
 const ScoutUser = require('./models/ScoutUser');
-const AudioFileLocation = require('./models/AudioFileLocation');
-const MetaAudioLocation = require('./models/MetaAudioLocation');
+const AudioFiles = require('./models/AudioFiles');
 const Hostname = require('./models/Hostname');
 const logger = require('../logger');
+const uuidgen = require('node-uuid-generator');
 
 class Database {
   async processScoutUser(userid, access_token) {
@@ -38,63 +38,114 @@ class Database {
     }
   }
 
-  async getAudioFileLocation(articleId, audioType) {
-    logger.info(`getAudioFileLocation for ${articleId}/${audioType}`);
-    const fileLocation = await AudioFileLocation.get({ item_id: articleId });
-    if (fileLocation) {
-      if (audioType === 'full' && fileLocation.full_audio_location) {
-        return fileLocation.full_audio_location;
-      } else if (
-        audioType === 'summary' &&
-        fileLocation.summary_audio_location
-      ) {
-        return fileLocation.summary_audio_location;
-      }
-    }
-    return '';
+  async getAudioFileLocation(articleId, type, voice) {
+    logger.info(`getAudioFileLocation for ${articleId}/${type}`);
+    return new Promise(resolve => {
+      AudioFiles.query('item_id')
+        .eq(articleId)
+        .filter('type')
+        .eq(type)
+        .filter('voice')
+        .eq(voice)
+        .filter('codec')
+        .eq('mp3')
+        .exec()
+        .then(function(data) {
+          console.log(data);
+          console.log(JSON.stringify(data));
+          if (data.count) {
+            resolve(data[0].url);
+            if (data.count > 1) {
+              logger.warn('duplicate entries!!!');
+            }
+          } else {
+            resolve('');
+          }
+        });
+    });
   }
 
-  async getMobileFileLocation(articleId) {
-    logger.info(`getMobileFileLocation for ${articleId}`);
-    const fileLocation = await AudioFileLocation.get({ item_id: articleId });
-    if (fileLocation && fileLocation.mobile_audio_location) {
-      return fileLocation.mobile_audio_location;
-    }
-    return '';
+  async getMobileMetadata(articleId) {
+    logger.info(`getMobileMetadata for ${articleId}`);
+    return new Promise(resolve => {
+      AudioFiles.query('item_id')
+        .eq(articleId)
+        .filter('type')
+        .eq('mobile')
+        .exec()
+        .then(function(data) {
+          console.log(data);
+          console.log(JSON.stringify(data));
+          resolve(data);
+        });
+    });
   }
 
-  async storeAudioFileLocation(articleId, audioType, location) {
-    logger.info(
-      `storeAudioFileLocation for ${articleId}/${audioType}: ${location}`
-    );
-    let fileLocation = await AudioFileLocation.get({ item_id: articleId });
-    if (!fileLocation) {
-      fileLocation = new AudioFileLocation({
-        item_id: articleId
-      });
-    }
-    if (audioType === 'full') {
-      fileLocation.full_audio_location = location;
-      fileLocation.full_audio_date = Date.now();
-    } else if (audioType === 'summary') {
-      fileLocation.summary_audio_location = location;
-      fileLocation.summary_audio_date = Date.now();
-    }
-    await fileLocation.save();
+  async storeAudioFileLocation(articleId, type, voice, location) {
+    logger.info(`storeAudioFileLocation for ${articleId}/${type}: ${location}`);
+    let mp3 = new AudioFiles({
+      item_id: articleId,
+      uuid: uuidgen.generate(),
+      voice: voice,
+      codec: 'mp3',
+      bitrate: 40000,
+      samplerate: 16000,
+      type: type,
+      url: location,
+      date: Date.now()
+    });
+    await mp3.save();
+
+    logger.debug('Before opus save');
+    let opus = new AudioFiles({
+      item_id: articleId,
+      uuid: uuidgen.generate(),
+      voice: voice,
+      codec: 'opus',
+      bitrate: 24000,
+      samplerate: 48000,
+      type: type,
+      url: location.replace('.mp3', '.opus'),
+      date: Date.now()
+    });
+    await opus.save();
+    logger.debug('after opus save');
   }
 
-  async storeMobileLocation(articleId, location) {
-    logger.info(`storeMobileLocation for ${articleId}: ${location}`);
-    let fileLocation = await AudioFileLocation.get({ item_id: articleId });
-    if (!fileLocation) {
-      fileLocation = new AudioFileLocation({
-        item_id: articleId
-      });
-    }
-    fileLocation.mobile_audio_location = location;
-    fileLocation.mobile_audio_date = Date.now();
+  async storeMobileLocation(articleId, lang, voice, audioMetadata) {
+    logger.info(`storeMobileLocation for ${articleId}: ${audioMetadata.url}`);
+    let mp3 = new AudioFiles({
+      item_id: articleId,
+      uuid: uuidgen.generate(),
+      lang: audioMetadata.lang,
+      voice: voice,
+      codec: 'mp3',
+      bitrate: 40000,
+      duration: audioMetadata.duration,
+      samplerate: 16000,
+      size: audioMetadata.size,
+      type: 'mobile',
+      url: audioMetadata.url,
+      date: Date.now()
+    });
+    await mp3.save();
 
-    await fileLocation.save();
+    logger.debug('Before opus save');
+    let opus = new AudioFiles({
+      item_id: articleId,
+      uuid: uuidgen.generate(),
+      lang: audioMetadata.lang,
+      voice: voice,
+      codec: 'opus',
+      bitrate: 24000,
+      duration: audioMetadata.duration,
+      samplerate: 48000,
+      type: 'mobile',
+      url: audioMetadata.url.replace('.mp3', '.opus'),
+      date: Date.now()
+    });
+    await opus.save();
+    logger.debug('after opus save');
   }
 
   async getHostnameData(hostname) {
@@ -132,40 +183,112 @@ class Database {
     return data;
   }
 
-  async getMetaAudioLocation(articleId) {
-    logger.info(`getMetaAudioLocation for ${articleId}`);
-    return await MetaAudioLocation.get({ item_id: articleId });
+  async getIntroAudioLocation(articleId, voice, summaryOnly) {
+    logger.info(`getIntroAudioLocation for ${articleId}`);
+    let type = summaryOnly ? 'summaryIntro' : 'fullIntro';
+    return new Promise(resolve => {
+      AudioFiles.query('item_id')
+        .eq(articleId)
+        .filter('type')
+        .eq(type)
+        .filter('voice')
+        .eq(voice)
+        .exec()
+        .then(function(data) {
+          console.log(data);
+          console.log(JSON.stringify(data));
+          if (data.count) {
+            resolve(data.url);
+          } else {
+            resolve('');
+          }
+        });
+    });
   }
 
-  async storeIntroLocation(articleId, introLocation, summaryOnly) {
+  async getOutroAudioLocation(articleId, voice) {
+    logger.info(`getOutroAudioLocation for ${articleId}`);
+    return new Promise(resolve => {
+      AudioFiles.query('item_id')
+        .eq(articleId)
+        .filter('type')
+        .eq('outro')
+        .filter('voice')
+        .eq(voice)
+        .exec()
+        .then(function(data) {
+          console.log(data);
+          console.log(JSON.stringify(data));
+          if (data.count) {
+            resolve(data.url);
+          } else {
+            resolve('');
+          }
+        });
+    });
+  }
+
+  async storeIntroLocation(articleId, introLocation, voice, summaryOnly) {
     logger.info(`storeIntroLocation for ${articleId}`);
-    let metaLocation = await MetaAudioLocation.get({ item_id: articleId });
-    if (!metaLocation) {
-      metaLocation = new MetaAudioLocation({
-        item_id: articleId
-      });
-    }
-    if (summaryOnly) {
-      metaLocation.intro_summary_location = introLocation;
-    } else {
-      metaLocation.intro_full_location = introLocation;
-    }
+    let type = summaryOnly ? 'introSummary' : 'introFull';
+    let mp3 = new AudioFiles({
+      item_id: articleId,
+      uuid: uuidgen.generate(),
+      voice: voice,
+      codec: 'mp3',
+      bitrate: 40000,
+      samplerate: 16000,
+      type: type,
+      url: introLocation,
+      date: Date.now()
+    });
+    await mp3.save();
 
-    metaLocation.date = Date.now();
-    await metaLocation.save();
+    logger.debug('Before opus save');
+    let opus = new AudioFiles({
+      item_id: articleId,
+      uuid: uuidgen.generate(),
+      voice: voice,
+      codec: 'opus',
+      bitrate: 24000,
+      samplerate: 48000,
+      type: type,
+      url: introLocation.replace('.mp3', '.opus'),
+      date: Date.now()
+    });
+    await opus.save();
+    logger.debug('after opus save');
   }
 
-  async storeOutroLocation(articleId, outroLocation) {
+  async storeOutroLocation(articleId, outroLocation, voice) {
     logger.info(`storeOutroLocation for ${articleId}`);
-    let metaLocation = await MetaAudioLocation.get({ item_id: articleId });
-    if (!metaLocation) {
-      metaLocation = new MetaAudioLocation({
-        item_id: articleId
-      });
-    }
-    metaLocation.outro_location = outroLocation;
-    metaLocation.date = Date.now();
-    await metaLocation.save();
+    let mp3 = new AudioFiles({
+      item_id: articleId,
+      uuid: uuidgen.generate(),
+      voice: voice,
+      codec: 'mp3',
+      bitrate: 40000,
+      samplerate: 16000,
+      type: 'outro',
+      url: outroLocation,
+      date: Date.now()
+    });
+    await mp3.save();
+
+    logger.debug('Before opus save');
+    let opus = new AudioFiles({
+      item_id: articleId,
+      uuid: uuidgen.generate(),
+      voice: voice,
+      codec: 'opus',
+      bitrate: 24000,
+      samplerate: 48000,
+      type: 'outro',
+      url: outroLocation.replace('.mp3', '.opus'),
+      date: Date.now()
+    });
+    await opus.save();
+    logger.debug('after opus save');
   }
 }
 
