@@ -63,6 +63,8 @@ You need the following environment variables:
 * |npm test| -- runs the tests.
 * |npm start| -- starts the server locally.
 
+Node version 9.11.1 is helpful for running locally due to natural libraries dependencies.
+
 # Deploy on Heroku
 
 This can also be run on Heroku. Here are the instructions for running with Heroku:
