@@ -822,19 +822,38 @@ async function buildAudioFromUrl(url) {
 function buildIntro(article) {
   //Intro: “article title, published by host, on publish date"
   let introFullText;
-  if (article.timePublished) {
-    var dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-    let publishedDate = new Date(article.timePublished * 1000);
-    let dateString = publishedDate.toLocaleDateString('en-US', dateOptions);
+  let dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+  if (article.lang == 'en') {
+    if (article.timePublished) {
+      let publishedDate = new Date(article.timePublished * 1000);
+      let dateString = publishedDate.toLocaleDateString('en-US', dateOptions);
 
-    introFullText = article.publisher
-      ? `${article.title}, published by ${article.host}, on ${dateString}`
-      : `${article.title}, published on ${dateString}`;
+      introFullText = article.publisher
+        ? `${article.title}, published by ${article.host}, on ${dateString}`
+        : `${article.title}, published on ${dateString}`;
+    } else {
+      // The case where date is not available.
+      introFullText = article.publisher
+        ? `${article.title}, published by ${article.host}.`
+        : `${article.title}.`;
+    }
   } else {
-    // The case where date is not available.
-    introFullText = article.publisher
-      ? `${article.title}, published by ${article.host}.`
-      : `${article.title}.`;
+    if (article.timePublished) {
+      let publishedDate = new Date(article.timePublished * 1000);
+      let dateString = publishedDate.toLocaleDateString(
+        article.lang,
+        dateOptions
+      );
+
+      introFullText = article.publisher
+        ? `${article.title}, ${article.host}, ${dateString}`
+        : `${article.title}, ${dateString}`;
+    } else {
+      // The case where date is not available.
+      introFullText = article.publisher
+        ? `${article.title}, ${article.host}.`
+        : `${article.title}.`;
+    }
   }
   return introFullText;
 }
