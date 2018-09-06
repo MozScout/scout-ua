@@ -44,6 +44,7 @@ const texttools = {
     //Clean up any last html codes and diacriticals that
     //contain & so it doesn't choke ssml.
     strippedHtml = strippedHtml.replace(/&[^\s]*/g, '');
+    strippedHtml = htmlStr.replace(/<[^>]+>/g, '');
 
     return strippedHtml;
   },
