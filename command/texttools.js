@@ -40,11 +40,13 @@ const texttools = {
       .replace(/&nbsp;/g, ' ')
       .replace(/&thinsp;/g, '');
 
+    //This next line turns encoded int'l chars into proper char
+    //example: pr&eacute;sid&eacute; ==> présidé à
     strippedHtml = entities.decode(strippedHtml);
     //Clean up any last html codes and diacriticals that
     //contain & so it doesn't choke ssml.
     strippedHtml = strippedHtml.replace(/&[^\s]*/g, '');
-
+    strippedHtml = strippedHtml.replace(/[<>]/g, '');
     return strippedHtml;
   },
 

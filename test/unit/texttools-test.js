@@ -69,4 +69,20 @@ describe('Text Tools - International languages', function() {
       done();
     });
   });
+
+  it('Should clean french text with lt and gt code tags', function(done) {
+    fs.readFile(
+      MOCK_DATA_PATH + '/french_article_with_code.json',
+      'utf8',
+      function(err, data) {
+        if (err) {
+          return console.log(err);
+        }
+        let articleData = JSON.parse(data);
+        let cleanText = texttools.cleanText(articleData.article);
+        expect(cleanText).to.equal(articleData.expected_clean_article);
+        done();
+      }
+    );
+  });
 });
