@@ -26,7 +26,7 @@ const texttools = {
 
   cleanText: function(htmlStr) {
     // Remove the HTML marks.
-    strippedHtml = htmlStr.replace(/<[^>]+>/g, ' ');
+    let strippedHtml = htmlStr.replace(/<[^>]+>/g, ' ');
 
     // Now replace the quotes and other markups.
     strippedHtml = strippedHtml
