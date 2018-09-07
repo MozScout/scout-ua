@@ -42,7 +42,6 @@ var polly_tts = {
         VoiceId: voiceType,
         TextType: 'ssml'
       };
-      logger.debug('SSML is: ' + ssmlText);
 
       var polly = new AWS.Polly({
         signatureVersion: 'v4'
