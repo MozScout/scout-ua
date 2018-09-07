@@ -26,7 +26,7 @@ const texttools = {
 
   cleanText: function(htmlStr) {
     // Remove the HTML marks.
-    let strippedHtml = htmlStr.replace(/<[^>]+>/g, ' ');
+    strippedHtml = htmlStr.replace(/<[^>]+>/g, ' ');
 
     // Now replace the quotes and other markups.
     strippedHtml = strippedHtml
@@ -40,12 +40,13 @@ const texttools = {
       .replace(/&nbsp;/g, ' ')
       .replace(/&thinsp;/g, '');
 
+    //This next line turns encoded int'l chars into proper char
+    //example: pr&eacute;sid&eacute; ==> présidé à
     strippedHtml = entities.decode(strippedHtml);
     //Clean up any last html codes and diacriticals that
     //contain & so it doesn't choke ssml.
     strippedHtml = strippedHtml.replace(/&[^\s]*/g, '');
-    strippedHtml = htmlStr.replace(/<[^>]+>/g, '');
-
+    strippedHtml = strippedHtml.replace(/[<>]/g, '');
     return strippedHtml;
   },
 

@@ -1,0 +1,40 @@
+{
+  "resolved_id": "2282521513",
+  "resolvedUrl": "http://www.spiegel.de/netzwelt/web/facebook-wollte-offenbar-kundendaten-von-banken-a-1221942.html",
+  "host": "spiegel.de",
+  "title": "Facebook wollte offenbar Kundendaten von Banken",
+  "datePublished": "2018-08-06 15:54:09",
+  "timePublished": 1533588849,
+  "responseCode": "200",
+  "excerpt": "Weil Facebook seine Nutzerinteraktion steigern wollte, soll das Unternehmen Banken nach Finanzinformationen ihrer Kunden gefragt haben. Dabei ging es demnach auch um Kontostände und Transaktionen.",
+  "authors": {
+    "55834569": {
+      "author_id": "55834569",
+      "name": "SPIEGEL ONLINE, Hamburg, Germany",
+      "url": ""
+    }
+  },
+  "images": {
+    "1": {
+      "item_id": "2282521513",
+      "image_id": "1",
+      "src": "http://cdn2.spiegel.de/images/image-1324485-860_poster_16x9-vmyh-1324485.jpg",
+      "width": "860",
+      "height": "484",
+      "credit": "REUTERS",
+      "caption": "Facebook-Logo"
+    }
+  },
+  "videos": "",
+  "wordCount": 314,
+  "isArticle": 1,
+  "isVideo": 0,
+  "isIndex": 0,
+  "usedFallback": 0,
+  "requiresLogin": 0,
+  "lang": "de",
+  "ampUrl": "http://www.spiegel.de/netzwelt/web/facebook-wollte-offenbar-kundendaten-von-banken-a-1221942-amp.html",
+  "topImageUrl": "http://cdn2.spiegel.de/images/image-1324485-860_poster_16x9-vmyh-1324485.jpg",
+  "expected_clean_article": "présidé à son remplacement VTDAddViewInterface NSObject- (void)setEntryName:(NSString *)name;- (void)setEntryDueDate:(NSDate *)date;@end   Views and view controllers also handle user interaction and input. It's easy to understand why view controllers usually become so large, since they are the easiest place to handle this input to perform some act",
+  "article": "pr&eacute;sid&eacute; &agrave; son remplacement VTDAddViewInterface &lt;NSObject&gt;- (void)setEntryName:(NSString *)name;- (void)setEntryDueDate:(NSDate *)date;@end</code></pre><p nodeIndex=\"109\">Views and view controllers also handle user interaction and input. It&rsquo;s easy to understand why view controllers usually become so large, since they are the easiest place to handle this input to perform some act"
+}
