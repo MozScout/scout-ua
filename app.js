@@ -22,22 +22,16 @@ if (
 // app.js
 
 // This middleware forces the use of https
-app.use(function(req, res, next) {
+/*app.use(function(req, res, next) {
   if (req.protocol !== 'https' || !req.secure) {
     console.log('not secure');
+    console.log
     return res.status(403).send({ message: 'SSL required' });
   } else {
     console.log('secure');
     // allow the request to continue
-    next();
-  }
-});
-
-/*app.use(function(req, res, next) {
-  if (req.secure) {
     return next();
   }
-  res.redirect('https://' + req.headers.host + req.url);
 });*/
 
 const UserController = require('./user/UserController');
