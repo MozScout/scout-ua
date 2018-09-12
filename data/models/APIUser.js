@@ -10,6 +10,6 @@ const schema = new dynamoose.Schema({
   active: Boolean
 });
 
-const APIUser = dynamoose.model('APIUsers', schema);
+const APIUser = dynamoose.model('APIUsers2', schema);
 
 module.exports = APIUser;

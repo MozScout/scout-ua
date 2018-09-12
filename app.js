@@ -4,6 +4,11 @@ const app = express();
 const dynamoose = require('dynamoose');
 const logger = require('./logger');
 
+/*const tlsOptions = {
+  key: fs.readFileSync('./key.pem'),
+  cert: fs.readFileSync('./cert.pem')
+};*/
+
 // DynamoDB init
 if (
   process.env.DYNAMODB_USE_LOCAL &&
@@ -17,16 +22,29 @@ if (
 // app.js
 
 // This middleware forces the use of https
-app.use(function(req, res, next) {
+/*app.use(function(req, res, next) {
   if (req.protocol !== 'https' || !req.secure) {
+    console.log('not secure');
     return res.status(403).send({ message: 'SSL required' });
+  } else {
+    console.log('secure');
+    // allow the request to continue
+    next();
   }
-  // allow the request to continue
-  next();
+});*/
+
+app.use(function(req, res, next) {
+  if (req.secure) {
+    return next();
+  }
+  res.redirect('https://' + req.headers.host + req.url);
 });
 
 const UserController = require('./user/UserController');
 app.use('/api/users', UserController);
+
+const AuthController = require('./auth/AuthController');
+app.use('/api/auth', AuthController);
 
 const MobileController = require('./auth/MobileController');
 app.use('/api/auth/mobile', MobileController);
