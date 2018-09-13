@@ -207,7 +207,6 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
           buildIntro(article),
           voice
         );
-
         let audioMetadata = await buildPocketAudio(introFile, articleFile);
         // Add the correct voice:
         audioMetadata['voice'] = voice;
@@ -824,8 +823,7 @@ function buildIntro(article) {
   //Intro: “article title, published by host, on publish date"
   let introFullText;
   let dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-  const articleLang = article.lang ? article.lang : 'en';
-  if (articleLang === 'en') {
+  if (!article.lang || article.lang === 'en') {
     if (article.timePublished) {
       let publishedDate = new Date(article.timePublished * 1000);
       let dateString = publishedDate.toLocaleDateString('en-US', dateOptions);
