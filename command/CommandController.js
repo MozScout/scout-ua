@@ -198,19 +198,16 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       if (article) {
         // Build the stitched file first
         let voice = vc.findVoice(article.lang);
-        logger.debug(`** creating article file`);
         let articleFile = await createAudioFileFromText(
           `${article.article}`,
           voice
         );
 
-        logger.debug(`** creating intro file`);
         let introFile = await createAudioFileFromText(
           buildIntro(article),
           voice
         );
 
-        logger.debug(`** creating pocket file`);
         let audioMetadata = await buildPocketAudio(introFile, articleFile);
         // Add the correct voice:
         audioMetadata['voice'] = voice;
@@ -860,7 +857,6 @@ function buildIntro(article) {
         : `${article.title}.`;
     }
   }
-  logger.debug('** leaving buildIntro');
   return introFullText;
 }
 

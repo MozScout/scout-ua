@@ -87,7 +87,7 @@ class Database {
       item_id: articleId,
       uuid: uuidgen.generate(),
       lang,
-      voice: voice,
+      voice,
       codec: 'mp3',
       bitrate: 40000,
       samplerate: 16000,
@@ -102,7 +102,7 @@ class Database {
       item_id: articleId,
       uuid: uuidgen.generate(),
       lang,
-      voice: voice,
+      voice,
       codec: 'opus',
       bitrate: 24000,
       samplerate: 48000,
@@ -115,11 +115,7 @@ class Database {
   }
 
   async storeMobileLocation(articleId, lang = 'en', voice, audioMetadata) {
-    logger.info(
-      `storeMobileLocation for ${articleId}: ${
-        audioMetadata.url
-      } and lang: ${lang}`
-    );
+    logger.info(`storeMobileLocation for ${articleId}: ${audioMetadata.url}`);
     let mp3 = new AudioFiles({
       item_id: articleId,
       uuid: uuidgen.generate(),
