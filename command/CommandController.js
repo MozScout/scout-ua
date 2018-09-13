@@ -301,8 +301,8 @@ router.get('/search', VerifyToken, async function(req, res) {
 });
 
 function logMetric(cmd, userid, agent) {
-  logger.info('User-Agent is: ' + agent);
   if (process.env.GA_PROPERTY_ID) {
+    logger.info('User-Agent is: ' + agent);
     var visitor = ua(process.env.GA_PROPERTY_ID, userid);
     var ga_params = {
       ec: cmd,
