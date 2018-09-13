@@ -81,12 +81,13 @@ class Database {
     });
   }
 
-  async storeAudioFileLocation(articleId, type, voice, location) {
+  async storeAudioFileLocation(articleId, type, voice, location, lang = 'en') {
     logger.info(`storeAudioFileLocation for ${articleId}/${type}: ${location}`);
     let mp3 = new AudioFiles({
       item_id: articleId,
       uuid: uuidgen.generate(),
-      voice: voice,
+      lang,
+      voice,
       codec: 'mp3',
       bitrate: 40000,
       samplerate: 16000,
@@ -100,7 +101,8 @@ class Database {
     let opus = new AudioFiles({
       item_id: articleId,
       uuid: uuidgen.generate(),
-      voice: voice,
+      lang,
+      voice,
       codec: 'opus',
       bitrate: 24000,
       samplerate: 48000,
@@ -112,13 +114,13 @@ class Database {
     logger.debug('after opus save');
   }
 
-  async storeMobileLocation(articleId, lang, voice, audioMetadata) {
+  async storeMobileLocation(articleId, lang = 'en', voice, audioMetadata) {
     logger.info(`storeMobileLocation for ${articleId}: ${audioMetadata.url}`);
     let mp3 = new AudioFiles({
       item_id: articleId,
       uuid: uuidgen.generate(),
-      lang: audioMetadata.lang,
-      voice: voice,
+      lang,
+      voice,
       codec: 'mp3',
       bitrate: 40000,
       duration: audioMetadata.duration,
@@ -134,8 +136,8 @@ class Database {
     let opus = new AudioFiles({
       item_id: articleId,
       uuid: uuidgen.generate(),
-      lang: audioMetadata.lang,
-      voice: voice,
+      lang,
+      voice,
       codec: 'opus',
       bitrate: 24000,
       duration: audioMetadata.duration,
