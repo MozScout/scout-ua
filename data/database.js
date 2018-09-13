@@ -117,7 +117,7 @@ class Database {
     let mp3 = new AudioFiles({
       item_id: articleId,
       uuid: uuidgen.generate(),
-      lang: lang ? lang : 'en',
+      lang: 'lang',
       voice: voice,
       codec: 'mp3',
       bitrate: 40000,
@@ -134,7 +134,7 @@ class Database {
     let opus = new AudioFiles({
       item_id: articleId,
       uuid: uuidgen.generate(),
-      lang: lang ? lang : 'en',
+      lang: 'lang',
       voice: voice,
       codec: 'opus',
       bitrate: 24000,
