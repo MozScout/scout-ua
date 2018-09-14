@@ -53,15 +53,6 @@ class CommandHelper {
     return false;
   }
 
-  async storeAudioFileLocation(articleId, summaryOnly, voice, location) {
-    await database.storeAudioFileLocation(
-      articleId,
-      summaryOnly ? 'summary' : 'full',
-      voice,
-      location
-    );
-  }
-
   async getMetaAudioLocation(articleId, voice, summaryOnly) {
     let metaAudio = {};
     let introLocation = await database.getIntroAudioLocation(
@@ -81,17 +72,28 @@ class CommandHelper {
     return metaAudio;
   }
 
+  async storeAudioFileLocation(articleId, summaryOnly, voice, location) {
+    const fileType = summaryOnly ? 'summary' : 'full';
+    await database.storeAudioFileLocation(articleId, location, fileType, voice);
+  }
+
   async storeIntroLocation(articleId, introLocation, voice, summaryOnly) {
-    return await database.storeIntroLocation(
+    const fileType = summaryOnly ? 'introSummary' : 'introFull';
+    await database.storeAudioFileLocation(
       articleId,
       introLocation,
-      voice,
-      summaryOnly
+      fileType,
+      voice
     );
   }
 
   async storeOutroLocation(articleId, outroLocation, voice) {
-    return await database.storeOutroLocation(articleId, outroLocation, voice);
+    await database.storeAudioFileLocation(
+      articleId,
+      outroLocation,
+      'outro',
+      voice
+    );
   }
 
   /*
@@ -99,11 +101,18 @@ class CommandHelper {
   * file.  
   */
   async storeMobileLocation(articleId, lang, voice, audioMetadata) {
-    return await database.storeMobileLocation(
+    const { url, size, duration } = audioMetadata;
+    await database.storeAudioFileLocation(
       articleId,
-      lang,
+      url,
+      'mobile',
       voice,
-      audioMetadata
+      lang,
+      {
+        size,
+        duration
+      },
+      { duration }
     );
   }
 }
