@@ -860,7 +860,7 @@ function buildIntro(article) {
 
 async function getPocketArticleTextFromUrl(url) {
   articleOptions.formData = {
-    consumer_key: process.env.POCKET_KEY,
+    consumer_key: process.env.POCKET_KEY || '',
     url,
     images: '0',
     videos: '0',
