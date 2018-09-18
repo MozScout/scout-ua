@@ -188,6 +188,7 @@ class Database {
   async getIntroAudioLocation(articleId, voice, summaryOnly) {
     logger.info(`getIntroAudioLocation for ${articleId}`);
     let type = summaryOnly ? 'summaryIntro' : 'fullIntro';
+    logger.info('TAMARAH:GETINTROAUDIOLOCATION:' + articleId + type + voice);
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
@@ -200,8 +201,10 @@ class Database {
           console.log(data);
           console.log(JSON.stringify(data));
           if (data.count) {
+            logger.info('TAMARAH:RESOLVE:' + data.url);
             resolve(data.url);
           } else {
+            logger.info('TAMARAH:RESOLVE: DIDNT FIND IT');
             resolve('');
           }
         });
@@ -233,6 +236,20 @@ class Database {
   async storeIntroLocation(articleId, introLocation, voice, summaryOnly) {
     logger.info(`storeIntroLocation for ${articleId}`);
     let type = summaryOnly ? 'introSummary' : 'introFull';
+    logger.info(
+      'TAMARAH:STOREINTROLOCATION:' +
+        articleId +
+        introLocation +
+        voice +
+        summaryOnly
+    );
+    logger.info(
+      'TAMARAH:STOREINTROLOCATION:' +
+        articleId +
+        introLocation +
+        voice +
+        summaryOnly
+    );
     let mp3 = new AudioFiles({
       item_id: articleId,
       uuid: uuidgen.generate(),
@@ -245,6 +262,7 @@ class Database {
       date: Date.now()
     });
     await mp3.save();
+    logger.info('TAMARAH:SAVED SUCCESSFULLY');
 
     logger.debug('Before opus save');
     let opus = new AudioFiles({
