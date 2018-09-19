@@ -203,8 +203,10 @@ class Database {
           console.log(data);
           console.log(JSON.stringify(data));
           if (data.count) {
+            console.log('data.count is: ' + data.count);
             resolve(data.url);
           } else {
+            console.log('data.count is NULL');
             resolve('');
           }
         });

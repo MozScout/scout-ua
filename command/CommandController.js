@@ -407,7 +407,9 @@ async function generateMetaAudio(data, summaryOnly) {
   if (md.intro) {
     // Intro is already in the database & s3.
     intro = md.intro;
+    console.log('MD.INTRO IS: ' + intro);
   } else {
+    console.log('INTRO IS NOT THERE');
     // It's a summary
     if (summaryOnly) {
       logger.info('Generating summary intro for item:' + data.item_id);
@@ -423,6 +425,7 @@ async function generateMetaAudio(data, summaryOnly) {
         summaryOnly
       );
     } else {
+      console.log('GENERATING A FULL INTRO');
       // It's a full article
       let introFullText = data.publisher
         ? `From ${data.publisher}, ${data.title}`
