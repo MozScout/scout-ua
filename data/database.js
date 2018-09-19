@@ -198,12 +198,15 @@ class Database {
         .eq(type)
         .filter(constants.strings.VOICE)
         .eq(voice)
+        .filter(constants.strings.CODEC_FIELD)
+        .eq(constants.strings.CODEC_MP3)
         .exec()
         .then(function(data) {
           console.log(data);
           console.log(JSON.stringify(data));
           if (data.count) {
             console.log('data.count is: ' + data.count);
+            console.log('data.url is:' + data.url);
             resolve(data.url);
           } else {
             console.log('data.count is NULL');
