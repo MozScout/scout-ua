@@ -42,6 +42,7 @@ In Permissions/Bucket Policy you can paste the following code (replace the resou
 
 You need the following environment variables:
 
+* `PORT`: Defaults to 3000 if not set.
 * `AWS_ACCESS_KEY_ID`: AWS Credentials (see [AWS IAM](https://console.aws.amazon.com/iam/home?region=us-east-1#/home))
 * `AWS_SECRET_ACCESS_KEY`: AWS Credentials
 * `AWS_REGION`: AWS Region (us-east-1)
