@@ -59,10 +59,11 @@ var polly_tts = {
               if (err) {
                 reject(err);
                 return logger.error(err);
+              } else {
+                logger.debug('Wrote chunk: ' + filenameIndex);
+                resolve(audioFile);
               }
             });
-            logger.debug('Wrote chunk: ' + filenameIndex);
-            resolve(audioFile);
           } else {
             reject('Not a proper AudioStream');
           }
