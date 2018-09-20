@@ -52,8 +52,6 @@ class Database {
         .eq(constants.strings.CODEC_MP3)
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           if (data.count) {
             resolve(data[0].url);
             if (data.count > 1) {
@@ -75,8 +73,6 @@ class Database {
         .eq('mobile')
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           resolve(data);
         });
     });
@@ -199,17 +195,13 @@ class Database {
         .filter(constants.strings.VOICE)
         .eq(voice)
         .filter(constants.strings.CODEC_FIELD)
-        .eq(constants.strings.CODEC_MP3)
+        .eq(constants.strings.CODEC_MP3) //Limit this to mp3 for Alexa
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           if (data.count) {
-            console.log('data.count is: ' + data.count);
-            console.log('data.url is:' + data[0].url);
             resolve(data[0].url);
           } else {
-            console.log('data.count is NULL');
+            logger.warn('data.count is NULL');
             resolve('');
           }
         });
@@ -226,16 +218,13 @@ class Database {
         .filter(constants.strings.VOICE)
         .eq(voice)
         .filter(constants.strings.CODEC_FIELD)
-        .eq(constants.strings.CODEC_MP3)
+        .eq(constants.strings.CODEC_MP3) //Limit to mp3 for Alexa
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           if (data.count) {
-            console.log('data.count is: ' + data.count);
-            console.log('data.url is:' + data[0].url);
             resolve(data[0].url);
           } else {
+            logger.warn('Data count is null');
             resolve('');
           }
         });
