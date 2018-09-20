@@ -3,6 +3,7 @@ const AudioFiles = require('./models/AudioFiles');
 const Hostname = require('./models/Hostname');
 const logger = require('../logger');
 const uuidgen = require('node-uuid-generator');
+const constants = require('../constants');
 
 class Database {
   async processScoutUser(userid, access_token) {
@@ -43,16 +44,14 @@ class Database {
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter('type')
+        .filter(constants.strings.TYPE_FIELD)
         .eq(type)
-        .filter('voice')
+        .filter(constants.strings.VOICE_FIELD)
         .eq(voice)
-        .filter('codec')
-        .eq('mp3')
+        .filter(constants.strings.CODEC_FIELD)
+        .eq(constants.strings.CODEC_MP3)
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           if (data.count) {
             resolve(data[0].url);
             if (data.count > 1) {
@@ -70,12 +69,10 @@ class Database {
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter('type')
+        .filter(constants.strings.TYPE_FIELD)
         .eq('mobile')
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           resolve(data);
         });
     });
@@ -88,9 +85,9 @@ class Database {
       uuid: uuidgen.generate(),
       lang,
       voice,
-      codec: 'mp3',
-      bitrate: 40000,
-      samplerate: 16000,
+      codec: constants.strings.CODEC_MP3,
+      bitrate: constants.bitrate.BITRATE_MP3,
+      samplerate: constants.samplerate.SAMPLERATE_MP3,
       type: type,
       url: location,
       date: Date.now()
@@ -103,9 +100,9 @@ class Database {
       uuid: uuidgen.generate(),
       lang,
       voice,
-      codec: 'opus',
-      bitrate: 24000,
-      samplerate: 48000,
+      codec: constants.strings.CODEC_OPUS,
+      bitrate: constants.bitrate.BITRATE_OPUS,
+      samplerate: constants.samplerate.SAMPLERATE_OPUS,
       type: type,
       url: location.replace('.mp3', '.opus'),
       date: Date.now()
@@ -121,12 +118,12 @@ class Database {
       uuid: uuidgen.generate(),
       lang,
       voice,
-      codec: 'mp3',
-      bitrate: 40000,
+      codec: constants.strings.CODEC_MP3,
+      bitrate: constants.bitrate.BITRATE_MP3,
       duration: audioMetadata.duration,
-      samplerate: 16000,
+      samplerate: constants.samplerate.SAMPLERATE_MP3,
       size: audioMetadata.size,
-      type: 'mobile',
+      type: constants.strings.TYPE_MOBILE,
       url: audioMetadata.url,
       date: Date.now()
     });
@@ -138,11 +135,11 @@ class Database {
       uuid: uuidgen.generate(),
       lang,
       voice,
-      codec: 'opus',
-      bitrate: 24000,
+      codec: constants.strings.CODEC_OPUS,
+      bitrate: constants.bitrate.BITRATE_OPUS,
       duration: audioMetadata.duration,
-      samplerate: 48000,
-      type: 'mobile',
+      samplerate: constants.samplerate.SAMPLERATE_OPUS,
+      type: constants.strings.TYPE_MOBILE,
       url: audioMetadata.url.replace('.mp3', '.opus'),
       date: Date.now()
     });
@@ -187,21 +184,24 @@ class Database {
 
   async getIntroAudioLocation(articleId, voice, summaryOnly) {
     logger.info(`getIntroAudioLocation for ${articleId}`);
-    let type = summaryOnly ? 'summaryIntro' : 'fullIntro';
+    let type = summaryOnly
+      ? constants.strings.TYPE_INTRO_SUMMARY
+      : constants.strings.TYPE_INTRO_FULL;
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter('type')
+        .filter(constants.strings.TYPE_FIELD)
         .eq(type)
-        .filter('voice')
+        .filter(constants.strings.VOICE_FIELD)
         .eq(voice)
+        .filter(constants.strings.CODEC_FIELD)
+        .eq(constants.strings.CODEC_MP3) //Limit this to mp3 for Alexa
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           if (data.count) {
-            resolve(data.url);
+            resolve(data[0].url);
           } else {
+            logger.warn('data.count is NULL');
             resolve('');
           }
         });
@@ -213,17 +213,18 @@ class Database {
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter('type')
-        .eq('outro')
-        .filter('voice')
+        .filter(constants.strings.TYPE_FIELD)
+        .eq(constants.strings.TYPE_OUTRO)
+        .filter(constants.strings.VOICE_FIELD)
         .eq(voice)
+        .filter(constants.strings.CODEC_FIELD)
+        .eq(constants.strings.CODEC_MP3) //Limit to mp3 for Alexa
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           if (data.count) {
-            resolve(data.url);
+            resolve(data[0].url);
           } else {
+            logger.warn('Data count is null');
             resolve('');
           }
         });
@@ -232,14 +233,16 @@ class Database {
 
   async storeIntroLocation(articleId, introLocation, voice, summaryOnly) {
     logger.info(`storeIntroLocation for ${articleId}`);
-    let type = summaryOnly ? 'introSummary' : 'introFull';
+    let type = summaryOnly
+      ? constants.strings.TYPE_INTRO_SUMMARY
+      : constants.strings.TYPE_INTRO_FULL;
     let mp3 = new AudioFiles({
       item_id: articleId,
       uuid: uuidgen.generate(),
       voice: voice,
-      codec: 'mp3',
-      bitrate: 40000,
-      samplerate: 16000,
+      codec: constants.strings.CODEC_MP3,
+      bitrate: constants.bitrate.BITRATE_MP3,
+      samplerate: constants.SAMPLERATE_MP3,
       type: type,
       url: introLocation,
       date: Date.now()
@@ -251,9 +254,9 @@ class Database {
       item_id: articleId,
       uuid: uuidgen.generate(),
       voice: voice,
-      codec: 'opus',
-      bitrate: 24000,
-      samplerate: 48000,
+      codec: constants.strings.CODEC_OPUS,
+      bitrate: constants.bitrate.BITRATE_OPUS,
+      samplerate: constants.SAMPLERATE_OPUS,
       type: type,
       url: introLocation.replace('.mp3', '.opus'),
       date: Date.now()
@@ -268,10 +271,10 @@ class Database {
       item_id: articleId,
       uuid: uuidgen.generate(),
       voice: voice,
-      codec: 'mp3',
-      bitrate: 40000,
-      samplerate: 16000,
-      type: 'outro',
+      codec: constants.strings.CODEC_MP3,
+      bitrate: constants.bitrate.BITRATE_MP3,
+      samplerate: constants.samplerate.SAMPLERATE_MP3,
+      type: constants.strings.TYPE_OUTRO,
       url: outroLocation,
       date: Date.now()
     });
@@ -282,10 +285,10 @@ class Database {
       item_id: articleId,
       uuid: uuidgen.generate(),
       voice: voice,
-      codec: 'opus',
-      bitrate: 24000,
-      samplerate: 48000,
-      type: 'outro',
+      codec: constants.strings.CODEC_OPUS,
+      bitrate: constants.bitrate.BITRATE_OPUS,
+      samplerate: constants.samplerate.SAMPLERATE_OPUS,
+      type: constants.strings.TYPE_OUTRO,
       url: outroLocation.replace('.mp3', '.opus'),
       date: Date.now()
     });
