@@ -44,9 +44,9 @@ class Database {
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter(constants.strings.TYPE)
+        .filter(constants.strings.TYPE_FIELD)
         .eq(type)
-        .filter(constants.strings.VOICE)
+        .filter(constants.strings.VOICE_FIELD)
         .eq(voice)
         .filter(constants.strings.CODEC_FIELD)
         .eq(constants.strings.CODEC_MP3)
@@ -69,7 +69,7 @@ class Database {
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter(constants.strings.TYPE)
+        .filter(constants.strings.TYPE_FIELD)
         .eq('mobile')
         .exec()
         .then(function(data) {
@@ -185,14 +185,14 @@ class Database {
   async getIntroAudioLocation(articleId, voice, summaryOnly) {
     logger.info(`getIntroAudioLocation for ${articleId}`);
     let type = summaryOnly
-      ? constants.strings.INTRO_SUMMARY
-      : constants.strings.INTRO_FULL;
+      ? constants.strings.TYPE_INTRO_SUMMARY
+      : constants.strings.TYPE_INTRO_FULL;
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter(constants.strings.TYPE)
+        .filter(constants.strings.TYPE_FIELD)
         .eq(type)
-        .filter(constants.strings.VOICE)
+        .filter(constants.strings.VOICE_FIELD)
         .eq(voice)
         .filter(constants.strings.CODEC_FIELD)
         .eq(constants.strings.CODEC_MP3) //Limit this to mp3 for Alexa
@@ -213,9 +213,9 @@ class Database {
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter(constants.strings.TYPE)
+        .filter(constants.strings.TYPE_FIELD)
         .eq(constants.strings.TYPE_OUTRO)
-        .filter(constants.strings.VOICE)
+        .filter(constants.strings.VOICE_FIELD)
         .eq(voice)
         .filter(constants.strings.CODEC_FIELD)
         .eq(constants.strings.CODEC_MP3) //Limit to mp3 for Alexa
@@ -234,8 +234,8 @@ class Database {
   async storeIntroLocation(articleId, introLocation, voice, summaryOnly) {
     logger.info(`storeIntroLocation for ${articleId}`);
     let type = summaryOnly
-      ? constants.strings.INTRO_SUMMARY
-      : constants.strings.INTRO_FULL;
+      ? constants.strings.TYPE_INTRO_SUMMARY
+      : constants.strings.TYPE_INTRO_FULL;
     let mp3 = new AudioFiles({
       item_id: articleId,
       uuid: uuidgen.generate(),

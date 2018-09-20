@@ -5,12 +5,12 @@ module.exports = Object.freeze({
     CODEC_FIELD: 'codec',
     CODEC_MP3: 'mp3',
     CODEC_OPUS: 'opus',
-    INTRO_FULL: 'introFull',
-    INTRO_SUMMARY: 'introSummary',
-    TYPE: 'type',
+    TYPE_INTRO_FULL: 'introFull',
+    TYPE_INTRO_SUMMARY: 'introSummary',
+    TYPE_FIELD: 'type',
     TYPE_MOBILE: 'mobile',
     TYPE_OUTRO: 'outro',
-    VOICE: 'voice'
+    VOICE_FIELD: 'voice'
   },
   bitrate: {
     BITRATE_MP3: 40000,

@@ -70,10 +70,7 @@ class CommandHelper {
       summaryOnly
     );
     if (introLocation && this.checkFileExistence(introLocation)) {
-      console.log('METAAUDIO.INTRO IS: ' + introLocation);
       metaAudio.intro = introLocation;
-    } else {
-      console.log('either audio file does not exist or introLocation is null');
     }
 
     let outroLocation = await database.getOutroAudioLocation(articleId, voice);
