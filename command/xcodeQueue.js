@@ -19,27 +19,31 @@ var sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 
 const xcodeQueue = {
   add: function(file) {
-    logger.debug('XCODE: filename: ' + file);
-    var jsonBody = {
-      filename: file,
-      targetCodec: 'opus 24'
-    };
+    if (process.env.SQS_QUEUE) {
+      logger.debug('XCODE: filename: ' + file);
+      var jsonBody = {
+        filename: file,
+        targetCodec: 'opus 24'
+      };
 
-    var params = {
-      MessageAttributes: {},
-      MessageGroupId: 'scout',
-      MessageDeduplicationId: uuidgen.generate(),
-      MessageBody: JSON.stringify(jsonBody),
-      QueueUrl: process.env.SQS_QUEUE
-    };
+      var params = {
+        MessageAttributes: {},
+        MessageGroupId: 'scout',
+        MessageDeduplicationId: uuidgen.generate(),
+        MessageBody: JSON.stringify(jsonBody),
+        QueueUrl: process.env.SQS_QUEUE
+      };
 
-    sqs.sendMessage(params, function(err, data) {
-      if (err) {
-        console.log('Error', err);
-      } else {
-        console.log('Success', data.MessageId);
-      }
-    });
+      sqs.sendMessage(params, function(err, data) {
+        if (err) {
+          logger.error('Error', err);
+        } else {
+          logger.debug('Success', data.MessageId);
+        }
+      });
+    } else {
+      logger.debug('No SQS queue defined, skipping XCode message.');
+    }
   }
 };
 
