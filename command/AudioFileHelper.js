@@ -3,6 +3,7 @@ const database = new Database();
 const AWS = require('aws-sdk');
 const url = require('url');
 const logger = require('../logger');
+const constants = require('../constants');
 
 const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
@@ -11,7 +12,9 @@ class CommandHelper {
     // first check if we have this file in the DB
     let fileUrl = await database.getAudioFileLocation(
       articleId,
-      summaryOnly ? 'summary' : 'full',
+      summaryOnly
+        ? constants.strings.TYPE_SUMMARY
+        : constants.strings.TYPE_FULL,
       voice
     );
 
@@ -73,12 +76,16 @@ class CommandHelper {
   }
 
   async storeAudioFileLocation(articleId, summaryOnly, voice, location) {
-    const fileType = summaryOnly ? 'summary' : 'full';
+    const fileType = summaryOnly
+      ? constants.strings.TYPE_SUMMARY
+      : constants.strings.TYPE_FULL;
     await database.storeAudioFileLocation(articleId, location, fileType, voice);
   }
 
   async storeIntroLocation(articleId, introLocation, voice, summaryOnly) {
-    const fileType = summaryOnly ? 'introSummary' : 'introFull';
+    const fileType = summaryOnly
+      ? constants.strings.TYPE_INTRO_SUMMARY
+      : constants.strings.TYPE_INTRO_FULL;
     await database.storeAudioFileLocation(
       articleId,
       introLocation,
@@ -91,7 +98,7 @@ class CommandHelper {
     await database.storeAudioFileLocation(
       articleId,
       outroLocation,
-      'outro',
+      constants.strings.TYPE_OUTRO,
       voice
     );
   }
@@ -105,7 +112,7 @@ class CommandHelper {
     await database.storeAudioFileLocation(
       articleId,
       url,
-      'mobile',
+      constants.strings.TYPE_MOBILE,
       voice,
       lang,
       {

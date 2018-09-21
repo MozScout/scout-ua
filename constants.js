@@ -5,9 +5,11 @@ module.exports = Object.freeze({
     CODEC_FIELD: 'codec',
     CODEC_MP3: 'mp3',
     CODEC_OPUS: 'opus',
+    TYPE_FIELD: 'type',
+    TYPE_FULL: 'full',
+    TYPE_SUMMARY: 'summary',
     TYPE_INTRO_FULL: 'introFull',
     TYPE_INTRO_SUMMARY: 'introSummary',
-    TYPE_FIELD: 'type',
     TYPE_MOBILE: 'mobile',
     TYPE_OUTRO: 'outro',
     VOICE_FIELD: 'voice'

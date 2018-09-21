@@ -70,7 +70,7 @@ class Database {
       AudioFiles.query('item_id')
         .eq(articleId)
         .filter(constants.strings.TYPE_FIELD)
-        .eq('mobile')
+        .eq(constants.strings.TYPE_MOBILE)
         .exec()
         .then(function(data) {
           resolve(data);
@@ -184,15 +184,15 @@ class Database {
     };
 
     const mp3FileAttributes = {
-      codec: 'mp3',
-      bitrate: 40000,
-      samplerate: 16000
+      codec: constants.strings.CODEC_MP3,
+      bitrate: constants.bitrate.BITRATE_MP3,
+      samplerate: constants.samplerate.SAMPLERATE_MP3
     };
 
     const opusFileAttributes = {
-      codec: 'opus',
-      bitrate: 24000,
-      samplerate: 48000
+      codec: constants.strings.CODEC_OPUS,
+      bitrate: constants.bitrate.BITRATE_OPUS,
+      samplerate: constants.samplerate.SAMPLERATE_OPUS
     };
     try {
       // save mp3 file data
