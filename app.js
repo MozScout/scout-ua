@@ -16,10 +16,7 @@ if (
 
 // app.js
 app.get('/hello', function(req, res) {
-  res.status(200).send(
-    `Hello! pocket=${process.env.POCKET_KEY},
-      pollybucket=${process.env.POLLY_S3_BUCKET}`
-  );
+  res.status(200).send(`Hello! `);
 });
 
 const UserController = require('./user/UserController');

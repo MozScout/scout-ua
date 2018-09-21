@@ -70,81 +70,12 @@ class Database {
       AudioFiles.query('item_id')
         .eq(articleId)
         .filter(constants.strings.TYPE_FIELD)
-        .eq('mobile')
+        .eq(constants.strings.TYPE_MOBILE)
         .exec()
         .then(function(data) {
           resolve(data);
         });
     });
-  }
-
-  async storeAudioFileLocation(articleId, type, voice, location, lang = 'en') {
-    logger.info(`storeAudioFileLocation for ${articleId}/${type}: ${location}`);
-    let mp3 = new AudioFiles({
-      item_id: articleId,
-      uuid: uuidgen.generate(),
-      lang,
-      voice,
-      codec: constants.strings.CODEC_MP3,
-      bitrate: constants.bitrate.BITRATE_MP3,
-      samplerate: constants.samplerate.SAMPLERATE_MP3,
-      type: type,
-      url: location,
-      date: Date.now()
-    });
-    await mp3.save();
-
-    logger.debug('Before opus save');
-    let opus = new AudioFiles({
-      item_id: articleId,
-      uuid: uuidgen.generate(),
-      lang,
-      voice,
-      codec: constants.strings.CODEC_OPUS,
-      bitrate: constants.bitrate.BITRATE_OPUS,
-      samplerate: constants.samplerate.SAMPLERATE_OPUS,
-      type: type,
-      url: location.replace('.mp3', '.opus'),
-      date: Date.now()
-    });
-    await opus.save();
-    logger.debug('after opus save');
-  }
-
-  async storeMobileLocation(articleId, lang = 'en', voice, audioMetadata) {
-    logger.info(`storeMobileLocation for ${articleId}: ${audioMetadata.url}`);
-    let mp3 = new AudioFiles({
-      item_id: articleId,
-      uuid: uuidgen.generate(),
-      lang,
-      voice,
-      codec: constants.strings.CODEC_MP3,
-      bitrate: constants.bitrate.BITRATE_MP3,
-      duration: audioMetadata.duration,
-      samplerate: constants.samplerate.SAMPLERATE_MP3,
-      size: audioMetadata.size,
-      type: constants.strings.TYPE_MOBILE,
-      url: audioMetadata.url,
-      date: Date.now()
-    });
-    await mp3.save();
-
-    logger.debug('Before opus save');
-    let opus = new AudioFiles({
-      item_id: articleId,
-      uuid: uuidgen.generate(),
-      lang,
-      voice,
-      codec: constants.strings.CODEC_OPUS,
-      bitrate: constants.bitrate.BITRATE_OPUS,
-      duration: audioMetadata.duration,
-      samplerate: constants.samplerate.SAMPLERATE_OPUS,
-      type: constants.strings.TYPE_MOBILE,
-      url: audioMetadata.url.replace('.mp3', '.opus'),
-      date: Date.now()
-    });
-    await opus.save();
-    logger.debug('after opus save');
   }
 
   async getHostnameData(hostname) {
@@ -231,69 +162,72 @@ class Database {
     });
   }
 
-  async storeIntroLocation(articleId, introLocation, voice, summaryOnly) {
-    logger.info(`storeIntroLocation for ${articleId}`);
-    let type = summaryOnly
-      ? constants.strings.TYPE_INTRO_SUMMARY
-      : constants.strings.TYPE_INTRO_FULL;
-    let mp3 = new AudioFiles({
+  async storeAudioFileLocation(
+    articleId,
+    mp3FileUrl,
+    type,
+    voice,
+    lang = 'en',
+    additionalMp3Info = {},
+    additionalOpusInfo = {}
+  ) {
+    logger.info(
+      `Store audio file location for ${articleId}/${type} @ ${mp3FileUrl}`
+    );
+
+    const commonFileInfo = {
       item_id: articleId,
-      uuid: uuidgen.generate(),
-      voice: voice,
+      voice,
+      lang,
+      type,
+      date: Date.now()
+    };
+
+    const mp3FileAttributes = {
       codec: constants.strings.CODEC_MP3,
       bitrate: constants.bitrate.BITRATE_MP3,
-      samplerate: constants.SAMPLERATE_MP3,
-      type: type,
-      url: introLocation,
-      date: Date.now()
-    });
-    await mp3.save();
+      samplerate: constants.samplerate.SAMPLERATE_MP3
+    };
 
-    logger.debug('Before opus save');
-    let opus = new AudioFiles({
-      item_id: articleId,
-      uuid: uuidgen.generate(),
-      voice: voice,
+    const opusFileAttributes = {
       codec: constants.strings.CODEC_OPUS,
       bitrate: constants.bitrate.BITRATE_OPUS,
-      samplerate: constants.SAMPLERATE_OPUS,
-      type: type,
-      url: introLocation.replace('.mp3', '.opus'),
-      date: Date.now()
-    });
-    await opus.save();
-    logger.debug('after opus save');
-  }
+      samplerate: constants.samplerate.SAMPLERATE_OPUS
+    };
+    try {
+      // save mp3 file data
+      let mp3FileInfo = {};
+      Object.assign(
+        mp3FileInfo,
+        commonFileInfo,
+        mp3FileAttributes,
+        additionalMp3Info,
+        {
+          uuid: uuidgen.generate(),
+          url: mp3FileUrl
+        }
+      );
+      const mp3AudioFile = new AudioFiles(mp3FileInfo);
+      const mp3Promise = mp3AudioFile.save();
 
-  async storeOutroLocation(articleId, outroLocation, voice) {
-    logger.info(`storeOutroLocation for ${articleId}`);
-    let mp3 = new AudioFiles({
-      item_id: articleId,
-      uuid: uuidgen.generate(),
-      voice: voice,
-      codec: constants.strings.CODEC_MP3,
-      bitrate: constants.bitrate.BITRATE_MP3,
-      samplerate: constants.samplerate.SAMPLERATE_MP3,
-      type: constants.strings.TYPE_OUTRO,
-      url: outroLocation,
-      date: Date.now()
-    });
-    await mp3.save();
-
-    logger.debug('Before opus save');
-    let opus = new AudioFiles({
-      item_id: articleId,
-      uuid: uuidgen.generate(),
-      voice: voice,
-      codec: constants.strings.CODEC_OPUS,
-      bitrate: constants.bitrate.BITRATE_OPUS,
-      samplerate: constants.samplerate.SAMPLERATE_OPUS,
-      type: constants.strings.TYPE_OUTRO,
-      url: outroLocation.replace('.mp3', '.opus'),
-      date: Date.now()
-    });
-    await opus.save();
-    logger.debug('after opus save');
+      // save opus file data
+      let opusFileInfo = {};
+      Object.assign(
+        opusFileInfo,
+        commonFileInfo,
+        opusFileAttributes,
+        additionalOpusInfo,
+        {
+          uuid: uuidgen.generate(),
+          url: mp3FileUrl.replace('.mp3', '.opus')
+        }
+      );
+      const opusAudioFile = new AudioFiles(opusFileInfo);
+      const opusPromise = opusAudioFile.save();
+      await Promise.all([mp3Promise, opusPromise]);
+    } catch (err) {
+      logger.error(`storeAudioFileLocation error: ${err}`);
+    }
   }
 }
 
