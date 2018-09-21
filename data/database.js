@@ -3,6 +3,7 @@ const AudioFiles = require('./models/AudioFiles');
 const Hostname = require('./models/Hostname');
 const logger = require('../logger');
 const uuidgen = require('node-uuid-generator');
+const constants = require('../constants');
 
 class Database {
   async processScoutUser(userid, access_token) {
@@ -43,16 +44,14 @@ class Database {
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter('type')
+        .filter(constants.strings.TYPE_FIELD)
         .eq(type)
-        .filter('voice')
+        .filter(constants.strings.VOICE_FIELD)
         .eq(voice)
-        .filter('codec')
-        .eq('mp3')
+        .filter(constants.strings.CODEC_FIELD)
+        .eq(constants.strings.CODEC_MP3)
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           if (data.count) {
             resolve(data[0].url);
             if (data.count > 1) {
@@ -70,12 +69,10 @@ class Database {
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter('type')
+        .filter(constants.strings.TYPE_FIELD)
         .eq('mobile')
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           resolve(data);
         });
     });
@@ -118,21 +115,24 @@ class Database {
 
   async getIntroAudioLocation(articleId, voice, summaryOnly) {
     logger.info(`getIntroAudioLocation for ${articleId}`);
-    let type = summaryOnly ? 'summaryIntro' : 'fullIntro';
+    let type = summaryOnly
+      ? constants.strings.TYPE_INTRO_SUMMARY
+      : constants.strings.TYPE_INTRO_FULL;
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter('type')
+        .filter(constants.strings.TYPE_FIELD)
         .eq(type)
-        .filter('voice')
+        .filter(constants.strings.VOICE_FIELD)
         .eq(voice)
+        .filter(constants.strings.CODEC_FIELD)
+        .eq(constants.strings.CODEC_MP3) //Limit this to mp3 for Alexa
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           if (data.count) {
-            resolve(data.url);
+            resolve(data[0].url);
           } else {
+            logger.warn('data.count is NULL');
             resolve('');
           }
         });
@@ -144,17 +144,18 @@ class Database {
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter('type')
-        .eq('outro')
-        .filter('voice')
+        .filter(constants.strings.TYPE_FIELD)
+        .eq(constants.strings.TYPE_OUTRO)
+        .filter(constants.strings.VOICE_FIELD)
         .eq(voice)
+        .filter(constants.strings.CODEC_FIELD)
+        .eq(constants.strings.CODEC_MP3) //Limit to mp3 for Alexa
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           if (data.count) {
-            resolve(data.url);
+            resolve(data[0].url);
           } else {
+            logger.warn('Data count is null');
             resolve('');
           }
         });
