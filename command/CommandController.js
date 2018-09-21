@@ -172,28 +172,28 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
   res.setHeader('Content-Type', 'application/json');
 
   try {
-    // Set the version
     let version = req.body.v ? req.body.v : 1;
-    console.log('Version is: ' + version);
-    let mobileMetadata;
-    if (req.body.article_id) {
-      // we have a pocket item. do we already have the audio file?
-      mobileMetadata = await audioHelper.getMobileFileMetadata(
-        req.body.article_id
+    logger.debug('/articleservice version is: ' + version);
+
+    if (!req.body.article_id) {
+      logger.error('/articleservice error:  missing article_id');
+      throw 'No article ID or metadata';
+    }
+
+    let mobileMetadata = await audioHelper.getMobileFileMetadata(
+      req.body.article_id
+    );
+    if (mobileMetadata.count) {
+      // We have already processed this article
+      logger.debug(`Found file(s) in the database for ${req.body.article_id}`);
+      let response = await buildPocketResponseFromMetadata(
+        mobileMetadata,
+        version
       );
-      logger.info('mobileMetadata: ' + JSON.stringify(mobileMetadata));
+      res.status(200).send(JSON.stringify(response));
     } else {
-      logger.info('error:  missing article_id');
-    }
-
-    if (!mobileMetadata) {
-      throw 'No Metadata';
-    }
-
-    // if we didn't find it in the DB, create the audio file
-    if (!mobileMetadata.count) {
-      logger.info('Did not find the audio URL in DB: ' + req.body.article_id);
-      // Create the body as a local file.
+      // Need to build the file(s)
+      logger.debug(`No file(s) in the database for ${req.body.article_id}`);
       let article = await getPocketArticleTextFromUrl(req.body.url);
       if (article) {
         // Build the stitched file first
@@ -202,16 +202,12 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
           `${article.article}`,
           voice
         );
-
         let introFile = await createAudioFileFromText(
           buildIntro(article),
           voice
         );
         let audioMetadata = await buildPocketAudio(introFile, articleFile);
-        // Add the correct voice:
-        audioMetadata['voice'] = voice;
 
-        logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
         await audioHelper.storeMobileLocation(
           req.body.article_id,
           article.lang,
@@ -219,17 +215,15 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
           audioMetadata
         );
 
-        // Now retry the metadata call
+        // Re-query the metadata for new file info
         mobileMetadata = await audioHelper.getMobileFileMetadata(
           req.body.article_id
         );
-        logger.info(`MMD is`, mobileMetadata);
         let response = await buildPocketResponseFromMetadata(
           mobileMetadata,
           version
         );
 
-        // let response = buildPocketResponse(audioMetadata, version);
         // Send it back to the mobile as quick as possible.
         res.status(200).send(JSON.stringify(response));
 
@@ -248,15 +242,9 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
           voice,
           articleUrl
         );
+      } else {
+        throw 'Unable to get article text.';
       }
-    } else {
-      logger.debug('Found the file in the database');
-      let response = await buildPocketResponseFromMetadata(
-        mobileMetadata,
-        version
-      );
-      logger.info('POST article resp: ' + JSON.stringify(response));
-      res.status(200).send(JSON.stringify(response));
     }
   } catch (reason) {
     logger.error('Error in /articleservice ' + reason);
@@ -920,30 +908,6 @@ async function buildAudioFromText(
 
 async function buildPocketAudio(introFile, articleFile) {
   return polly_tts.processPocketAudio(introFile, articleFile);
-}
-
-function buildPocketResponse(audioMetadata, version) {
-  logger.debug('Entering buildPocketResponse');
-  let response;
-  if (version == 2) {
-    let opus_metadata = {
-      format: 'opus',
-      url: audioMetadata.url.replace('.mp3', '.opus'),
-      status: 'processing',
-      voice: audioMetadata.voice,
-      sample_rate: 48000,
-      duration: audioMetadata.duration,
-      size: null
-    };
-
-    response = [audioMetadata, opus_metadata];
-  } else {
-    response = {
-      url: audioMetadata.url
-    };
-  }
-  logger.debug('JSON RESPONSE IS: ' + response);
-  return response;
 }
 
 async function buildPocketResponseFromMetadata(mmd, version) {
