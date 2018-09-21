@@ -218,10 +218,18 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
           voice,
           audioMetadata
         );
-        logger.debug('Before buildPocketResponse');
-        let response = buildPocketResponse(audioMetadata, version);
+
+        // Now retry the metadata call
+        mobileMetadata = await audioHelper.getMobileFileMetadata(
+          req.body.article_id
+        );
+        let response = await buildPocketResponseFromMetadata(
+          mobileMetadata,
+          version
+        );
+
+        // let response = buildPocketResponse(audioMetadata, version);
         // Send it back to the mobile as quick as possible.
-        logger.info('POST article resp: ' + JSON.stringify(response));
         res.status(200).send(JSON.stringify(response));
 
         // Upload the individual parts for use by Alexa later & cleanup.
