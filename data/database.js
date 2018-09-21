@@ -4,7 +4,7 @@ const Hostname = require('./models/Hostname');
 const logger = require('../logger');
 const uuidgen = require('node-uuid-generator');
 const constants = require('../constants');
-const xcodeQueue = require('./xcodeQueue');
+const xcodeQueue = require('../command/xcodeQueue');
 
 class Database {
   async processScoutUser(userid, access_token) {
