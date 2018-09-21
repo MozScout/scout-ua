@@ -227,7 +227,7 @@ class Database {
         const opusAudioFile = new AudioFiles(opusFileInfo);
         promiseArr.push(opusAudioFile.save());
       }
-      await Promise.all([promiseArr]);
+      await Promise.all(promiseArr);
     } catch (err) {
       logger.error(`storeAudioFileLocation error: ${err}`);
     }
