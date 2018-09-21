@@ -18,8 +18,12 @@ AWS.config.update({ region: process.env.AWS_REGION });
 var sqs = new AWS.SQS({ apiVersion: '2012-11-05' });
 
 const xcodeQueue = {
+  useXcode: function() {
+    return !!process.env.SQS_QUEUE;
+  },
+
   add: function(file) {
-    if (process.env.SQS_QUEUE) {
+    if (this.useXcode()) {
       logger.debug('XCODE: filename: ' + file);
       var jsonBody = {
         filename: file,

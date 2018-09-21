@@ -4,6 +4,7 @@ const Hostname = require('./models/Hostname');
 const logger = require('../logger');
 const uuidgen = require('node-uuid-generator');
 const constants = require('../constants');
+const xcodeQueue = require('./xcodeQueue');
 
 class Database {
   async processScoutUser(userid, access_token) {
@@ -208,23 +209,25 @@ class Database {
         }
       );
       const mp3AudioFile = new AudioFiles(mp3FileInfo);
-      const mp3Promise = mp3AudioFile.save();
+      const promiseArr = [mp3AudioFile.save()];
 
-      // save opus file data
-      let opusFileInfo = {};
-      Object.assign(
-        opusFileInfo,
-        commonFileInfo,
-        opusFileAttributes,
-        additionalOpusInfo,
-        {
-          uuid: uuidgen.generate(),
-          url: mp3FileUrl.replace('.mp3', '.opus')
-        }
-      );
-      const opusAudioFile = new AudioFiles(opusFileInfo);
-      const opusPromise = opusAudioFile.save();
-      await Promise.all([mp3Promise, opusPromise]);
+      if (xcodeQueue.useXcode()) {
+        // save opus file data
+        let opusFileInfo = {};
+        Object.assign(
+          opusFileInfo,
+          commonFileInfo,
+          opusFileAttributes,
+          additionalOpusInfo,
+          {
+            uuid: uuidgen.generate(),
+            url: mp3FileUrl.replace('.mp3', '.opus')
+          }
+        );
+        const opusAudioFile = new AudioFiles(opusFileInfo);
+        promiseArr.push(opusAudioFile.save());
+      }
+      await Promise.all([promiseArr]);
     } catch (err) {
       logger.error(`storeAudioFileLocation error: ${err}`);
     }
