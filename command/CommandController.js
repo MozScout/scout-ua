@@ -223,6 +223,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
         mobileMetadata = await audioHelper.getMobileFileMetadata(
           req.body.article_id
         );
+        logger.info(`MMD is`, mobileMetadata);
         let response = await buildPocketResponseFromMetadata(
           mobileMetadata,
           version
