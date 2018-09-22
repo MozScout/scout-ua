@@ -606,7 +606,7 @@ describe('CommandController - Endpoints', function() {
       delete userData.article_id;
     });
 
-    it.only('should return metadata for the article', done => {
+    it('should return metadata for the article', done => {
       chai
         .request(app)
         .post('/command/articleservice')
