@@ -200,6 +200,14 @@ describe('CommandController - Endpoints', function() {
     );
     sinon.replace(
       polly_tts,
+      'getFileSizeFromUrl',
+      sinon.fake(function() {
+        console.log('Calling fake getFileSizeFromUrl');
+        return 999;
+      })
+    );
+    sinon.replace(
+      polly_tts,
       'processPocketAudio',
       sinon.fake(function() {
         console.log('Calling fake processPocketAudio');
