@@ -323,13 +323,18 @@ var polly_tts = {
     logger.debug('Entering deleteLocalFiles: ' + rootFile);
     let files = glob.sync(rootFile.replace('.mp3', '*.*'));
     var i = files.length;
+    logger.debug('There are: ' + i + ' files to delete.');
     files.forEach(function(filepath) {
+      logger.debug('unlinking: ' + filepath);
       fs.unlink(filepath, function(err) {
         i--;
         if (err) {
+          logger.error('Error deleting file: ' + filepath);
+          logger.error('Error is: ' + err);
           callback(err);
           return;
         } else if (i <= 0) {
+          logger.debug('Calling the callback for deleting files');
           callback(null);
         }
       });
