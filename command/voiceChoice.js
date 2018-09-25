@@ -30,6 +30,12 @@ const voiceChoice = {
       case 'de':
         voice = 'Hans';
         break;
+      case 'hi':
+        voice = 'Aditi';
+        break;
+      case 'cmn':
+        voice = 'Zhiyu';
+        break;
       case 'is':
         voice = 'Dora';
         break;
