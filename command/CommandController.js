@@ -823,18 +823,22 @@ function buildIntro(article) {
   //Intro: “article title, published by host, on publish date"
   let introFullText;
   let dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+  let publisher = hostnameHelper.getHostnameData(
+    article.resolved_url,
+    'publisher'
+  );
   if (!article.lang || article.lang === 'en') {
     if (article.timePublished) {
       let publishedDate = new Date(article.timePublished * 1000);
       let dateString = publishedDate.toLocaleDateString('en-US', dateOptions);
 
-      introFullText = article.host
-        ? `${article.title}, published by ${article.host}, on ${dateString}`
+      introFullText = publisher
+        ? `${article.title}, published by ${publisher}, on ${dateString}`
         : `${article.title}, published on ${dateString}`;
     } else {
       // The case where date is not available.
-      introFullText = article.host
-        ? `${article.title}, published by ${article.host}.`
+      introFullText = publisher
+        ? `${article.title}, published by ${publisher}.`
         : `${article.title}.`;
     }
   } else {
@@ -845,13 +849,13 @@ function buildIntro(article) {
         dateOptions
       );
 
-      introFullText = article.host
-        ? `${article.title}, ${article.host}, ${dateString}`
+      introFullText = publisher
+        ? `${article.title}, ${publisher}, ${dateString}`
         : `${article.title}, ${dateString}`;
     } else {
       // The case where date is not available.
-      introFullText = article.host
-        ? `${article.title}, ${article.host}.`
+      introFullText = publisher
+        ? `${article.title}, ${publisher}.`
         : `${article.title}.`;
     }
   }
