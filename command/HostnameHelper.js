@@ -40,7 +40,7 @@ class HostnameHelper {
       if (type == 'all' || type == 'publisher') {
         metadataPromise = scrape(link).catch(function(err) {
           logger.error(
-            `Error occured during HostnameHelper Metadata promise calls: ${
+            `Error occured for HostnameHelper Metadata promise calls: ${
               err.status
             }, ${err.name}. Domain: ${hostname}`
           );
