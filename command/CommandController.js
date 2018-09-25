@@ -824,7 +824,7 @@ function buildIntro(article) {
   let introFullText;
   let dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
   let publisher = hostnameHelper.getHostnameData(
-    article.resolved_url,
+    article.resolvedUrl,
     'publisher'
   );
   if (!article.lang || article.lang === 'en') {
