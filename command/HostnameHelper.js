@@ -40,7 +40,7 @@ class HostnameHelper {
       if (type == 'all' || type == 'publisher') {
         metadataPromise = scrape(link).catch(function(err) {
           logger.error(
-            `Error occured for HostnameHelper Metadata promise calls: ${
+            `Error occured during HostnameHelper Metadata promise calls: ${
               err.status
             }, ${err.name}. Domain: ${hostname}`
           );
@@ -128,6 +128,7 @@ class HostnameHelper {
       case 'favicon':
         return data.favicon_url;
       case 'publisher':
+        logger.debug('Returning:' + data.publisher_name);
         return data.publisher_name;
       case 'all':
         return data;

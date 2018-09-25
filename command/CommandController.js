@@ -204,7 +204,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
         );
 
         let introFile = await createAudioFileFromText(
-          buildIntro(article),
+          await buildIntro(article),
           voice
         );
         let audioMetadata = await buildPocketAudio(introFile, articleFile);
@@ -819,11 +819,11 @@ async function buildAudioFromUrl(url) {
   return buildAudioFromText(`${article.article}`);
 }
 
-function buildIntro(article) {
+async function buildIntro(article) {
   //Intro: “article title, published by host, on publish date"
   let introFullText;
   let dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-  let publisher = hostnameHelper.getHostnameData(
+  let publisher = await hostnameHelper.getHostnameData(
     article.resolvedUrl,
     'publisher'
   );
