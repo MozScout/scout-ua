@@ -241,13 +241,11 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
         );
       } else {
         logger.error('Not an article');
-        res
-          .status(404)
-          .send(
-            JSON.stringify({
-              speech: `There was an error processing the article. Not an article`
-            })
-          );
+        res.status(404).send(
+          JSON.stringify({
+            speech: `There was an error processing the article. Not an article`
+          })
+        );
       }
     } else {
       logger.debug('Found the file in the database');
