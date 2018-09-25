@@ -828,12 +828,12 @@ function buildIntro(article) {
       let publishedDate = new Date(article.timePublished * 1000);
       let dateString = publishedDate.toLocaleDateString('en-US', dateOptions);
 
-      introFullText = article.publisher
+      introFullText = article.host
         ? `${article.title}, published by ${article.host}, on ${dateString}`
         : `${article.title}, published on ${dateString}`;
     } else {
       // The case where date is not available.
-      introFullText = article.publisher
+      introFullText = article.host
         ? `${article.title}, published by ${article.host}.`
         : `${article.title}.`;
     }
@@ -845,12 +845,12 @@ function buildIntro(article) {
         dateOptions
       );
 
-      introFullText = article.publisher
+      introFullText = article.host
         ? `${article.title}, ${article.host}, ${dateString}`
         : `${article.title}, ${dateString}`;
     } else {
       // The case where date is not available.
-      introFullText = article.publisher
+      introFullText = article.host
         ? `${article.title}, ${article.host}.`
         : `${article.title}.`;
     }
