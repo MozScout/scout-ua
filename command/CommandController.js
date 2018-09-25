@@ -195,7 +195,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       logger.info('Did not find the audio URL in DB: ' + req.body.article_id);
       // Create the body as a local file.
       let article = await getPocketArticleTextFromUrl(req.body.url);
-      if (article) {
+      if (article && article.isArticle && article.isArticle == 1) {
         // Build the stitched file first
         let voice = vc.findVoice(article.lang);
         let articleFile = await createAudioFileFromText(
@@ -238,6 +238,13 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
           false,
           voice,
           articleUrl
+        );
+      } else {
+        logger.error('Not an article');
+        res.status(404).send(
+          JSON.stringify({
+            speech: `There was an error processing the article. Not an article`
+          })
         );
       }
     } else {
