@@ -198,49 +198,59 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       if (article && article.isArticle && article.isArticle == 1) {
         // Build the stitched file first
         let voice = vc.findVoice(article.lang);
-        let articleFile = await createAudioFileFromText(
-          `${article.article}`,
-          voice
-        );
+        // Check that we actually go a valid language
+        if (voice && voice.meta && voice.main) {
+          let articleFile = await createAudioFileFromText(
+            `${article.article}`,
+            voice.main
+          );
 
-        let introFile = await createAudioFileFromText(
-          await buildIntro(article),
-          voice
-        );
-        let audioMetadata = await buildPocketAudio(introFile, articleFile);
-        // Add the correct voice:
-        audioMetadata['voice'] = voice;
+          let introFile = await createAudioFileFromText(
+            await buildIntro(article),
+            voice.meta
+          );
+          let audioMetadata = await buildPocketAudio(introFile, articleFile);
+          // Add the correct voice:
+          audioMetadata['voice'] = voice.main;
 
-        logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
-        await audioHelper.storeMobileLocation(
-          req.body.article_id,
-          article.lang,
-          voice,
-          audioMetadata
-        );
-        logger.debug('Before buildPocketResponse');
-        let response = buildPocketResponse(audioMetadata, version);
-        // Send it back to the mobile as quick as possible.
-        logger.info('POST article resp: ' + JSON.stringify(response));
-        res.status(200).send(JSON.stringify(response));
+          logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
+          await audioHelper.storeMobileLocation(
+            req.body.article_id,
+            article.lang,
+            voice,
+            audioMetadata
+          );
+          logger.debug('Before buildPocketResponse');
+          let response = buildPocketResponse(audioMetadata, version);
+          // Send it back to the mobile as quick as possible.
+          logger.info('POST article resp: ' + JSON.stringify(response));
+          res.status(200).send(JSON.stringify(response));
 
-        // Upload the individual parts for use by Alexa later & cleanup.
-        let introUrl = await polly_tts.postProcessPart(introFile);
-        let articleUrl = await polly_tts.postProcessPart(articleFile);
-        await audioHelper.storeIntroLocation(
-          req.body.article_id,
-          introUrl,
-          voice,
-          false
-        );
-        await audioHelper.storeAudioFileLocation(
-          req.body.article_id,
-          false,
-          voice,
-          articleUrl
-        );
+          // Upload the individual parts for use by Alexa later & cleanup.
+          let introUrl = await polly_tts.postProcessPart(introFile);
+          let articleUrl = await polly_tts.postProcessPart(articleFile);
+          await audioHelper.storeIntroLocation(
+            req.body.article_id,
+            introUrl,
+            voice,
+            false
+          );
+          await audioHelper.storeAudioFileLocation(
+            req.body.article_id,
+            false,
+            voice,
+            articleUrl
+          );
+        } else {
+          logger.error('No language found for article:' + req.body.article_id);
+          res.status(404).send(
+            JSON.stringify({
+              speech: `There was an error processing the article. No language`
+            })
+          );
+        }
       } else {
-        logger.error('Not an article');
+        logger.error('Not an article: ' + req.body.article_id);
         res.status(404).send(
           JSON.stringify({
             speech: `There was an error processing the article. Not an article`

@@ -13,68 +13,92 @@ const logger = require('../logger');
 const voiceChoice = {
   findVoice: function(lang) {
     logger.debug('Choosing voice for lang: ' + lang);
-    let voice = '';
+    let main = '';
+    let meta = '';
     switch (lang) {
       case 'en':
-        voice = 'Salli';
+        main = 'Salli';
+        meta = 'Matthew';
         break;
       case 'da':
-        voice = 'Naja';
+        main = 'Naja';
+        meta = 'Mads';
         break;
       case 'nl':
-        voice = 'Lotte';
+        main = 'Lotte';
+        meta = 'Ruben';
         break;
       case 'fr':
-        voice = 'Celine';
+        main = 'Celine';
+        meta = 'Mathieu';
         break;
       case 'de':
-        voice = 'Hans';
+        main = 'Hans';
+        meta = 'Vicki';
         break;
       case 'is':
-        voice = 'Dora';
+        main = 'Dora';
+        meta = 'Karl';
         break;
       case 'it':
-        voice = 'Giorgio';
+        main = 'Giorgio';
+        meta = 'Carla';
         break;
       case 'ja':
-        voice = 'Takumi';
+        main = 'Takumi';
+        meta = 'Mizuki';
         break;
       case 'ko':
-        voice = 'Seoyeon';
+        main = 'Seoyeon';
+        meta = 'Seoyeon';
         break;
       case 'nb':
-        voice = 'Liv';
+        main = 'Liv';
+        meta = 'Liv';
         break;
       case 'pl':
-        voice = 'Jacek';
+        main = 'Jacek';
+        meta = 'Maja';
         break;
       case 'pt':
-        voice = 'Ricardo';
+        main = 'Ricardo';
+        meta = 'Ricardo';
         break;
       case 'ro':
-        voice = 'Carmen';
+        main = 'Carmen';
+        meta = 'Carmen';
         break;
       case 'ru':
-        voice = 'Maxim';
+        main = 'Maxim';
+        meta = 'Tatyana';
         break;
       case 'es':
-        voice = 'Miguel';
+        main = 'Miguel';
+        meta = 'Penélope';
         break;
       case 'sv':
-        voice = 'Astrid';
+        main = 'Astrid';
+        meta = 'Astrid';
         break;
       case 'tr':
-        voice = 'Filiz';
+        main = 'Filiz';
+        meta = 'Filiz';
         break;
       case 'cy':
-        voice = 'Gwyneth';
+        main = 'Gwyneth';
+        meta = 'Gwyneth';
         break;
       default:
-        voice = 'Salli';
+        logger.error('No matching language code for: ' + lang);
+        main = '';
+        meta = '';
         break;
     }
-    logger.debug('Voice is: ' + voice);
-    return voice;
+    logger.debug('Voice choice:' + meta + main);
+    return {
+      meta: meta,
+      main: main
+    };
   }
 };
 
