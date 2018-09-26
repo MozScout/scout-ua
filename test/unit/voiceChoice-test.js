@@ -1,5 +1,4 @@
 'use strict';
-const sinon = require('sinon');
 const assert = require('chai').assert;
 const vc = require('../../command/voiceChoice');
 
