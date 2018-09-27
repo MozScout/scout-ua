@@ -198,6 +198,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       if (article && article.isArticle && article.isArticle == 1) {
         // Build the stitched file first
         let voice = vc.findVoice(article.lang);
+        logger.debug('voice main is:' + voice.main);
         // Check that we actually go a valid language
         if (voice && voice.meta && voice.main) {
           let articleFile = await createAudioFileFromText(
@@ -936,6 +937,7 @@ async function buildPocketAudio(introFile, articleFile) {
 
 function buildPocketResponse(audioMetadata, version) {
   logger.debug('Entering buildPocketResponse');
+  logger.debug('voice is: ' + audioMetadata.voice);
   let response;
   if (version == 2) {
     let opus_metadata = {
