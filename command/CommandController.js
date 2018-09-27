@@ -217,7 +217,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
           await audioHelper.storeMobileLocation(
             req.body.article_id,
             article.lang,
-            voice,
+            voice.main,
             audioMetadata
           );
           logger.debug('Before buildPocketResponse');
