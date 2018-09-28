@@ -82,7 +82,10 @@ describe('CommandController - Endpoints', function() {
       'getHostnameData',
       sinon.fake(function() {
         console.log('Calling fake getHostnameData');
-        return { publisher_name: 'publisher', favicon_url: 'favicon' };
+        return {
+          publisher_name: 'publisher',
+          favicon_url: 'http://favicon.url'
+        };
       })
     );
     sinon.replace(
@@ -122,7 +125,7 @@ describe('CommandController - Endpoints', function() {
       'checkFileExistence',
       sinon.fake(function(url) {
         console.log('Calling fake checkFileExistence');
-        return url == 'audio_file_url';
+        return url == 'http://audio_file.mp3';
       })
     );
     sinon.replace(
@@ -130,10 +133,12 @@ describe('CommandController - Endpoints', function() {
       'getMobileFileMetadata',
       sinon.fake(function() {
         console.log('Calling fake getMobileFileMetadata');
-        return {
-          fileUrl: 'audio_file_url',
-          duration: 300
-        };
+        return [
+          {
+            url: 'http://audio_file.mp3',
+            duration: 300
+          }
+        ];
       })
     );
     sinon.replace(
@@ -142,8 +147,8 @@ describe('CommandController - Endpoints', function() {
       sinon.fake(function() {
         console.log('Calling fake getMetaAudioLocation');
         return {
-          intro: 'audio_file_url',
-          outro: 'audio_file_url'
+          intro: 'http://audio_file.mp3',
+          outro: 'http://audio_file.mp3'
         };
       })
     );
@@ -182,7 +187,7 @@ describe('CommandController - Endpoints', function() {
       'getSpeechSynthUrl',
       sinon.fake(function() {
         console.log('Calling fake getSpeechSynthUrl');
-        return 'audio_file_url';
+        return 'http://audio_file.mp3';
       })
     );
     sinon.replace(
@@ -190,7 +195,15 @@ describe('CommandController - Endpoints', function() {
       'synthesizeSpeechFile',
       sinon.fake(function() {
         console.log('Calling fake synthesizeSpeechFile');
-        return 'audio_file_url';
+        return 'http://audio_file.mp3';
+      })
+    );
+    sinon.replace(
+      polly_tts,
+      'getFileSizeFromUrl',
+      sinon.fake(function() {
+        console.log('Calling fake getFileSizeFromUrl');
+        return 999;
       })
     );
     sinon.replace(
@@ -200,7 +213,7 @@ describe('CommandController - Endpoints', function() {
         console.log('Calling fake processPocketAudio');
         return {
           format: 'mp3',
-          url: 'audio_url',
+          url: 'http://audio_file.mp3',
           status: 'available',
           voice: 'Joanna',
           sample_rate: '48000',
@@ -214,7 +227,7 @@ describe('CommandController - Endpoints', function() {
       'uploadFile',
       sinon.fake(function() {
         console.log('Calling fake uploadFile');
-        return 'audio_file_url';
+        return 'http://audio_file.mp3';
       })
     );
     sinon.replace(
@@ -222,7 +235,7 @@ describe('CommandController - Endpoints', function() {
       'postProcessPart',
       sinon.fake(function() {
         console.log('Calling fake uploadFile');
-        return 'audio_file_url';
+        return 'http://audio_file.mp3';
       })
     );
   });
@@ -403,7 +416,7 @@ describe('CommandController - Endpoints', function() {
           .end((err, res) => {
             expect(res).have.status(200);
             expect(res.body).be.a('object');
-            expect(res.body.url).be.equal('audio_file_url');
+            expect(res.body.url).be.equal('http://audio_file.mp3');
             done();
           });
       });
