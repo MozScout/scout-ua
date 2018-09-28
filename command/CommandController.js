@@ -252,23 +252,19 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
           );
         } else {
           logger.error('No language found for article:' + req.body.article_id);
-          res
-            .status(404)
-            .send(
-              JSON.stringify({
-                speech: `There was an error processing the article. No language`
-              })
-            );
+          res.status(404).send(
+            JSON.stringify({
+              speech: `There was an error processing the article. No language`
+            })
+          );
         }
       } else {
         logger.error('Not an article: ' + req.body.article_id);
-        res
-          .status(404)
-          .send(
-            JSON.stringify({
-              speech: `There was an error processing the article. Not an article`
-            })
-          );
+        res.status(404).send(
+          JSON.stringify({
+            speech: `There was an error processing the article. Not an article`
+          })
+        );
       }
     }
   } catch (reason) {
