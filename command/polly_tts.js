@@ -264,7 +264,7 @@ var polly_tts = {
               // Return the URL of the Mp3 in the S3 bucket.
               resolve(data.Location);
               // Remove the files locally.
-              polly_tts.deleteLocalFiles(audio_file, function(err) {
+              polly_tts.deleteLocalFiles(newAudioFile, function(err) {
                 if (err) {
                   logger.error('Error removing files ' + err);
                 } else {
@@ -327,6 +327,9 @@ var polly_tts = {
       fs.unlink(filepath, function(err) {
         i--;
         if (err) {
+          logger.error(
+            'Error deleting file: ' + filepath + ' Error is: ' + err
+          );
           callback(err);
           return;
         } else if (i <= 0) {

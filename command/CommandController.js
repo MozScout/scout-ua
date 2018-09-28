@@ -183,6 +183,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
     let mobileMetadata = await audioHelper.getMobileFileMetadata(
       req.body.article_id
     );
+
     if (mobileMetadata.count) {
       // We have already processed this article
       logger.debug(`Found file(s) in the database for ${req.body.article_id}`);
@@ -195,55 +196,79 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       // Need to build the file(s)
       logger.debug(`No file(s) in the database for ${req.body.article_id}`);
       let article = await getPocketArticleTextFromUrl(req.body.url);
-      if (article) {
+      if (article && article.isArticle && article.isArticle == 1) {
         // Build the stitched file first
         let voice = vc.findVoice(article.lang);
-        let articleFile = await createAudioFileFromText(
-          `${article.article}`,
-          voice
-        );
-        let introFile = await createAudioFileFromText(
-          buildIntro(article),
-          voice
-        );
-        let audioMetadata = await buildPocketAudio(introFile, articleFile);
 
-        await audioHelper.storeMobileLocation(
-          req.body.article_id,
-          article.lang,
-          voice,
-          audioMetadata
-        );
+        // Check that we actually got a valid language
+        if (voice && voice.meta && voice.main) {
+          let articleFile = await createAudioFileFromText(
+            `${article.article}`,
+            voice.main
+          );
 
-        // Re-query the metadata for new file info
-        mobileMetadata = await audioHelper.getMobileFileMetadata(
-          req.body.article_id
-        );
-        let response = await buildPocketResponseFromMetadata(
-          mobileMetadata,
-          version
-        );
+          let introFile = await createAudioFileFromText(
+            await buildIntro(article),
+            voice.meta
+          );
+          let audioMetadata = await buildPocketAudio(introFile, articleFile);
+          // Add the correct voice:
+          audioMetadata['voice'] = voice.main;
 
-        // Send it back to the mobile as quick as possible.
-        res.status(200).send(JSON.stringify(response));
+          logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
+          await audioHelper.storeMobileLocation(
+            req.body.article_id,
+            article.lang,
+            voice.main,
+            audioMetadata
+          );
 
-        // Upload the individual parts for use by Alexa later & cleanup.
-        let introUrl = await polly_tts.postProcessPart(introFile);
-        let articleUrl = await polly_tts.postProcessPart(articleFile);
-        await audioHelper.storeIntroLocation(
-          req.body.article_id,
-          introUrl,
-          voice,
-          false
-        );
-        await audioHelper.storeAudioFileLocation(
-          req.body.article_id,
-          false,
-          voice,
-          articleUrl
-        );
+          // Re-query the metadata for new file info
+          mobileMetadata = await audioHelper.getMobileFileMetadata(
+            req.body.article_id
+          );
+          let response = await buildPocketResponseFromMetadata(
+            mobileMetadata,
+            version
+          );
+
+          // Send it back to the mobile as quick as possible.
+          res.status(200).send(JSON.stringify(response));
+
+          // Upload the individual parts for use by Alexa later & cleanup.
+          let introUrl = await polly_tts.postProcessPart(introFile);
+          let articleUrl = await polly_tts.postProcessPart(articleFile);
+          await audioHelper.storeIntroLocation(
+            req.body.article_id,
+            introUrl,
+            voice.meta,
+            false
+          );
+          await audioHelper.storeAudioFileLocation(
+            req.body.article_id,
+            false,
+            voice.main,
+            articleUrl
+          );
+        } else {
+          logger.error('No language found for article:' + req.body.article_id);
+          res
+            .status(404)
+            .send(
+              JSON.stringify({
+                speech: `There was an error processing the article. No language`
+              })
+            );
+        }
       } else {
-        throw 'Unable to get article text.';
+        logger.error('Not an article: ' + req.body.article_id);
+        res
+          .status(404)
+          .send(
+            JSON.stringify({
+              speech: `There was an error processing the article. Not an article`
+            })
+          );
       }
     }
   } catch (reason) {
@@ -816,22 +841,26 @@ async function buildAudioFromUrl(url) {
   return buildAudioFromText(`${article.article}`);
 }
 
-function buildIntro(article) {
+async function buildIntro(article) {
   //Intro: “article title, published by host, on publish date"
   let introFullText;
   let dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+  let publisher = await hostnameHelper.getHostnameData(
+    article.resolvedUrl,
+    'publisher'
+  );
   if (!article.lang || article.lang === 'en') {
     if (article.timePublished) {
       let publishedDate = new Date(article.timePublished * 1000);
       let dateString = publishedDate.toLocaleDateString('en-US', dateOptions);
 
-      introFullText = article.publisher
-        ? `${article.title}, published by ${article.host}, on ${dateString}`
+      introFullText = publisher
+        ? `${article.title}, published by ${publisher}, on ${dateString}`
         : `${article.title}, published on ${dateString}`;
     } else {
       // The case where date is not available.
-      introFullText = article.publisher
-        ? `${article.title}, published by ${article.host}.`
+      introFullText = publisher
+        ? `${article.title}, published by ${publisher}.`
         : `${article.title}.`;
     }
   } else {
@@ -842,13 +871,13 @@ function buildIntro(article) {
         dateOptions
       );
 
-      introFullText = article.publisher
-        ? `${article.title}, ${article.host}, ${dateString}`
+      introFullText = publisher
+        ? `${article.title}, ${publisher}, ${dateString}`
         : `${article.title}, ${dateString}`;
     } else {
       // The case where date is not available.
-      introFullText = article.publisher
-        ? `${article.title}, ${article.host}.`
+      introFullText = publisher
+        ? `${article.title}, ${publisher}.`
         : `${article.title}.`;
     }
   }
