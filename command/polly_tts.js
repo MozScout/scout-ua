@@ -38,7 +38,7 @@ var polly_tts = {
       let params = {
         Text: ssmlText,
         OutputFormat: 'mp3',
-        SampleRate: '22050',
+        SampleRate: process.env.SAMPLE_RATE,
         VoiceId: voiceType,
         TextType: 'ssml'
       };
