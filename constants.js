@@ -15,11 +15,11 @@ module.exports = Object.freeze({
     VOICE_FIELD: 'voice'
   },
   bitrate: {
-    BITRATE_MP3: 40000,
+    BITRATE_MP3: 48000,
     BITRATE_OPUS: 24000
   },
   samplerate: {
-    SAMPLERATE_MP3: 16000,
+    SAMPLERATE_MP3: 22050,
     SAMPLERATE_OPUS: 48000
   }
 });
