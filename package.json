@@ -33,6 +33,7 @@
     "serve-favicon": "~2.4.5",
     "universal-analytics": "^0.4.17",
     "url": "^0.11.0",
+    "webworker-threads": "^0.7.17",
     "winston": "^3.0.0"
   },
   "devDependencies": {
