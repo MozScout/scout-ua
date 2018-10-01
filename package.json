@@ -21,7 +21,6 @@
     "dotenv": "^5.0.1",
     "dynamoose": "^0.8.7",
     "express": "~4.15.5",
-    "fs": "0.0.1-security",
     "get-website-favicon": "0.0.7",
     "glob": "^7.1.2",
     "html-entities": "^1.2.1",
