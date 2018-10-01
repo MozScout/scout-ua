@@ -3,6 +3,8 @@ const AudioFiles = require('./models/AudioFiles');
 const Hostname = require('./models/Hostname');
 const logger = require('../logger');
 const uuidgen = require('node-uuid-generator');
+const constants = require('../constants');
+const xcodeQueue = require('../command/xcodeQueue');
 
 class Database {
   async processScoutUser(userid, access_token) {
@@ -43,16 +45,14 @@ class Database {
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter('type')
+        .filter(constants.strings.TYPE_FIELD)
         .eq(type)
-        .filter('voice')
+        .filter(constants.strings.VOICE_FIELD)
         .eq(voice)
-        .filter('codec')
-        .eq('mp3')
+        .filter(constants.strings.CODEC_FIELD)
+        .eq(constants.strings.CODEC_MP3)
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           if (data.count) {
             resolve(data[0].url);
             if (data.count > 1) {
@@ -70,82 +70,13 @@ class Database {
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter('type')
-        .eq('mobile')
+        .filter(constants.strings.TYPE_FIELD)
+        .eq(constants.strings.TYPE_MOBILE)
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           resolve(data);
         });
     });
-  }
-
-  async storeAudioFileLocation(articleId, type, voice, location) {
-    logger.info(`storeAudioFileLocation for ${articleId}/${type}: ${location}`);
-    let mp3 = new AudioFiles({
-      item_id: articleId,
-      uuid: uuidgen.generate(),
-      voice: voice,
-      codec: 'mp3',
-      bitrate: 40000,
-      samplerate: 16000,
-      type: type,
-      url: location,
-      date: Date.now()
-    });
-    await mp3.save();
-
-    logger.debug('Before opus save');
-    let opus = new AudioFiles({
-      item_id: articleId,
-      uuid: uuidgen.generate(),
-      voice: voice,
-      codec: 'opus',
-      bitrate: 24000,
-      samplerate: 48000,
-      type: type,
-      url: location.replace('.mp3', '.opus'),
-      date: Date.now()
-    });
-    await opus.save();
-    logger.debug('after opus save');
-  }
-
-  async storeMobileLocation(articleId, lang, voice, audioMetadata) {
-    logger.info(`storeMobileLocation for ${articleId}: ${audioMetadata.url}`);
-    let mp3 = new AudioFiles({
-      item_id: articleId,
-      uuid: uuidgen.generate(),
-      lang: audioMetadata.lang,
-      voice: voice,
-      codec: 'mp3',
-      bitrate: 40000,
-      duration: audioMetadata.duration,
-      samplerate: 16000,
-      size: audioMetadata.size,
-      type: 'mobile',
-      url: audioMetadata.url,
-      date: Date.now()
-    });
-    await mp3.save();
-
-    logger.debug('Before opus save');
-    let opus = new AudioFiles({
-      item_id: articleId,
-      uuid: uuidgen.generate(),
-      lang: audioMetadata.lang,
-      voice: voice,
-      codec: 'opus',
-      bitrate: 24000,
-      duration: audioMetadata.duration,
-      samplerate: 48000,
-      type: 'mobile',
-      url: audioMetadata.url.replace('.mp3', '.opus'),
-      date: Date.now()
-    });
-    await opus.save();
-    logger.debug('after opus save');
   }
 
   async getHostnameData(hostname) {
@@ -185,21 +116,24 @@ class Database {
 
   async getIntroAudioLocation(articleId, voice, summaryOnly) {
     logger.info(`getIntroAudioLocation for ${articleId}`);
-    let type = summaryOnly ? 'summaryIntro' : 'fullIntro';
+    let type = summaryOnly
+      ? constants.strings.TYPE_INTRO_SUMMARY
+      : constants.strings.TYPE_INTRO_FULL;
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter('type')
+        .filter(constants.strings.TYPE_FIELD)
         .eq(type)
-        .filter('voice')
+        .filter(constants.strings.VOICE_FIELD)
         .eq(voice)
+        .filter(constants.strings.CODEC_FIELD)
+        .eq(constants.strings.CODEC_MP3) //Limit this to mp3 for Alexa
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           if (data.count) {
-            resolve(data.url);
+            resolve(data[0].url);
           } else {
+            logger.warn('data.count is NULL');
             resolve('');
           }
         });
@@ -211,84 +145,92 @@ class Database {
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
-        .filter('type')
-        .eq('outro')
-        .filter('voice')
+        .filter(constants.strings.TYPE_FIELD)
+        .eq(constants.strings.TYPE_OUTRO)
+        .filter(constants.strings.VOICE_FIELD)
         .eq(voice)
+        .filter(constants.strings.CODEC_FIELD)
+        .eq(constants.strings.CODEC_MP3) //Limit to mp3 for Alexa
         .exec()
         .then(function(data) {
-          console.log(data);
-          console.log(JSON.stringify(data));
           if (data.count) {
-            resolve(data.url);
+            resolve(data[0].url);
           } else {
+            logger.warn('Data count is null');
             resolve('');
           }
         });
     });
   }
 
-  async storeIntroLocation(articleId, introLocation, voice, summaryOnly) {
-    logger.info(`storeIntroLocation for ${articleId}`);
-    let type = summaryOnly ? 'introSummary' : 'introFull';
-    let mp3 = new AudioFiles({
-      item_id: articleId,
-      uuid: uuidgen.generate(),
-      voice: voice,
-      codec: 'mp3',
-      bitrate: 40000,
-      samplerate: 16000,
-      type: type,
-      url: introLocation,
-      date: Date.now()
-    });
-    await mp3.save();
+  async storeAudioFileLocation(
+    articleId,
+    mp3FileUrl,
+    type,
+    voice,
+    lang = 'en',
+    additionalMp3Info = {},
+    additionalOpusInfo = {}
+  ) {
+    logger.info(
+      `Store audio file location for ${articleId}/${type} @ ${mp3FileUrl}`
+    );
 
-    logger.debug('Before opus save');
-    let opus = new AudioFiles({
+    const commonFileInfo = {
       item_id: articleId,
-      uuid: uuidgen.generate(),
-      voice: voice,
-      codec: 'opus',
-      bitrate: 24000,
-      samplerate: 48000,
-      type: type,
-      url: introLocation.replace('.mp3', '.opus'),
+      voice,
+      lang,
+      type,
       date: Date.now()
-    });
-    await opus.save();
-    logger.debug('after opus save');
-  }
+    };
 
-  async storeOutroLocation(articleId, outroLocation, voice) {
-    logger.info(`storeOutroLocation for ${articleId}`);
-    let mp3 = new AudioFiles({
-      item_id: articleId,
-      uuid: uuidgen.generate(),
-      voice: voice,
-      codec: 'mp3',
-      bitrate: 40000,
-      samplerate: 16000,
-      type: 'outro',
-      url: outroLocation,
-      date: Date.now()
-    });
-    await mp3.save();
+    const mp3FileAttributes = {
+      codec: constants.strings.CODEC_MP3,
+      bitrate: constants.bitrate.BITRATE_MP3,
+      samplerate: constants.samplerate.SAMPLERATE_MP3
+    };
 
-    logger.debug('Before opus save');
-    let opus = new AudioFiles({
-      item_id: articleId,
-      uuid: uuidgen.generate(),
-      voice: voice,
-      codec: 'opus',
-      bitrate: 24000,
-      samplerate: 48000,
-      type: 'outro',
-      url: outroLocation.replace('.mp3', '.opus'),
-      date: Date.now()
-    });
-    await opus.save();
-    logger.debug('after opus save');
+    const opusFileAttributes = {
+      codec: constants.strings.CODEC_OPUS,
+      bitrate: constants.bitrate.BITRATE_OPUS,
+      samplerate: constants.samplerate.SAMPLERATE_OPUS
+    };
+    try {
+      // save mp3 file data
+      let mp3FileInfo = {};
+      Object.assign(
+        mp3FileInfo,
+        commonFileInfo,
+        mp3FileAttributes,
+        additionalMp3Info,
+        {
+          uuid: uuidgen.generate(),
+          url: mp3FileUrl
+        }
+      );
+      const mp3AudioFile = new AudioFiles(mp3FileInfo);
+      const promiseArr = [mp3AudioFile.save()];
+
+      if (xcodeQueue.useXcode()) {
+        // save opus file data
+        let opusFileInfo = {};
+        Object.assign(
+          opusFileInfo,
+          commonFileInfo,
+          opusFileAttributes,
+          additionalOpusInfo,
+          {
+            uuid: uuidgen.generate(),
+            url: mp3FileUrl.replace('.mp3', '.opus')
+          }
+        );
+        const opusAudioFile = new AudioFiles(opusFileInfo);
+        promiseArr.push(opusAudioFile.save());
+      }
+      await Promise.all(promiseArr);
+    } catch (err) {
+      logger.error(`storeAudioFileLocation error: ${err}`);
+    }
   }
 }
 

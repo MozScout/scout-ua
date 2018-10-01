@@ -128,6 +128,7 @@ class HostnameHelper {
       case 'favicon':
         return data.favicon_url;
       case 'publisher':
+        logger.debug('Returning:' + data.publisher_name);
         return data.publisher_name;
       case 'all':
         return data;

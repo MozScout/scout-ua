@@ -172,82 +172,100 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
   res.setHeader('Content-Type', 'application/json');
 
   try {
-    // Set the version
     let version = req.body.v ? req.body.v : 1;
-    console.log('Version is: ' + version);
-    let mobileMetadata;
-    if (req.body.article_id) {
-      // we have a pocket item. do we already have the audio file?
-      mobileMetadata = await audioHelper.getMobileFileMetadata(
-        req.body.article_id
-      );
-      logger.info('mobileMetadata: ' + JSON.stringify(mobileMetadata));
-    } else {
-      logger.info('error:  missing article_id');
+    logger.debug('/articleservice version is: ' + version);
+
+    if (!req.body.article_id) {
+      logger.error('/articleservice error:  missing article_id');
+      throw 'No article ID or metadata';
     }
 
-    if (!mobileMetadata) {
-      throw 'No Metadata';
-    }
+    let mobileMetadata = await audioHelper.getMobileFileMetadata(
+      req.body.article_id
+    );
 
-    // if we didn't find it in the DB, create the audio file
-    if (!mobileMetadata.count) {
-      logger.info('Did not find the audio URL in DB: ' + req.body.article_id);
-      // Create the body as a local file.
-      let article = await getPocketArticleTextFromUrl(req.body.url);
-      if (article) {
-        // Build the stitched file first
-        let voice = vc.findVoice(article.lang);
-        let articleFile = await createAudioFileFromText(
-          `${article.article}`,
-          voice
-        );
-
-        let introFile = await createAudioFileFromText(
-          buildIntro(article),
-          voice
-        );
-        let audioMetadata = await buildPocketAudio(introFile, articleFile);
-        // Add the correct voice:
-        audioMetadata['voice'] = voice;
-
-        logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
-        await audioHelper.storeMobileLocation(
-          req.body.article_id,
-          article.lang,
-          voice,
-          audioMetadata
-        );
-        logger.debug('Before buildPocketResponse');
-        let response = buildPocketResponse(audioMetadata, version);
-        // Send it back to the mobile as quick as possible.
-        logger.info('POST article resp: ' + JSON.stringify(response));
-        res.status(200).send(JSON.stringify(response));
-
-        // Upload the individual parts for use by Alexa later & cleanup.
-        let introUrl = await polly_tts.postProcessPart(introFile);
-        let articleUrl = await polly_tts.postProcessPart(articleFile);
-        await audioHelper.storeIntroLocation(
-          req.body.article_id,
-          introUrl,
-          voice,
-          false
-        );
-        await audioHelper.storeAudioFileLocation(
-          req.body.article_id,
-          false,
-          voice,
-          articleUrl
-        );
-      }
-    } else {
-      logger.debug('Found the file in the database');
+    if (mobileMetadata.count) {
+      // We have already processed this article
+      logger.debug(`Found file(s) in the database for ${req.body.article_id}`);
       let response = await buildPocketResponseFromMetadata(
         mobileMetadata,
         version
       );
-      logger.info('POST article resp: ' + JSON.stringify(response));
       res.status(200).send(JSON.stringify(response));
+    } else {
+      // Need to build the file(s)
+      logger.debug(`No file(s) in the database for ${req.body.article_id}`);
+      let article = await getPocketArticleTextFromUrl(req.body.url);
+      if (article && article.isArticle && article.isArticle == 1) {
+        // Build the stitched file first
+        let voice = vc.findVoice(article.lang);
+
+        // Check that we actually got a valid language
+        if (voice && voice.meta && voice.main) {
+          let articleFile = await createAudioFileFromText(
+            `${article.article}`,
+            voice.main
+          );
+
+          let introFile = await createAudioFileFromText(
+            await buildIntro(article),
+            voice.meta
+          );
+          let audioMetadata = await buildPocketAudio(introFile, articleFile);
+          // Add the correct voice:
+          audioMetadata['voice'] = voice.main;
+
+          logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
+          await audioHelper.storeMobileLocation(
+            req.body.article_id,
+            article.lang,
+            voice.main,
+            audioMetadata
+          );
+
+          // Re-query the metadata for new file info
+          mobileMetadata = await audioHelper.getMobileFileMetadata(
+            req.body.article_id
+          );
+          let response = await buildPocketResponseFromMetadata(
+            mobileMetadata,
+            version
+          );
+
+          // Send it back to the mobile as quick as possible.
+          res.status(200).send(JSON.stringify(response));
+
+          // Upload the individual parts for use by Alexa later & cleanup.
+          let introUrl = await polly_tts.postProcessPart(introFile);
+          let articleUrl = await polly_tts.postProcessPart(articleFile);
+          await audioHelper.storeIntroLocation(
+            req.body.article_id,
+            introUrl,
+            voice.meta,
+            false
+          );
+          await audioHelper.storeAudioFileLocation(
+            req.body.article_id,
+            false,
+            voice.main,
+            articleUrl
+          );
+        } else {
+          logger.error('No language found for article:' + req.body.article_id);
+          res.status(404).send(
+            JSON.stringify({
+              speech: `There was an error processing the article. No language`
+            })
+          );
+        }
+      } else {
+        logger.error('Not an article: ' + req.body.article_id);
+        res.status(404).send(
+          JSON.stringify({
+            speech: `There was an error processing the article. Not an article`
+          })
+        );
+      }
     }
   } catch (reason) {
     logger.error('Error in /articleservice ' + reason);
@@ -301,8 +319,8 @@ router.get('/search', VerifyToken, async function(req, res) {
 });
 
 function logMetric(cmd, userid, agent) {
-  logger.info('User-Agent is: ' + agent);
   if (process.env.GA_PROPERTY_ID) {
+    logger.info('User-Agent is: ' + agent);
     var visitor = ua(process.env.GA_PROPERTY_ID, userid);
     var ga_params = {
       ec: cmd,
@@ -819,22 +837,26 @@ async function buildAudioFromUrl(url) {
   return buildAudioFromText(`${article.article}`);
 }
 
-function buildIntro(article) {
+async function buildIntro(article) {
   //Intro: “article title, published by host, on publish date"
   let introFullText;
   let dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-  if (article.lang == 'en') {
+  let publisher = await hostnameHelper.getHostnameData(
+    article.resolvedUrl,
+    'publisher'
+  );
+  if (!article.lang || article.lang === 'en') {
     if (article.timePublished) {
       let publishedDate = new Date(article.timePublished * 1000);
       let dateString = publishedDate.toLocaleDateString('en-US', dateOptions);
 
-      introFullText = article.publisher
-        ? `${article.title}, published by ${article.host}, on ${dateString}`
+      introFullText = publisher
+        ? `${article.title}, published by ${publisher}, on ${dateString}`
         : `${article.title}, published on ${dateString}`;
     } else {
       // The case where date is not available.
-      introFullText = article.publisher
-        ? `${article.title}, published by ${article.host}.`
+      introFullText = publisher
+        ? `${article.title}, published by ${publisher}.`
         : `${article.title}.`;
     }
   } else {
@@ -845,13 +867,13 @@ function buildIntro(article) {
         dateOptions
       );
 
-      introFullText = article.publisher
-        ? `${article.title}, ${article.host}, ${dateString}`
+      introFullText = publisher
+        ? `${article.title}, ${publisher}, ${dateString}`
         : `${article.title}, ${dateString}`;
     } else {
       // The case where date is not available.
-      introFullText = article.publisher
-        ? `${article.title}, ${article.host}.`
+      introFullText = publisher
+        ? `${article.title}, ${publisher}.`
         : `${article.title}.`;
     }
   }
@@ -860,7 +882,7 @@ function buildIntro(article) {
 
 async function getPocketArticleTextFromUrl(url) {
   articleOptions.formData = {
-    consumer_key: process.env.POCKET_KEY,
+    consumer_key: process.env.POCKET_KEY || '',
     url,
     images: '0',
     videos: '0',
@@ -911,30 +933,6 @@ async function buildAudioFromText(
 
 async function buildPocketAudio(introFile, articleFile) {
   return polly_tts.processPocketAudio(introFile, articleFile);
-}
-
-function buildPocketResponse(audioMetadata, version) {
-  logger.debug('Entering buildPocketResponse');
-  let response;
-  if (version == 2) {
-    let opus_metadata = {
-      format: 'opus',
-      url: audioMetadata.url.replace('.mp3', '.opus'),
-      status: 'processing',
-      voice: audioMetadata.voice,
-      sample_rate: 48000,
-      duration: audioMetadata.duration,
-      size: null
-    };
-
-    response = [audioMetadata, opus_metadata];
-  } else {
-    response = {
-      url: audioMetadata.url
-    };
-  }
-  logger.debug('JSON RESPONSE IS: ' + response);
-  return response;
 }
 
 async function buildPocketResponseFromMetadata(mmd, version) {

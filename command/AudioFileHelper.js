@@ -3,6 +3,7 @@ const database = new Database();
 const AWS = require('aws-sdk');
 const url = require('url');
 const logger = require('../logger');
+const constants = require('../constants');
 
 const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
@@ -11,7 +12,9 @@ class CommandHelper {
     // first check if we have this file in the DB
     let fileUrl = await database.getAudioFileLocation(
       articleId,
-      summaryOnly ? 'summary' : 'full',
+      summaryOnly
+        ? constants.strings.TYPE_SUMMARY
+        : constants.strings.TYPE_FULL,
       voice
     );
 
@@ -53,15 +56,6 @@ class CommandHelper {
     return false;
   }
 
-  async storeAudioFileLocation(articleId, summaryOnly, voice, location) {
-    await database.storeAudioFileLocation(
-      articleId,
-      summaryOnly ? 'summary' : 'full',
-      voice,
-      location
-    );
-  }
-
   async getMetaAudioLocation(articleId, voice, summaryOnly) {
     let metaAudio = {};
     let introLocation = await database.getIntroAudioLocation(
@@ -81,17 +75,32 @@ class CommandHelper {
     return metaAudio;
   }
 
+  async storeAudioFileLocation(articleId, summaryOnly, voice, location) {
+    const fileType = summaryOnly
+      ? constants.strings.TYPE_SUMMARY
+      : constants.strings.TYPE_FULL;
+    await database.storeAudioFileLocation(articleId, location, fileType, voice);
+  }
+
   async storeIntroLocation(articleId, introLocation, voice, summaryOnly) {
-    return await database.storeIntroLocation(
+    const fileType = summaryOnly
+      ? constants.strings.TYPE_INTRO_SUMMARY
+      : constants.strings.TYPE_INTRO_FULL;
+    await database.storeAudioFileLocation(
       articleId,
       introLocation,
-      voice,
-      summaryOnly
+      fileType,
+      voice
     );
   }
 
   async storeOutroLocation(articleId, outroLocation, voice) {
-    return await database.storeOutroLocation(articleId, outroLocation, voice);
+    await database.storeAudioFileLocation(
+      articleId,
+      outroLocation,
+      constants.strings.TYPE_OUTRO,
+      voice
+    );
   }
 
   /*
@@ -99,11 +108,18 @@ class CommandHelper {
   * file.  
   */
   async storeMobileLocation(articleId, lang, voice, audioMetadata) {
-    return await database.storeMobileLocation(
+    const { url, size, duration } = audioMetadata;
+    await database.storeAudioFileLocation(
       articleId,
-      lang,
+      url,
+      constants.strings.TYPE_MOBILE,
       voice,
-      audioMetadata
+      lang,
+      {
+        size,
+        duration
+      },
+      { duration }
     );
   }
 }
