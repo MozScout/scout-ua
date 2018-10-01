@@ -26,6 +26,7 @@ var polly_tts = {
     return new Promise(function(resolve, reject) {
       let rate = process.env.PROSODY_RATE || 'medium';
       let vol = process.env.PROSODY_VOLUME || 'medium';
+      let sr = process.env.SAMPLE_RATE;
       var ssmlText =
         '<speak><prosody rate="' +
         rate +
@@ -38,7 +39,7 @@ var polly_tts = {
       let params = {
         Text: ssmlText,
         OutputFormat: 'mp3',
-        SampleRate: '16000',
+        SampleRate: sr,
         VoiceId: voiceType,
         TextType: 'ssml'
       };
