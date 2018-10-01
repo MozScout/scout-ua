@@ -368,6 +368,7 @@ var polly_tts = {
             duration: Math.floor(audioInfo.format.duration),
             size: fileSizeInBytes
           };
+          logger.debug('BIT RATE: ' + audioInfo.streams.bit_rate);
           resolve(metadata);
         });
       } catch (err) {
