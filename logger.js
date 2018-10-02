@@ -1,6 +1,6 @@
 const winston = require('winston');
 
-const level = process.env.LOG_LEVEL || 'debug';
+const level = process.env.LOG_LEVEL || 'info';
 
 const logger = winston.createLogger({
   transports: [
