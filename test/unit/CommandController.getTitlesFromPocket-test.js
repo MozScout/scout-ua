@@ -1,5 +1,5 @@
-//const rewire = require('rewire');
-//const CommandController = rewire('../../command/CommandController.js');
+const rewire = require('rewire');
+const CommandController = rewire('../../command/CommandController.js');
 
 const chai = require('chai');
 const expect = chai.expect; //
