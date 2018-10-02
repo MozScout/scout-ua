@@ -22,6 +22,15 @@ chai.use(chaiHttp);*/
 
 //let app = require('../../app');
 
+'use strict';
+const texttools = require('../../command/texttools');
+const chai = require('chai');
+
+const MOCK_DATA_PATH = __dirname + '/data';
+
+const expect = chai.expect;
+const fs = require('fs');
+
 describe('CommandController - Endpoints', function() {
   /* let userData = {
     userid: 'existing-user@test.com',
@@ -249,6 +258,21 @@ describe('CommandController - Endpoints', function() {
     it('Return data when search term: firefox', done => {
       console.log('fake test');
       done();
+    });
+    it('Text Cleaning - French, no html codes', function(done) {
+      fs.readFile(MOCK_DATA_PATH + '/french_article.json', 'utf8', function(
+        err,
+        data
+      ) {
+        if (err) {
+          return console.log(err);
+        }
+        let originalText = JSON.parse(data).article;
+        expect(originalText).to.match(/&(?:[a-z]+|#x?\d+);/g);
+        let cleanText = texttools.cleanText(originalText);
+        expect(cleanText).to.not.match(/&(?:[a-z]+|#x?\d+);/g); // no html & codes
+        done();
+      });
     });
 
     /*describe('ScoutTitles', function() {
