@@ -106,7 +106,7 @@ describe('CommandController - Endpoints', function() {
         func(undefined, decoded);
       })
     );
-    sinon.replace(
+    /*   sinon.replace(
       AudioFileHelper.prototype,
       'getAudioFileLocation',
       sinon.fake(function() {
@@ -174,7 +174,7 @@ describe('CommandController - Endpoints', function() {
       sinon.fake(function() {
         console.log('Calling fake storeIntroLocation');
       })
-    );
+    );*/
     sinon.replace(
       statusHelper.prototype,
       'getArticleStatus',
