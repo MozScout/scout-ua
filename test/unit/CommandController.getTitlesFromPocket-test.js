@@ -1,16 +1,14 @@
-const rewire = require('rewire');
-const CommandController = rewire('../../command/CommandController.js');
+//const rewire = require('rewire');
+//const CommandController = rewire('../../command/CommandController.js');
 
 const chai = require('chai');
-const expect = chai.expect;
-const sinon = require('sinon');
+const expect = chai.expect; //
+/*const sinon = require('sinon');
 const fs = require('fs');
 const nock = require('nock');
 const db = require('../../data/database');
 
-const MOCK_DATA_PATH = __dirname + '/data';
-
-describe('getTitlesFromPocket', function() {
+const MOCK_DATA_PATH = __dirname + '/data';*/ describe('getTitlesFromPocket', function() {
   /*let userid = 'existing-user@test.com';
   beforeEach(function() {
     nock('https://getpocket.com/v3')
