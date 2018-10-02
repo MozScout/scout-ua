@@ -1,21 +1,21 @@
 'use strict';
 //var jwt = require('jsonwebtoken');
 //const sinon = require('sinon');
-const chai = require('chai');
+/*const chai = require('chai');
 const chaiHttp = require('chai-http');
-chai.use(chaiHttp);
+chai.use(chaiHttp);*/
 
 //const AudioFileHelper = require('../../command/AudioFileHelper');
 //const polly_tts = require('../../command/polly_tts');
 //const statusHelper = require('../../articlestatus/ArticleStatusHelper.js');
 //const HostnameHelper = require('../../command/HostnameHelper.js');
 
-const expect = chai.expect;
-const fs = require('fs');
+// const expect = chai.expect;
+// const fs = require('fs');
 //const nock = require('nock');
 //const db = require('../../data/database');
 
-const MOCK_DATA_PATH = __dirname + '/data';
+// const MOCK_DATA_PATH = __dirname + '/data';
 /*const FIREFOX_ARTICLE_URL =
   'https://www.nytimes.com/2018/06/20/technology/' +
   'personaltech/firefox-chrome-browser-privacy.html';*/
@@ -23,11 +23,11 @@ const MOCK_DATA_PATH = __dirname + '/data';
 let app = require('../../app');
 
 describe('CommandController - Endpoints', function() {
-  let userData = {
+  /* let userData = {
     userid: 'existing-user@test.com',
     cmd: ''
   };
-  let accessToken = 'token';
+  let accessToken = 'token';*/
   beforeEach(function() {
     /*nock('https://getpocket.com/v3')
       .post('/get')
@@ -246,7 +246,7 @@ describe('CommandController - Endpoints', function() {
   });
 
   describe('/intent', function() {
-    describe('ScoutTitles', function() {
+    /*describe('ScoutTitles', function() {
       before(function() {
         userData.cmd = 'ScoutTitles';
       });
@@ -275,7 +275,7 @@ describe('CommandController - Endpoints', function() {
           });
       });
     });
-    /*
+    
     describe('SearchAndPlayArticle', function() {
       before(function() {
         userData.cmd = 'SearchAndPlayArticle';
