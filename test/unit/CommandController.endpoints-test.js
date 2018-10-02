@@ -246,6 +246,11 @@ describe('CommandController - Endpoints', function() {
   });
 
   describe('/intent', function() {
+    it('Return data when search term: firefox', done => {
+      console.log('fake test');
+      done();
+    });
+
     /*describe('ScoutTitles', function() {
       before(function() {
         userData.cmd = 'ScoutTitles';
