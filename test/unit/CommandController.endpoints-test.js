@@ -77,7 +77,7 @@ describe('CommandController - Endpoints', function() {
         };
       });
 
-    sinon.replace(
+    /*sinon.replace(
       HostnameHelper.prototype,
       'getHostnameData',
       sinon.fake(function() {
@@ -106,7 +106,7 @@ describe('CommandController - Endpoints', function() {
         func(undefined, decoded);
       })
     );
-    /*   sinon.replace(
+       sinon.replace(
       AudioFileHelper.prototype,
       'getAudioFileLocation',
       sinon.fake(function() {
