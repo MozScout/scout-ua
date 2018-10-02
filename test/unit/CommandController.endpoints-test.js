@@ -20,7 +20,7 @@ chai.use(chaiHttp);*/
   'https://www.nytimes.com/2018/06/20/technology/' +
   'personaltech/firefox-chrome-browser-privacy.html';*/
 
-let app = require('../../app');
+//let app = require('../../app');
 
 describe('CommandController - Endpoints', function() {
   /* let userData = {
