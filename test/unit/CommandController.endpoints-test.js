@@ -5,7 +5,7 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 chai.use(chaiHttp);
 
-const AudioFileHelper = require('../../command/AudioFileHelper');
+//const AudioFileHelper = require('../../command/AudioFileHelper');
 const polly_tts = require('../../command/polly_tts');
 const statusHelper = require('../../articlestatus/ArticleStatusHelper.js');
 const HostnameHelper = require('../../command/HostnameHelper.js');
