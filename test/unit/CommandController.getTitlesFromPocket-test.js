@@ -11,7 +11,7 @@ const db = require('../../data/database');
 const MOCK_DATA_PATH = __dirname + '/data';
 
 describe('getTitlesFromPocket', function() {
-  let userid = 'existing-user@test.com';
+  /*let userid = 'existing-user@test.com';
   beforeEach(function() {
     nock('https://getpocket.com/v3')
       .post('/get')
@@ -36,5 +36,5 @@ describe('getTitlesFromPocket', function() {
         done();
       });
     });
-  });
+  });*/
 });
