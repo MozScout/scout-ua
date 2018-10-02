@@ -270,7 +270,7 @@ describe('CommandController - Endpoints', function() {
         let originalText = JSON.parse(data).article;
         expect(originalText).to.match(/&(?:[a-z]+|#x?\d+);/g);
         let cleanText = texttools.cleanText(originalText);
-        expect(cleanText).to.not.match(/&(?:[a-z]+|#x?\d+);/g); // no html & codes
+        expect(cleanText).to.not.match(/&(?:[a-z]+|#x?\d+);/g);
         done();
       });
     });
