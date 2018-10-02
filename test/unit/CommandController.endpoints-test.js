@@ -275,7 +275,7 @@ describe('CommandController - Endpoints', function() {
           });
       });
     });
-
+    /*
     describe('SearchAndPlayArticle', function() {
       before(function() {
         userData.cmd = 'SearchAndPlayArticle';
@@ -420,9 +420,9 @@ describe('CommandController - Endpoints', function() {
             done();
           });
       });
-    });
+    });*/
   });
-
+  /*
   describe('/article', function() {
     before(function() {
       userData.url = FIREFOX_ARTICLE_URL;
@@ -632,5 +632,5 @@ describe('CommandController - Endpoints', function() {
           done();
         });
     });
-  });
+  });*/
 });
