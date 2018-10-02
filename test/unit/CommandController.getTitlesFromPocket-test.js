@@ -1,7 +1,7 @@
 //const rewire = require('rewire');
 //const CommandController = rewire('../../command/CommandController.js');
 
-const chai = require('chai');
+//const chai = require('chai');
 //const expect = chai.expect; //
 /*const sinon = require('sinon');
 const fs = require('fs');
