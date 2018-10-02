@@ -16,9 +16,9 @@ const fs = require('fs');
 //const db = require('../../data/database');
 
 const MOCK_DATA_PATH = __dirname + '/data';
-const FIREFOX_ARTICLE_URL =
+/*const FIREFOX_ARTICLE_URL =
   'https://www.nytimes.com/2018/06/20/technology/' +
-  'personaltech/firefox-chrome-browser-privacy.html';
+  'personaltech/firefox-chrome-browser-privacy.html';*/
 
 let app = require('../../app');
 
@@ -241,8 +241,8 @@ describe('CommandController - Endpoints', function() {
   });
 
   afterEach(function() {
-    sinon.restore();
-    nock.cleanAll();
+    //  sinon.restore();
+    //  nock.cleanAll();
   });
 
   describe('/intent', function() {
