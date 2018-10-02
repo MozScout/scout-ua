@@ -12,7 +12,7 @@ chai.use(chaiHttp);
 
 const expect = chai.expect;
 const fs = require('fs');
-const nock = require('nock');
+//const nock = require('nock');
 //const db = require('../../data/database');
 
 const MOCK_DATA_PATH = __dirname + '/data';
@@ -29,7 +29,7 @@ describe('CommandController - Endpoints', function() {
   };
   let accessToken = 'token';
   beforeEach(function() {
-    nock('https://getpocket.com/v3')
+    /*nock('https://getpocket.com/v3')
       .post('/get')
       .reply(function(uri, body) {
         console.log('Fake Pocket API called on /get');
@@ -77,7 +77,7 @@ describe('CommandController - Endpoints', function() {
         };
       });
 
-    /*sinon.replace(
+    sinon.replace(
       HostnameHelper.prototype,
       'getHostnameData',
       sinon.fake(function() {
