@@ -1,6 +1,6 @@
 'use strict';
 //var jwt = require('jsonwebtoken');
-const sinon = require('sinon');
+//const sinon = require('sinon');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 chai.use(chaiHttp);
