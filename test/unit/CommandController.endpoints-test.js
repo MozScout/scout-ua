@@ -174,7 +174,7 @@ describe('CommandController - Endpoints', function() {
       sinon.fake(function() {
         console.log('Calling fake storeIntroLocation');
       })
-    );*/
+    );
     sinon.replace(
       statusHelper.prototype,
       'getArticleStatus',
@@ -237,7 +237,7 @@ describe('CommandController - Endpoints', function() {
         console.log('Calling fake uploadFile');
         return 'http://audio_file.mp3';
       })
-    );
+    );*/
   });
 
   afterEach(function() {
