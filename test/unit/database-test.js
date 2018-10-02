@@ -37,7 +37,7 @@ describe('database', function() {
         assert.equal(ScoutUser.prototype.save.callCount, 1);
       });
     });
-    describe('new user', function() {
+    /*   describe('new user', function() {
       let userid = 'new-user@test.com';
       let token = 'newtoken';
       beforeEach(function() {
@@ -80,9 +80,9 @@ describe('database', function() {
         await Database.processScoutUser(userid, token);
         assert.equal(ScoutUser.prototype.save.callCount, 0);
       });
-    });
+    });*/
   });
-
+  /*
   describe('getAccessToken', function() {
     describe('existing user', function() {
       let userid = 'existing-user@test.com';
@@ -127,5 +127,5 @@ describe('database', function() {
         }
       });
     });
-  });
+  });*/
 });
