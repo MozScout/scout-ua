@@ -12,7 +12,7 @@ const MOCK_DATA_PATH = __dirname + '/data';
 
 describe('getTitlesFromPocket', function() {
   let userid = 'existing-user@test.com';
-  beforeEach(function() {
+  beforeEach(function(done) {
     nock('https://getpocket.com/v3')
       .post('/get')
       .reply(200, function() {
@@ -20,6 +20,7 @@ describe('getTitlesFromPocket', function() {
         return fs.createReadStream(MOCK_DATA_PATH + '/pocketApi.json');
       });
     sinon.replace(db.prototype, 'getAccessToken', sinon.fake());
+    done();
   });
 
   it('Existing user', done => {
