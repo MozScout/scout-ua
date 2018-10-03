@@ -1,28 +1,28 @@
 'use strict';
-//var jwt = require('jsonwebtoken');
-//const sinon = require('sinon');
-/*const chai = require('chai');
+var jwt = require('jsonwebtoken');
+const sinon = require('sinon');
+const chai = require('chai');
 const chaiHttp = require('chai-http');
-chai.use(chaiHttp);*/
+chai.use(chaiHttp);
 
-//const AudioFileHelper = require('../../command/AudioFileHelper');
-//const polly_tts = require('../../command/polly_tts');
-//const statusHelper = require('../../articlestatus/ArticleStatusHelper.js');
-//const HostnameHelper = require('../../command/HostnameHelper.js');
+const AudioFileHelper = require('../../command/AudioFileHelper');
+const polly_tts = require('../../command/polly_tts');
+const statusHelper = require('../../articlestatus/ArticleStatusHelper.js');
+const HostnameHelper = require('../../command/HostnameHelper.js');
 
-// const expect = chai.expect;
-// const fs = require('fs');
-//const nock = require('nock');
-//const db = require('../../data/database');
+const expect = chai.expect;
+const fs = require('fs');
+const nock = require('nock');
+const db = require('../../data/database');
 
-// const MOCK_DATA_PATH = __dirname + '/data';
-/*const FIREFOX_ARTICLE_URL =
+const MOCK_DATA_PATH = __dirname + '/data';
+const FIREFOX_ARTICLE_URL =
   'https://www.nytimes.com/2018/06/20/technology/' +
-  'personaltech/firefox-chrome-browser-privacy.html';*/
+  'personaltech/firefox-chrome-browser-privacy.html';
 
-//let app = require('../../app');
+let app = require('../../app');
 
-'use strict';
+('use strict');
 const texttools = require('../../command/texttools');
 const chai = require('chai');
 
@@ -32,13 +32,13 @@ const expect = chai.expect;
 const fs = require('fs');
 
 describe('CommandController - Endpoints', function() {
-  /* let userData = {
+  let userData = {
     userid: 'existing-user@test.com',
     cmd: ''
   };
-  let accessToken = 'token';*/
-  beforeEach(function() {
-    /*nock('https://getpocket.com/v3')
+  let accessToken = 'token';
+  beforeEach(function(done) {
+    nock('https://getpocket.com/v3')
       .post('/get')
       .reply(function(uri, body) {
         console.log('Fake Pocket API called on /get');
@@ -115,7 +115,7 @@ describe('CommandController - Endpoints', function() {
         func(undefined, decoded);
       })
     );
-       sinon.replace(
+    sinon.replace(
       AudioFileHelper.prototype,
       'getAudioFileLocation',
       sinon.fake(function() {
@@ -246,12 +246,13 @@ describe('CommandController - Endpoints', function() {
         console.log('Calling fake uploadFile');
         return 'http://audio_file.mp3';
       })
-    );*/
+    );
+    done();
   });
 
   afterEach(function() {
-    //  sinon.restore();
-    //  nock.cleanAll();
+    sinon.restore();
+    nock.cleanAll();
   });
 
   describe('/intent', function() {
@@ -275,7 +276,7 @@ describe('CommandController - Endpoints', function() {
       });
     });
 
-    /*describe('ScoutTitles', function() {
+    describe('ScoutTitles', function() {
       before(function() {
         userData.cmd = 'ScoutTitles';
       });
@@ -304,7 +305,7 @@ describe('CommandController - Endpoints', function() {
           });
       });
     });
-    
+
     describe('SearchAndPlayArticle', function() {
       before(function() {
         userData.cmd = 'SearchAndPlayArticle';
@@ -449,9 +450,9 @@ describe('CommandController - Endpoints', function() {
             done();
           });
       });
-    });*/
+    });
   });
-  /*
+
   describe('/article', function() {
     before(function() {
       userData.url = FIREFOX_ARTICLE_URL;
@@ -661,5 +662,5 @@ describe('CommandController - Endpoints', function() {
           done();
         });
     });
-  });*/
+  });
 });
