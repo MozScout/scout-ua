@@ -887,7 +887,9 @@ async function getPocketArticleTextFromUrl(url) {
     images: '0',
     videos: '0',
     refresh: '0',
-    output: 'json'
+    output: 'json',
+    showCopyright: '0',
+    msg: '0'
   };
   logger.info('Getting article from pocket API: ' + url);
   const article = JSON.parse(await rp(articleOptions));
