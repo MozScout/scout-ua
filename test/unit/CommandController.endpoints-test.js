@@ -28,7 +28,7 @@ describe('CommandController - Endpoints', function() {
     cmd: ''
   };
   let accessToken = 'token';
-  beforeEach(function() {
+  beforeEach(function(done) {
     nock('https://getpocket.com/v3')
       .post('/get')
       .reply(function(uri, body) {
@@ -238,6 +238,7 @@ describe('CommandController - Endpoints', function() {
         return 'http://audio_file.mp3';
       })
     );
+    done();
   });
 
   afterEach(function() {
