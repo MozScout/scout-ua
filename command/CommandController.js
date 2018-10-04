@@ -342,7 +342,8 @@ async function processArticleRequest(
   let result = await searchForPocketArticleByUrl(
     getBody,
     req.body.url,
-    extendedData || metaAudioRequested
+    extendedData || metaAudioRequested,
+    req.body.item_id
     // metaAudio requires to have the publisher name
   );
 
@@ -722,7 +723,12 @@ async function archiveTitle(userId, itemId, res) {
  * Looks for an article in user's account that matches the url,
  * and if found, returns metadata for it. Otherwise undefined.
  */
-async function searchForPocketArticleByUrl(getBody, url, extendedData) {
+async function searchForPocketArticleByUrl(
+  getBody,
+  url,
+  extendedData,
+  theItemId
+) {
   let result;
   if (url) {
     logger.info('Search for article matching url: ' + url);
@@ -735,24 +741,30 @@ async function searchForPocketArticleByUrl(getBody, url, extendedData) {
       logger.debug('keysarr = ' + keysArr);
       logger.info('article count: ' + keysArr.length);
       if (keysArr.length > 0) {
-        let isArticleId = 0;
-
-        // store the id for first object that is an article
-        while (
-          isArticleId < keysArr.length &&
-          jsonBody.list[keysArr[isArticleId]].is_article != '1'
-        ) {
-          isArticleId++;
+        let listIndex = 0;
+        if (theItemId) {
+          // We have the item ID, so try and match to resolved id
+          listIndex = keysArr.findIndex(el => el === theItemId);
+          logger.debug(
+            'Value is: ' + jsonBody.list[keysArr[listIndex]].resolved_id
+          );
+        } else {
+          while (
+            listIndex < keysArr.length &&
+            jsonBody.list[keysArr[listIndex]].is_article != '1'
+          ) {
+            listIndex++;
+          }
         }
 
-        if (isArticleId < keysArr.length) {
+        if (listIndex >= 0 && listIndex < keysArr.length) {
           // if we have a result
           result = await getArticleMetadata(
-            jsonBody.list[keysArr[isArticleId]],
+            jsonBody.list[keysArr[listIndex]],
             extendedData
           );
         } else {
-          logger.warn(
+          logger.error(
             `Searching for '${url}' failed to find a matching article.`
           );
         }
@@ -887,7 +899,9 @@ async function getPocketArticleTextFromUrl(url) {
     images: '0',
     videos: '0',
     refresh: '0',
-    output: 'json'
+    output: 'json',
+    showCopyright: '0',
+    msg: '0'
   };
   logger.info('Getting article from pocket API: ' + url);
   const article = JSON.parse(await rp(articleOptions));
