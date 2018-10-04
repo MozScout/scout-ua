@@ -741,41 +741,30 @@ async function searchForPocketArticleByUrl(
       logger.debug('keysarr = ' + keysArr);
       logger.info('article count: ' + keysArr.length);
       if (keysArr.length > 0) {
-        let isArticleId = 0;
-
+        let listIndex = 0;
         if (theItemId) {
           // We have the item ID, so try and match to resolved id
-          while (
-            isArticleId < keysArr.length &&
-            jsonBody.list[keysArr[isArticleId]].resolved_id != theItemId
-          ) {
-            logger.debug(
-              'ResolvedId is: ' +
-                jsonBody.list[keysArr[isArticleId]].resolved_id
-            );
-            isArticleId++;
-          }
+          listIndex = keysArr.findIndex(el => el === theItemId);
           logger.debug(
-            'Final ResolvedId is: ' +
-              jsonBody.list[keysArr[isArticleId]].resolved_id
+            'Value is: ' + jsonBody.list[keysArr[listIndex]].resolved_id
           );
         } else {
           while (
-            isArticleId < keysArr.length &&
-            jsonBody.list[keysArr[isArticleId]].is_article != '1'
+            listIndex < keysArr.length &&
+            jsonBody.list[keysArr[listIndex]].is_article != '1'
           ) {
-            isArticleId++;
+            listIndex++;
           }
         }
 
-        if (isArticleId < keysArr.length) {
+        if (listIndex >= 0 && listIndex < keysArr.length) {
           // if we have a result
           result = await getArticleMetadata(
-            jsonBody.list[keysArr[isArticleId]],
+            jsonBody.list[keysArr[listIndex]],
             extendedData
           );
         } else {
-          logger.warn(
+          logger.error(
             `Searching for '${url}' failed to find a matching article.`
           );
         }
