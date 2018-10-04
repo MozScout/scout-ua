@@ -342,7 +342,8 @@ async function processArticleRequest(
   let result = await searchForPocketArticleByUrl(
     getBody,
     req.body.url,
-    extendedData || metaAudioRequested
+    extendedData || metaAudioRequested,
+    req.body.item_id
     // metaAudio requires to have the publisher name
   );
 
@@ -722,7 +723,12 @@ async function archiveTitle(userId, itemId, res) {
  * Looks for an article in user's account that matches the url,
  * and if found, returns metadata for it. Otherwise undefined.
  */
-async function searchForPocketArticleByUrl(getBody, url, extendedData) {
+async function searchForPocketArticleByUrl(
+  getBody,
+  url,
+  extendedData,
+  theItemId
+) {
   let result;
   if (url) {
     logger.info('Search for article matching url: ' + url);
@@ -737,12 +743,29 @@ async function searchForPocketArticleByUrl(getBody, url, extendedData) {
       if (keysArr.length > 0) {
         let isArticleId = 0;
 
-        // store the id for first object that is an article
-        while (
-          isArticleId < keysArr.length &&
-          jsonBody.list[keysArr[isArticleId]].is_article != '1'
-        ) {
-          isArticleId++;
+        if (theItemId) {
+          // We have the item ID, so try and match to resolved id
+          while (
+            isArticleId < keysArr.length &&
+            jsonBody.list[keysArr[isArticleId]].resolved_id != theItemId
+          ) {
+            logger.debug(
+              'ResolvedId is: ' +
+                jsonBody.list[keysArr[isArticleId]].resolved_id
+            );
+            isArticleId++;
+          }
+          logger.debug(
+            'Final ResolvedId is: ' +
+              jsonBody.list[keysArr[isArticleId]].resolved_id
+          );
+        } else {
+          while (
+            isArticleId < keysArr.length &&
+            jsonBody.list[keysArr[isArticleId]].is_article != '1'
+          ) {
+            isArticleId++;
+          }
         }
 
         if (isArticleId < keysArr.length) {
