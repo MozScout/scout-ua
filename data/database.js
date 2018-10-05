@@ -80,13 +80,13 @@ class Database {
   }
 
   async getHostnameData(hostname) {
-    logger.info(`getHostnameData for ${hostname}`);
+    logger.debug(`getHostnameData for ${hostname}`);
     const data = await Hostname.get({ hostname: hostname });
     return data;
   }
 
   async storeHostnameData(hostname, faviconUrl, name) {
-    logger.info(`storeHostnameData for ${hostname}: ${faviconUrl}, ${name}`);
+    logger.debug(`storeHostnameData for ${hostname}: ${faviconUrl}, ${name}`);
     let data = await Hostname.get({ hostname: hostname });
     if (!data) {
       data = new Hostname({
