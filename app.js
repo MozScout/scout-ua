@@ -15,15 +15,8 @@ if (
 }
 
 // app.js
-app.get('/hello', function(req, res) {
-  res.status(200).send(`Hello! `);
-});
-
 const UserController = require('./user/UserController');
 app.use('/api/users', UserController);
-
-const AuthController = require('./auth/AuthController');
-app.use('/api/auth', AuthController);
 
 const MobileController = require('./auth/MobileController');
 app.use('/api/auth/mobile', MobileController);
