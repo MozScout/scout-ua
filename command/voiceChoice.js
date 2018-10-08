@@ -74,7 +74,7 @@ const voiceChoice = {
         break;
       case 'es':
         main = 'Miguel';
-        meta = 'Penélope';
+        meta = 'Penelope';
         break;
       case 'sv':
         main = 'Astrid';
