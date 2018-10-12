@@ -371,8 +371,7 @@ async function processArticleRequest(
     if (summaryOnly) {
       audioUrl = await buildSummaryAudioFromUrl(req.body.url);
     } else {
-      let article = await getPocketArticleTextFromUrl(req.body.url);
-      audioUrl = await buildAudioFromText(`${article.article}`);
+      audioUrl = await buildAudioFromUrl(req.body.url);
     }
 
     if (result) {
@@ -453,8 +452,6 @@ async function generateMetaAudio(data, summaryOnly) {
       );
     } else {
       // It's a full article
-      console.log('** generateMetaAudio data param:');
-      console.log(data);
       let introFullText = await buildIntro(
         articleTextDetails.resolvedUrl,
         articleTextDetails.title,
@@ -925,7 +922,6 @@ async function getPocketArticleTextFromUrl(url) {
   logger.info('Getting article from pocket API: ' + url);
   const article = JSON.parse(await rp(articleOptions));
   logger.info('Returned article from pocket API: ' + article.title);
-  console.log(article);
   return article;
 }
 
