@@ -208,7 +208,12 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
           );
 
           let introFile = await createAudioFileFromText(
-            await buildIntro(article),
+            await buildIntro(
+              article.resolvedUrl,
+              article.title,
+              article.lang,
+              article.timePublished
+            ),
             voice.meta
           );
           let audioMetadata = await buildPocketAudio(introFile, articleFile);
@@ -852,14 +857,11 @@ async function buildAudioFromUrl(url) {
   return buildAudioFromText(`${article.article}`);
 }
 
-async function buildIntro({ resolvedUrl, title, lang, timePublished }) {
+async function buildIntro(articleUrl, title, lang, timePublished) {
   //Intro: “article title, published by host, on publish date"
   let introFullText;
   let dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-  let publisher = await hostnameHelper.getHostnameData(
-    resolvedUrl,
-    'publisher'
-  );
+  let publisher = await hostnameHelper.getHostnameData(articleUrl, 'publisher');
   if (!lang || lang === 'en') {
     if (timePublished) {
       let publishedDate = new Date(timePublished * 1000);
