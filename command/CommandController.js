@@ -371,7 +371,7 @@ async function processArticleRequest(
     if (summaryOnly) {
       audioUrl = await buildSummaryAudioFromUrl(req.body.url);
     } else {
-      let article = await getPocketArticleTextFromUrl(url);
+      let article = await getPocketArticleTextFromUrl(req.body.url);
       audioUrl = await buildAudioFromText(`${article.article}`);
     }
 
@@ -857,36 +857,46 @@ async function buildAudioFromUrl(url) {
   return buildAudioFromText(`${article.article}`);
 }
 
-async function buildIntro(articleUrl, title, lang, timePublished) {
+async function buildIntro(
+  articleUrl,
+  articleTitle,
+  articleLang,
+  timePublished
+) {
   //Intro: “article title, published by host, on publish date"
   let introFullText;
   let dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
   let publisher = await hostnameHelper.getHostnameData(articleUrl, 'publisher');
-  if (!lang || lang === 'en') {
+  if (!articleLang || articleLang === 'en') {
     if (timePublished) {
       let publishedDate = new Date(timePublished * 1000);
       let dateString = publishedDate.toLocaleDateString('en-US', dateOptions);
 
       introFullText = publisher
-        ? `${title}, published by ${publisher}, on ${dateString}`
-        : `${title}, published on ${dateString}`;
+        ? `${articleTitle}, published by ${publisher}, on ${dateString}`
+        : `${articleTitle}, published on ${dateString}`;
     } else {
       // The case where date is not available.
       introFullText = publisher
-        ? `${title}, published by ${publisher}.`
-        : `${title}.`;
+        ? `${articleTitle}, published by ${publisher}.`
+        : `${articleTitle}.`;
     }
   } else {
     if (timePublished) {
       let publishedDate = new Date(timePublished * 1000);
-      let dateString = publishedDate.toLocaleDateString(lang, dateOptions);
+      let dateString = publishedDate.toLocaleDateString(
+        articleLang,
+        dateOptions
+      );
 
       introFullText = publisher
-        ? `${title}, ${publisher}, ${dateString}`
-        : `${title}, ${dateString}`;
+        ? `${articleTitle}, ${publisher}, ${dateString}`
+        : `${articleTitle}, ${dateString}`;
     } else {
       // The case where date is not available.
-      introFullText = publisher ? `${title}, ${publisher}.` : `${title}.`;
+      introFullText = publisher
+        ? `${articleTitle}, ${publisher}.`
+        : `${articleTitle}.`;
     }
   }
   return introFullText;
