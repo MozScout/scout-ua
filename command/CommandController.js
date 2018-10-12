@@ -208,7 +208,12 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
           );
 
           let introFile = await createAudioFileFromText(
-            await buildIntro(article),
+            await buildIntro(
+              article.resolvedUrl,
+              article.title,
+              article.lang,
+              article.timePublished
+            ),
             voice.meta
           );
           let audioMetadata = await buildPocketAudio(introFile, articleFile);
@@ -409,6 +414,7 @@ async function generateMetaAudio(data, summaryOnly) {
   // (summary intro, full article intro or outro)
   let intro;
   let outro;
+  let articleTextDetails;
   let voice = process.env.META_VOICE || process.env.POLLY_VOICE || 'Salli';
 
   // 4 cases depending on what we want:
@@ -428,6 +434,9 @@ async function generateMetaAudio(data, summaryOnly) {
     intro = md.intro;
   } else {
     // It's a summary
+    if (!articleTextDetails) {
+      articleTextDetails = await getPocketArticleTextFromUrl(data.resolved_url);
+    }
     if (summaryOnly) {
       logger.info('Generating summary intro for item:' + data.item_id);
       let introSummaryText = data.publisher
@@ -443,9 +452,12 @@ async function generateMetaAudio(data, summaryOnly) {
       );
     } else {
       // It's a full article
-      let introFullText = data.publisher
-        ? `From ${data.publisher}, ${data.title}`
-        : `${data.title}`;
+      let introFullText = await buildIntro(
+        articleTextDetails.resolvedUrl,
+        articleTextDetails.title,
+        articleTextDetails.lang,
+        articleTextDetails.timePublished
+      );
       logger.info('Generating full intro for item:' + data.item_id);
       intro = await buildAudioFromText(`${introFullText}`, voice);
       await audioHelper.storeIntroLocation(
@@ -463,9 +475,11 @@ async function generateMetaAudio(data, summaryOnly) {
     outro = md.outro;
   } else {
     logger.info('Generating outro for item:' + data.item_id);
-    let article = await getPocketArticleTextFromUrl(data.resolved_url);
+    if (!articleTextDetails) {
+      articleTextDetails = await getPocketArticleTextFromUrl(data.resolved_url);
+    }
     var dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-    let publishedDate = new Date(article.timePublished * 1000);
+    let publishedDate = new Date(articleTextDetails.timePublished * 1000);
     let dateString =
       'Published on ' + publishedDate.toLocaleDateString('en-US', dateOptions);
     let authorString = data.author ? `Written by ${data.author}. ` : '';
@@ -849,44 +863,46 @@ async function buildAudioFromUrl(url) {
   return buildAudioFromText(`${article.article}`);
 }
 
-async function buildIntro(article) {
+async function buildIntro(
+  articleUrl,
+  articleTitle,
+  articleLang,
+  timePublished
+) {
   //Intro: “article title, published by host, on publish date"
   let introFullText;
   let dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-  let publisher = await hostnameHelper.getHostnameData(
-    article.resolvedUrl,
-    'publisher'
-  );
-  if (!article.lang || article.lang === 'en') {
-    if (article.timePublished) {
-      let publishedDate = new Date(article.timePublished * 1000);
+  let publisher = await hostnameHelper.getHostnameData(articleUrl, 'publisher');
+  if (!articleLang || articleLang === 'en') {
+    if (timePublished) {
+      let publishedDate = new Date(timePublished * 1000);
       let dateString = publishedDate.toLocaleDateString('en-US', dateOptions);
 
       introFullText = publisher
-        ? `${article.title}, published by ${publisher}, on ${dateString}`
-        : `${article.title}, published on ${dateString}`;
+        ? `${articleTitle}, published by ${publisher}, on ${dateString}`
+        : `${articleTitle}, published on ${dateString}`;
     } else {
       // The case where date is not available.
       introFullText = publisher
-        ? `${article.title}, published by ${publisher}.`
-        : `${article.title}.`;
+        ? `${articleTitle}, published by ${publisher}.`
+        : `${articleTitle}.`;
     }
   } else {
-    if (article.timePublished) {
-      let publishedDate = new Date(article.timePublished * 1000);
+    if (timePublished) {
+      let publishedDate = new Date(timePublished * 1000);
       let dateString = publishedDate.toLocaleDateString(
-        article.lang,
+        articleLang,
         dateOptions
       );
 
       introFullText = publisher
-        ? `${article.title}, ${publisher}, ${dateString}`
-        : `${article.title}, ${dateString}`;
+        ? `${articleTitle}, ${publisher}, ${dateString}`
+        : `${articleTitle}, ${dateString}`;
     } else {
       // The case where date is not available.
       introFullText = publisher
-        ? `${article.title}, ${publisher}.`
-        : `${article.title}.`;
+        ? `${articleTitle}, ${publisher}.`
+        : `${articleTitle}.`;
     }
   }
   return introFullText;
