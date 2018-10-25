@@ -207,12 +207,19 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
             voice.main
           );
 
+          // Extract the publisher's name if available.
+          let publisher =
+            article.domainMetadata && article.domainMetadata.name
+              ? article.domainMetadata.name
+              : article.host;
+
           let introFile = await createAudioFileFromText(
             await buildIntro(
               article.resolvedUrl,
               article.title,
               article.lang,
-              article.timePublished
+              article.timePublished,
+              publisher
             ),
             voice.meta
           );
@@ -433,14 +440,21 @@ async function generateMetaAudio(data, summaryOnly) {
     // Intro is already in the database & s3.
     intro = md.intro;
   } else {
-    // It's a summary
+    let publisher;
     if (!articleTextDetails) {
       articleTextDetails = await getPocketArticleTextFromUrl(data.resolved_url);
+      // Extract the publisher's name if available.
+      publisher =
+        articleTextDetails.domainMetadata &&
+        articleTextDetails.domainMetadata.name
+          ? articleTextDetails.domainMetadata.name
+          : articleTextDetails.host;
     }
+    // It's a summary
     if (summaryOnly) {
       logger.info('Generating summary intro for item:' + data.item_id);
-      let introSummaryText = data.publisher
-        ? `A summary of ${data.publisher}, ${data.title}`
+      let introSummaryText = publisher
+        ? `A summary of ${publisher}, ${data.title}`
         : `A summary of ${data.title}`;
 
       intro = await buildAudioFromText(`${introSummaryText}`, voice);
@@ -456,7 +470,8 @@ async function generateMetaAudio(data, summaryOnly) {
         articleTextDetails.resolvedUrl,
         articleTextDetails.title,
         articleTextDetails.lang,
-        articleTextDetails.timePublished
+        articleTextDetails.timePublished,
+        publisher
       );
       logger.info('Generating full intro for item:' + data.item_id);
       intro = await buildAudioFromText(`${introFullText}`, voice);
@@ -867,12 +882,12 @@ async function buildIntro(
   articleUrl,
   articleTitle,
   articleLang,
-  timePublished
+  timePublished,
+  publisher
 ) {
   //Intro: “article title, published by host, on publish date"
   let introFullText;
   let dateOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-  let publisher = await hostnameHelper.getHostnameData(articleUrl, 'publisher');
   if (!articleLang || articleLang === 'en') {
     if (timePublished) {
       let publishedDate = new Date(timePublished * 1000);
@@ -917,7 +932,8 @@ async function getPocketArticleTextFromUrl(url) {
     refresh: '0',
     output: 'json',
     showCopyright: '0',
-    msg: '0'
+    msg: '0',
+    getItem: '1'
   };
   logger.info('Getting article from pocket API: ' + url);
   const article = JSON.parse(await rp(articleOptions));
