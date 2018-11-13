@@ -190,11 +190,17 @@ class Database {
       samplerate: constants.samplerate.SAMPLERATE_MP3
     };
 
-    const opusFileAttributes = {
-      codec: constants.strings.CODEC_OPUS,
+    const opusCafFileAttributes = {
+      codec: constants.strings.CODEC_OPUS_CAF,
       bitrate: constants.bitrate.BITRATE_OPUS,
       samplerate: constants.samplerate.SAMPLERATE_OPUS
     };
+    const opusOggFileAttributes = {
+      codec: constants.strings.CODEC_OPUS_OGG,
+      bitrate: constants.bitrate.BITRATE_OPUS,
+      samplerate: constants.samplerate.SAMPLERATE_OPUS
+    };
+
     try {
       // save mp3 file data
       let mp3FileInfo = {};
@@ -213,19 +219,33 @@ class Database {
 
       if (xcodeQueue.useXcode()) {
         // save opus file data
-        let opusFileInfo = {};
+        let opusCafFileInfo = {};
         Object.assign(
-          opusFileInfo,
+          opusCafFileInfo,
           commonFileInfo,
-          opusFileAttributes,
+          opusCafFileAttributes,
           additionalOpusInfo,
           {
             uuid: uuidgen.generate(),
-            url: mp3FileUrl.replace('.mp3', '.opus')
+            url: mp3FileUrl.replace('.mp3', '.opus-caf')
           }
         );
-        const opusAudioFile = new AudioFiles(opusFileInfo);
+        const opusAudioFile = new AudioFiles(opusCafFileInfo);
         promiseArr.push(opusAudioFile.save());
+
+        let opusOggFileInfo = {};
+        Object.assign(
+          opusOggFileInfo,
+          commonFileInfo,
+          opusOggFileAttributes,
+          additionalOpusInfo,
+          {
+            uuid: uuidgen.generate(),
+            url: mp3FileUrl.replace('.mp3', '.opus-ogg')
+          }
+        );
+        const opusOggAudioFile = new AudioFiles(opusOggFileInfo);
+        promiseArr.push(opusOggAudioFile.save());
       }
       await Promise.all(promiseArr);
     } catch (err) {

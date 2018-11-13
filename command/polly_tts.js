@@ -136,7 +136,7 @@ var polly_tts = {
   *    handle db writes
   *    upload intro & body separately for Alexa.
   */
-  processPocketAudio(introFile, articleFile) {
+  processPocketAudio(introFile, articleFile, article_id) {
     return new Promise(resolve => {
       polly_tts
         .concatAudio([introFile, articleFile], uuidgen.generate())
@@ -158,7 +158,7 @@ var polly_tts = {
             }
           });
           // Send the stitched file off for transcoding.
-          xcodeQueue.add(audio_file);
+          xcodeQueue.add(audio_file, article_id);
         });
     });
   },
@@ -272,7 +272,7 @@ var polly_tts = {
                 }
               });
               //Put the file in queue for transcoding.
-              xcodeQueue.add(audio_file + '.mp3');
+              xcodeQueue.add(audio_file + '.mp3', item_id);
             }
           });
         });
@@ -297,7 +297,6 @@ var polly_tts = {
       polly_tts.uploadFile(audio_file).then(function(audio_url) {
         //Put the file in queue for transcoding.
         logger.debug('audio_file is: ' + audio_file);
-        xcodeQueue.add(audio_file.replace(/^.*[\\/]/, ''));
         resolve(audio_url);
         polly_tts.deleteLocalFiles(audio_file, function(err) {
           if (err) {

@@ -223,7 +223,11 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
             ),
             voice.meta
           );
-          let audioMetadata = await buildPocketAudio(introFile, articleFile);
+          let audioMetadata = await buildPocketAudio(
+            introFile,
+            articleFile,
+            req.body.article_id
+          );
           // Add the correct voice:
           audioMetadata['voice'] = voice.main;
 
@@ -457,7 +461,11 @@ async function generateMetaAudio(data, summaryOnly) {
         ? `A summary of ${publisher}, ${data.title}`
         : `A summary of ${data.title}`;
 
-      intro = await buildAudioFromText(`${introSummaryText}`, voice);
+      intro = await buildAudioFromText(
+        `${introSummaryText}`,
+        voice,
+        data.item_id
+      );
       await audioHelper.storeIntroLocation(
         data.item_id,
         intro,
@@ -474,7 +482,7 @@ async function generateMetaAudio(data, summaryOnly) {
         publisher
       );
       logger.info('Generating full intro for item:' + data.item_id);
-      intro = await buildAudioFromText(`${introFullText}`, voice);
+      intro = await buildAudioFromText(`${introFullText}`, voice, data.item_id);
       await audioHelper.storeIntroLocation(
         data.item_id,
         intro,
@@ -498,7 +506,11 @@ async function generateMetaAudio(data, summaryOnly) {
     let dateString =
       'Published on ' + publishedDate.toLocaleDateString('en-US', dateOptions);
     let authorString = data.author ? `Written by ${data.author}. ` : '';
-    outro = await buildAudioFromText(`${authorString}${dateString}`, voice);
+    outro = await buildAudioFromText(
+      `${authorString}${dateString}`,
+      voice,
+      data.item_id
+    );
 
     await audioHelper.storeOutroLocation(data.item_id, outro, voice);
   }
@@ -506,7 +518,8 @@ async function generateMetaAudio(data, summaryOnly) {
   if (!(await audioHelper.checkFileExistence(endInstructionsData.url))) {
     endInstructionsData.url = await buildAudioFromText(
       endInstructionsData.text,
-      voice
+      voice,
+      data.item_id
     );
     endInstructionsData.date = Date.now();
   }
@@ -518,6 +531,9 @@ async function generateMetaAudio(data, summaryOnly) {
   };
 }
 
+/*
+* Deprecated
+*/
 async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
   // Gets the user's Pocket titles and summarizes first three.
   const getBody = await buildPocketRequestBody(userid);
@@ -830,7 +846,10 @@ async function searchAndPlayArticle(
       // if we didn't find it in the DB, create the audio file
       if (!audioUrl) {
         if (summaryOnly) {
-          audioUrl = await buildSummaryAudioFromUrl(articleInfo.resolved_url);
+          audioUrl = await buildSummaryAudioFromUrl(
+            articleInfo.resolved_url,
+            articleInfo.item_id
+          );
         } else {
           audioUrl = await buildAudioFromUrl(articleInfo.resolved_url);
         }
@@ -875,7 +894,7 @@ async function searchAndPlayArticle(
 
 async function buildAudioFromUrl(url) {
   let article = await getPocketArticleTextFromUrl(url);
-  return buildAudioFromText(`${article.article}`);
+  return buildAudioFromText(`${article.article}`, `${article.resolved_id}`);
 }
 
 async function buildIntro(
@@ -951,7 +970,7 @@ async function createAudioFileFromText(
   return polly_tts.synthesizeSpeechFile(chunkText, voiceType);
 }
 
-async function buildSummaryAudioFromUrl(url) {
+async function buildSummaryAudioFromUrl(url, item_id) {
   summaryOptions.uri = summaryLink + url;
   const sumResults = JSON.parse(await rp(summaryOptions));
   if (sumResults.sm_api_character_count) {
@@ -959,7 +978,9 @@ async function buildSummaryAudioFromUrl(url) {
       texttools.buildSummaryText(
         sumResults.sm_api_title,
         sumResults.sm_api_content
-      )
+      ),
+      'Salli',
+      item_id
     );
     return summaryURL;
   } else {
@@ -969,16 +990,17 @@ async function buildSummaryAudioFromUrl(url) {
 
 async function buildAudioFromText(
   textString,
-  voiceType = process.env.POLLY_VOICE || 'Salli'
+  voiceType = process.env.POLLY_VOICE || 'Salli',
+  article_id
 ) {
   const cleanText = texttools.cleanText(textString);
   const chunkText = texttools.chunkText(cleanText);
   logger.debug('chunkText is: ', chunkText.length, chunkText);
-  return polly_tts.getSpeechSynthUrl(chunkText, voiceType);
+  return polly_tts.getSpeechSynthUrl(chunkText, voiceType, article_id);
 }
 
-async function buildPocketAudio(introFile, articleFile) {
-  return polly_tts.processPocketAudio(introFile, articleFile);
+async function buildPocketAudio(introFile, articleFile, article_id) {
+  return polly_tts.processPocketAudio(introFile, articleFile, article_id);
 }
 
 async function buildPocketResponseFromMetadata(mmd, version) {
