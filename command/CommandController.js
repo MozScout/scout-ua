@@ -109,15 +109,6 @@ router.post('/intent', VerifyToken, async function(req, res) {
           req.body.extendedData == true || req.body.extended_data == true
         );
         break;
-      case 'ScoutMyPocket':
-        scoutSummaries(
-          req.body.userid,
-          'list',
-          'given_url',
-          'given_title',
-          res
-        );
-        break;
       case 'Archive':
         archiveTitle(req.body.userid, req.body.itemid, res);
         break;
@@ -529,98 +520,6 @@ async function generateMetaAudio(data, summaryOnly) {
     outro_url: outro,
     instructions_url: endInstructionsData.url
   };
-}
-
-/*
-* Deprecated
-*/
-async function scoutSummaries(userid, jsonBodyAttr, urlAttr, titleAttr, res) {
-  // Gets the user's Pocket titles and summarizes first three.
-  const getBody = await buildPocketRequestBody(userid);
-  getBody.count = '3';
-  getOptions.body = JSON.stringify(getBody);
-
-  logger.debug('jsonboddyattr=' + jsonBodyAttr);
-  logger.debug('urlattr=' + urlAttr);
-  rp(getOptions)
-    .then(function(body) {
-      const jsonBody = JSON.parse(body);
-      if (jsonBody.status == '1') {
-        let summLoop = function() {
-          let promiseArray = [];
-          let arrJson = jsonBody[jsonBodyAttr];
-          Object.keys(arrJson).forEach(key => {
-            if (arrJson[key].is_article == '1') {
-              summaryOptions.uri = summaryLink + arrJson[key][urlAttr];
-              logger.debug('Summary uri is: ' + summaryOptions.uri);
-              promiseArray.push(
-                rp(summaryOptions)
-                  .then(sumResults => {
-                    let sumResultsJson = JSON.parse(sumResults);
-                    sumResultsJson['title'] = arrJson[key][titleAttr];
-                    return sumResultsJson;
-                  })
-                  .catch(function(err) {
-                    logger.error('Caught an error: ' + err);
-                    return JSON.stringify({});
-                  })
-              );
-            }
-          });
-          logger.debug('RETURNING PROMISE.ALL ' + Date.now());
-          return Promise.all(promiseArray);
-        };
-
-        summLoop()
-          .then(function(sumVal) {
-            let textResponse = '';
-            sumVal.forEach(function(element) {
-              // Link up the response text for all summaries
-              if (element.sm_api_character_count) {
-                // TODO: Right now, some of the pages are not
-                // parseable. Want to change this later to allow
-                // it to get 3 that are parseable.
-                textResponse += texttools.buildSummaryText(
-                  element.title,
-                  element.sm_api_content
-                );
-              } else {
-                logger.warn('no data.  Summary must have failed.');
-              }
-            });
-            logger.debug('Text response is: ' + textResponse);
-            logger.debug('Time to get summaries: ' + Date.now());
-            return buildAudioFromText(textResponse);
-          })
-          .then(function(url) {
-            logger.debug('Time to buildAudioFromText ' + Date.now());
-            res.status(200).send(JSON.stringify({ url: url }));
-          })
-          .catch(function(err) {
-            res
-              .status(500)
-              .send(JSON.stringify({ speech: 'Summary Engine error' }));
-            logger.error('Error parsing: ' + err);
-          });
-      } else {
-        logger.warn('Searching for the article failed to find a match');
-        throw 'NoSearchMatch';
-      }
-    })
-    .catch(reason => {
-      logger.error('caught an error: ' + reason);
-      let errSpeech = '';
-      switch (reason) {
-        case 'NoSearchMatch':
-          errSpeech =
-            'Unable to find a matching article.  ' + 'Try another phrase.';
-          break;
-        default:
-          errSpeech = 'There was an error finding the article.';
-          break;
-      }
-      res.status(404).send(JSON.stringify({ speech: errSpeech }));
-    });
 }
 
 async function getTitlesFromPocket(userid, extendedData) {
