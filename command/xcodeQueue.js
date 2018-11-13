@@ -9,7 +9,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-var uuidgen = require('node-uuid-generator');
 var AWS = require('aws-sdk');
 const logger = require('../logger');
 const constants = require('../constants');
