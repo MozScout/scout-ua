@@ -399,28 +399,6 @@ describe('CommandController - Endpoints', function() {
           });
       });
     });
-
-    describe('ScoutMyPocket', function() {
-      before(function() {
-        userData.cmd = 'ScoutMyPocket';
-      });
-      after(function() {
-        userData.cmd = '';
-      });
-      it('Returns an audio file', done => {
-        chai
-          .request(app)
-          .post('/command/intent')
-          .set('x-access-token', accessToken)
-          .send(userData)
-          .end((err, res) => {
-            expect(res).have.status(200);
-            expect(res.body).be.a('object');
-            expect(res.body.url).be.equal('http://audio_file.mp3');
-            done();
-          });
-      });
-    });
   });
 
   describe('/article', function() {
