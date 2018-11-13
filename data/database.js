@@ -217,7 +217,7 @@ class Database {
       const mp3AudioFile = new AudioFiles(mp3FileInfo);
       const promiseArr = [mp3AudioFile.save()];
 
-      if (xcodeQueue.useXcode()) {
+      if (xcodeQueue.useXcode() && type == constants.strings.TYPE_MOBILE) {
         // save opus file data
         let opusCafFileInfo = {};
         Object.assign(
