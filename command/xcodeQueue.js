@@ -9,9 +9,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-var uuidgen = require('node-uuid-generator');
 var AWS = require('aws-sdk');
 const logger = require('../logger');
+const constants = require('../constants');
 AWS.config.update({ region: process.env.AWS_REGION });
 
 // Create an SQS service object
@@ -22,32 +22,48 @@ const xcodeQueue = {
     return !!process.env.SQS_QUEUE;
   },
 
-  add: function(file) {
+  add: function(file, item_id) {
     if (this.useXcode()) {
       logger.debug('XCODE: filename: ' + file);
-      var jsonBody = {
-        filename: file,
-        targetCodec: 'opus 24'
-      };
-
-      var params = {
-        MessageAttributes: {},
-        MessageGroupId: 'scout',
-        MessageDeduplicationId: uuidgen.generate(),
-        MessageBody: JSON.stringify(jsonBody),
-        QueueUrl: process.env.SQS_QUEUE
-      };
-
-      sqs.sendMessage(params, function(err, data) {
-        if (err) {
-          logger.error('Error', err);
-        } else {
-          logger.debug('Success', data.MessageId);
-        }
-      });
+      this.addTranscode(
+        file,
+        item_id,
+        constants.strings.CODEC_OPUS_CAF,
+        constants.strings.CONTAINER_CAF
+      );
+      this.addTranscode(
+        file,
+        item_id,
+        constants.strings.CODEC_OPUS_OGG,
+        constants.strings.CONTAINER_OGG
+      );
     } else {
       logger.debug('No SQS queue defined, skipping XCode message.');
     }
+  },
+
+  addTranscode: function(file, item_id, codec, container) {
+    var jsonBody = {
+      filename: file,
+      targetCodec: codec,
+      bitrate: '24k',
+      container: container,
+      item_id: item_id
+    };
+
+    var params = {
+      MessageAttributes: {},
+      MessageBody: JSON.stringify(jsonBody),
+      QueueUrl: process.env.SQS_QUEUE
+    };
+
+    sqs.sendMessage(params, function(err, data) {
+      if (err) {
+        logger.error('Error', err);
+      } else {
+        logger.debug('Success', data.MessageId);
+      }
+    });
   }
 };
 
