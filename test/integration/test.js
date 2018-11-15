@@ -506,8 +506,8 @@ describe('POST /command/articleservice', function() {
         .send(data)
         .end((err, res) => {
           expect(res).have.status(200);
-          expect(res.body).be.a('object');
-          expect(res.body).have.property('url');
+          expect(res.body).be.an('array');
+          expect(res.body[0]).have.property('url');
         });
       done();
     });

@@ -163,7 +163,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
   res.setHeader('Content-Type', 'application/json');
 
   try {
-    let version = req.body.v ? req.body.v : 1;
+    let version = req.body.v ? req.body.v : 2;
     logger.debug('/articleservice version is: ' + version);
 
     if (!req.body.article_id) {
@@ -171,11 +171,12 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       throw 'No article ID or metadata';
     }
 
+    logger.debug('locale passed in: ' + req.body.locale);
     let mobileMetadata = await audioHelper.getMobileFileMetadata(
-      req.body.article_id
+      req.body.article_id,
+      req.body.locale
     );
-
-    if (mobileMetadata.count) {
+    if (mobileMetadata && mobileMetadata.length > 0) {
       // We have already processed this article
       logger.debug(`Found file(s) in the database for ${req.body.article_id}`);
       let response = await buildPocketResponseFromMetadata(
@@ -188,11 +189,8 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
       logger.debug(`No file(s) in the database for ${req.body.article_id}`);
       let article = await getPocketArticleTextFromUrl(req.body.url);
       if (article && article.isArticle && article.isArticle == 1) {
-        // Build the stitched file first
-        let voice = vc.findVoice(article.lang);
-
-        // Check that we actually got a valid language
-        if (voice && voice.meta && voice.main) {
+        let voice = vc.findVoice(article.lang, req.body.locale);
+        if (voice.main && voice.meta) {
           let articleFile = await createAudioFileFromText(
             `${article.article}`,
             voice.main
@@ -227,13 +225,16 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
             req.body.article_id,
             article.lang,
             voice.main,
-            audioMetadata
+            audioMetadata,
+            voice.localeSynthesis
           );
 
           // Re-query the metadata for new file info
-          mobileMetadata = await audioHelper.getMobileFileMetadata(
-            req.body.article_id
+          mobileMetadata = await audioHelper.getMobileMetadataForLocale(
+            req.body.article_id,
+            voice.localeSynthesis
           );
+          logger.debug('mobilemetadata is: ' + mobileMetadata);
           let response = await buildPocketResponseFromMetadata(
             mobileMetadata,
             version
@@ -249,13 +250,17 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
             req.body.article_id,
             introUrl,
             voice.meta,
-            false
+            false,
+            article.lang,
+            voice.localeSynthesis
           );
           await audioHelper.storeAudioFileLocation(
             req.body.article_id,
             false,
             voice.main,
-            articleUrl
+            articleUrl,
+            article.lang,
+            voice.localeSynthesis
           );
         } else {
           logger.error('No language found for article:' + req.body.article_id);

@@ -4,6 +4,7 @@ const AWS = require('aws-sdk');
 const url = require('url');
 const logger = require('../logger');
 const constants = require('../constants');
+const vc = require('./voiceChoice');
 
 const s3 = new AWS.S3({ apiVersion: '2006-03-01' });
 
@@ -25,11 +26,32 @@ class CommandHelper {
     return fileUrl;
   }
 
-  async getMobileFileMetadata(articleId) {
-    // first check if we have this file in the DB
+  async getMobileMetadataForLocale(articleId, locale) {
+    let mmd = await database.getMobileMetadataForLocale(articleId, locale);
+    return mmd;
+  }
+  async getMobileFileMetadata(articleId, locale) {
+    // first get the language of this article
     let result = {};
-    result = await database.getMobileMetadata(articleId);
-    //TODO: check if files exist.
+    let lang = await database.getMobileLang(articleId);
+    if (lang) {
+      logger.debug('lang is ' + lang);
+      // We might have it in their locale
+      let voice = vc.findVoice(lang, locale);
+      //Check if there is a locale specifc that we support (en, fr, pt, es)
+      if (voice.localeSynthesis) {
+        logger.debug('We support local specific:  ' + voice.localeSynthesis);
+        result = await database.getMobileMetadataForLocale(
+          articleId,
+          voice.localeSynthesis
+        );
+      } else {
+        logger.debug('Not local specific:  ' + voice.localeSynthesis);
+        result = await database.getMobileMetadata(articleId);
+      }
+    } else {
+      logger.debug('no lang in database for this article');
+    }
     return result;
   }
 
@@ -75,14 +97,35 @@ class CommandHelper {
     return metaAudio;
   }
 
-  async storeAudioFileLocation(articleId, summaryOnly, voice, location) {
+  async storeAudioFileLocation(
+    articleId,
+    summaryOnly,
+    voice,
+    location,
+    lang,
+    locale
+  ) {
     const fileType = summaryOnly
       ? constants.strings.TYPE_SUMMARY
       : constants.strings.TYPE_FULL;
-    await database.storeAudioFileLocation(articleId, location, fileType, voice);
+    await database.storeAudioFileLocation(
+      articleId,
+      location,
+      fileType,
+      voice,
+      lang,
+      locale
+    );
   }
 
-  async storeIntroLocation(articleId, introLocation, voice, summaryOnly) {
+  async storeIntroLocation(
+    articleId,
+    introLocation,
+    voice,
+    summaryOnly,
+    lang,
+    locale
+  ) {
     const fileType = summaryOnly
       ? constants.strings.TYPE_INTRO_SUMMARY
       : constants.strings.TYPE_INTRO_FULL;
@@ -90,7 +133,9 @@ class CommandHelper {
       articleId,
       introLocation,
       fileType,
-      voice
+      voice,
+      lang,
+      locale
     );
   }
 
@@ -104,10 +149,10 @@ class CommandHelper {
   }
 
   /*
-  * Mobile file has the stitched intro and the body of the
-  * file.  
-  */
-  async storeMobileLocation(articleId, lang, voice, audioMetadata) {
+   * Mobile file has the stitched intro and the body of the
+   * file.
+   */
+  async storeMobileLocation(articleId, lang, voice, audioMetadata, locale) {
     const { url, size, duration } = audioMetadata;
     await database.storeAudioFileLocation(
       articleId,
@@ -115,6 +160,7 @@ class CommandHelper {
       constants.strings.TYPE_MOBILE,
       voice,
       lang,
+      locale,
       {
         size,
         duration

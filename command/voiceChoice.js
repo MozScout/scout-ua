@@ -1,7 +1,7 @@
 /*
  * voiceChoice.js
  *
- * Determine which voice to use in concert with language and provider 
+ * Determine which voice to use in concert with language and provider
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,14 +11,22 @@
 const logger = require('../logger');
 
 const voiceChoice = {
-  findVoice: function(lang) {
-    logger.debug('Choosing voice for lang: ' + lang);
+  findVoice: function(lang, locale) {
+    logger.debug(`Choosing voice for lang: ${lang} and locale: ${locale}`);
     let main = '';
     let meta = '';
+    let localeSynthesis = '';
     switch (lang) {
       case 'en':
-        main = 'Salli';
-        meta = 'Matthew';
+        if (locale && locale == 'en-GB') {
+          main = 'Emma';
+          meta = 'Brian';
+          localeSynthesis = 'GB';
+        } else {
+          main = 'Salli';
+          meta = 'Matthew';
+          localeSynthesis = 'US';
+        }
         break;
       case 'da':
         main = 'Naja';
@@ -29,8 +37,15 @@ const voiceChoice = {
         meta = 'Ruben';
         break;
       case 'fr':
-        main = 'Celine';
-        meta = 'Mathieu';
+        if (locale && locale == 'fr-CA') {
+          main = 'Chantal';
+          meta = 'Chantal';
+          localeSynthesis = 'CA';
+        } else {
+          main = 'Celine';
+          meta = 'Mathieu';
+          localeSynthesis = 'FR';
+        }
         break;
       case 'de':
         main = 'Hans';
@@ -61,8 +76,15 @@ const voiceChoice = {
         meta = 'Maja';
         break;
       case 'pt':
-        main = 'Ricardo';
-        meta = 'Ricardo';
+        if (locale && locale == 'pt-PT') {
+          meta = 'Cristiano';
+          main = 'Ines';
+          localeSynthesis = 'PT';
+        } else {
+          main = 'Ricardo';
+          meta = 'Vitoria';
+          localeSynthesis = 'BR';
+        }
         break;
       case 'ro':
         main = 'Carmen';
@@ -73,8 +95,15 @@ const voiceChoice = {
         meta = 'Tatyana';
         break;
       case 'es':
-        main = 'Miguel';
-        meta = 'Penelope';
+        if (locale && locale == 'es-ES') {
+          main = 'Lucia';
+          meta = 'Enrique';
+          localeSynthesis = 'ES';
+        } else {
+          main = 'Miguel';
+          meta = 'Penelope';
+          localeSynthesis = 'US';
+        }
         break;
       case 'sv':
         main = 'Astrid';
@@ -97,7 +126,8 @@ const voiceChoice = {
     logger.debug('Voice choice:' + meta + main);
     return {
       meta: meta,
-      main: main
+      main: main,
+      localeSynthesis: localeSynthesis
     };
   }
 };
