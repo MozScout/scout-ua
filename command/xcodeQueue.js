@@ -1,7 +1,7 @@
 /*
  * xcodeQueue.js
  *
- * Logic to ADD messages to the SQS queue for future transcoding 
+ * Logic to ADD messages to the SQS queue for future transcoding
  * to the requested format.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -34,8 +34,8 @@ const xcodeQueue = {
       this.addTranscode(
         file,
         item_id,
-        constants.strings.CODEC_OPUS_OGG,
-        constants.strings.CONTAINER_OGG
+        constants.strings.CODEC_OPUS_MKV,
+        constants.strings.CONTAINER_MKV
       );
     } else {
       logger.debug('No SQS queue defined, skipping XCode message.');
