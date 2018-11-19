@@ -195,8 +195,8 @@ class Database {
       bitrate: constants.bitrate.BITRATE_OPUS,
       samplerate: constants.samplerate.SAMPLERATE_OPUS
     };
-    const opusOggFileAttributes = {
-      codec: constants.strings.CODEC_OPUS_OGG,
+    const opusMkvFileAttributes = {
+      codec: constants.strings.CODEC_OPUS_MKV,
       bitrate: constants.bitrate.BITRATE_OPUS,
       samplerate: constants.samplerate.SAMPLERATE_OPUS
     };
@@ -233,19 +233,19 @@ class Database {
         const opusAudioFile = new AudioFiles(opusCafFileInfo);
         promiseArr.push(opusAudioFile.save());
 
-        let opusOggFileInfo = {};
+        let opusMkvFileInfo = {};
         Object.assign(
-          opusOggFileInfo,
+          opusMkvFileInfo,
           commonFileInfo,
-          opusOggFileAttributes,
+          opusMkvFileAttributes,
           additionalOpusInfo,
           {
             uuid: uuidgen.generate(),
-            url: mp3FileUrl.replace('.mp3', '.opus-ogg')
+            url: mp3FileUrl.replace('.mp3', '.opus-mkv')
           }
         );
-        const opusOggAudioFile = new AudioFiles(opusOggFileInfo);
-        promiseArr.push(opusOggAudioFile.save());
+        const opusMkvAudioFile = new AudioFiles(opusMkvFileInfo);
+        promiseArr.push(opusMkvAudioFile.save());
       }
       await Promise.all(promiseArr);
     } catch (err) {
