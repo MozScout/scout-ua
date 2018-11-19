@@ -5,7 +5,7 @@ module.exports = Object.freeze({
     CODEC_FIELD: 'codec',
     CODEC_MP3: 'mp3',
     CODEC_OPUS_CAF: 'opus-caf',
-    CODEC_OPUS_OGG: 'opus-ogg',
+    CODEC_OPUS_MKV: 'opus-mkv',
     TYPE_FIELD: 'type',
     TYPE_FULL: 'full',
     TYPE_SUMMARY: 'summary',
@@ -15,7 +15,7 @@ module.exports = Object.freeze({
     TYPE_OUTRO: 'outro',
     VOICE_FIELD: 'voice',
     CONTAINER_CAF: 'caf',
-    CONTAINER_OGG: 'ogg'
+    CONTAINER_MKV: 'mkv'
   },
   bitrate: {
     BITRATE_MP3: 40000,
