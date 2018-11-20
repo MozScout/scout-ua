@@ -373,7 +373,7 @@ async function processArticleRequest(
     if (summaryOnly) {
       audioUrl = await buildSummaryAudioFromUrl(req.body.url);
     } else {
-      audioUrl = await buildAudioFromUrl(req.body.url);
+      audioUrl = await buildAudioFromUrl(req.body.url, process.env.POLLY_VOICE);
     }
 
     if (result) {
@@ -418,6 +418,7 @@ async function generateMetaAudio(data, summaryOnly) {
   let outro;
   let articleTextDetails;
   let voice = process.env.META_VOICE || process.env.POLLY_VOICE || 'Salli';
+  logger.debug('inside generateMetaAudio voice is: ' + voice);
 
   // 4 cases depending on what we want:
   // - we want a summary intro:
@@ -750,7 +751,10 @@ async function searchAndPlayArticle(
             articleInfo.item_id
           );
         } else {
-          audioUrl = await buildAudioFromUrl(articleInfo.resolved_url);
+          audioUrl = await buildAudioFromUrl(
+            articleInfo.resolved_url,
+            process.env.POLLY_VOICE
+          );
         }
 
         await audioHelper.storeAudioFileLocation(
@@ -791,9 +795,13 @@ async function searchAndPlayArticle(
   }
 }
 
-async function buildAudioFromUrl(url) {
+async function buildAudioFromUrl(url, voice) {
   let article = await getPocketArticleTextFromUrl(url);
-  return buildAudioFromText(`${article.article}`, `${article.resolved_id}`);
+  return buildAudioFromText(
+    `${article.article}`,
+    `${voice}`,
+    `${article.resolved_id}`
+  );
 }
 
 async function buildIntro(
@@ -866,6 +874,7 @@ async function createAudioFileFromText(
   const cleanText = texttools.cleanText(textString);
   const chunkText = texttools.chunkText(cleanText);
   logger.debug('chunkText is: ', chunkText.length, chunkText);
+  logger.debug('VoiceType in command  is: ' + voiceType);
   return polly_tts.synthesizeSpeechFile(chunkText, voiceType);
 }
 
