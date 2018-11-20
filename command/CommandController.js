@@ -373,7 +373,7 @@ async function processArticleRequest(
     if (summaryOnly) {
       audioUrl = await buildSummaryAudioFromUrl(req.body.url);
     } else {
-      audioUrl = await buildAudioFromUrl(req.body.url);
+      audioUrl = await buildAudioFromUrl(req.body.url, process.env.POLLY_VOICE);
     }
 
     if (result) {
@@ -750,7 +750,10 @@ async function searchAndPlayArticle(
             articleInfo.item_id
           );
         } else {
-          audioUrl = await buildAudioFromUrl(articleInfo.resolved_url);
+          audioUrl = await buildAudioFromUrl(
+            articleInfo.resolved_url,
+            process.env.POLLY_VOICE
+          );
         }
 
         await audioHelper.storeAudioFileLocation(
@@ -791,9 +794,13 @@ async function searchAndPlayArticle(
   }
 }
 
-async function buildAudioFromUrl(url) {
+async function buildAudioFromUrl(url, voice) {
   let article = await getPocketArticleTextFromUrl(url);
-  return buildAudioFromText(`${article.article}`, `${article.resolved_id}`);
+  return buildAudioFromText(
+    `${article.article}`,
+    `${voice}`,
+    `${article.resolved_id}`
+  );
 }
 
 async function buildIntro(
