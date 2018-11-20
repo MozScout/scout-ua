@@ -315,28 +315,6 @@ describe('POST /command/intent', function() {
     it('Search: error', intentError);
   });
 
-  describe('ScoutMyPocket', function() {
-    before(function() {
-      data.cmd = 'ScoutMyPocket';
-    });
-
-    it('ScoutMyPocket', done => {
-      chai
-        .request(API_URL)
-        .post('/command/intent')
-        .set('x-access-token', accessToken)
-        .send(data)
-        .end((err, res) => {
-          expect(res).have.status(200);
-          expect(res.body).be.a('object');
-          expect(res.body).have.property('url');
-          expect(Object.keys(res.body)).to.have.lengthOf(1);
-          expect(res.body.url).not.be.equal('');
-          done();
-        });
-    });
-  });
-
   describe('Archive', function() {
     before(function() {
       data.cmd = 'Archive';
