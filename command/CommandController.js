@@ -345,6 +345,7 @@ async function processArticleRequest(
   extendedData,
   metaAudioRequested
 ) {
+  logger.info('ProcessArticleRequest: ' + req.body.item_id);
   const getBody = await buildPocketRequestBody(req.body.userid);
   let result = await searchForPocketArticleByUrl(
     getBody,
