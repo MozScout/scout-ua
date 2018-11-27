@@ -569,7 +569,6 @@ async function getTitlesFromPocket(userid, extendedData) {
 
 async function scoutTitles(userid, res, extendedData) {
   try {
-    logger.debug('Extended data is: ' + extendedData);
     const titleObj = await getTitlesFromPocket(userid, extendedData);
     if (titleObj && titleObj.articles) {
       res.status(200).send(JSON.stringify({ articles: titleObj.articles }));
@@ -617,17 +616,14 @@ async function getArticleMetadata(pocketArticle, extendedData) {
     imageURL: pocketArticle.top_image_url,
     image_url: pocketArticle.top_image_url
   };
-  logger.debug('Extended Data is: ' + extendedData);
+
   if (extendedData) {
     try {
       const faviconData = await hostnameHelper.getHostnameData(
         pocketArticle.resolved_url
       );
-      logger.debug('publisher is: ' + faviconData.publisher_name);
-      logger.debug('icon is: ' + faviconData.favicon_url);
       result.publisher = faviconData.publisher_name;
       result.icon_url = faviconData.favicon_url;
-      logger.debug('Excerpt is: ' + pocketArticle.excerpt);
       result.excerpt = pocketArticle.excerpt;
     } catch (err) {
       result.publisher = hostnameHelper.getHostname(pocketArticle.resolved_url);
