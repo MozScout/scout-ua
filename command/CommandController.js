@@ -532,7 +532,6 @@ async function getTitlesFromPocket(userid, extendedData) {
     const result = { status: jsonBody.status };
     if (jsonBody.status === 1 || jsonBody.status === 2) {
       let articlesPromises = [];
-
       // process list of articles
       Object.keys(jsonBody.list).forEach(key => {
         if (
@@ -624,6 +623,7 @@ async function getArticleMetadata(pocketArticle, extendedData) {
       );
       result.publisher = faviconData.publisher_name;
       result.icon_url = faviconData.favicon_url;
+      result.excerpt = pocketArticle.excerpt;
     } catch (err) {
       result.publisher = hostnameHelper.getHostname(pocketArticle.resolved_url);
       result.icon_url = '';
