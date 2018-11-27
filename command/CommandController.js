@@ -96,7 +96,7 @@ router.post('/intent', VerifyToken, async function(req, res) {
         scoutTitles(
           req.body.userid,
           res,
-          req.body.extendedData == 'true' || req.body.extended_data == 'true'
+          req.body.extendedData == true || req.body.extended_data == true
         );
         break;
       case 'SearchAndPlayArticle':
