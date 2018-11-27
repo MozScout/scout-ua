@@ -532,7 +532,6 @@ async function getTitlesFromPocket(userid, extendedData) {
     const result = { status: jsonBody.status };
     if (jsonBody.status === 1 || jsonBody.status === 2) {
       let articlesPromises = [];
-      logger.debug('Processing articles');
       // process list of articles
       Object.keys(jsonBody.list).forEach(key => {
         if (
