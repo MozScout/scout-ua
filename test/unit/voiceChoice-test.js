@@ -61,7 +61,7 @@ describe('voiceChoice', function() {
     });
     it('should return a language and meta for Portugese', async () => {
       let voice = vc.findVoice('pt');
-      assert.equal(voice.meta, 'Ricardo');
+      assert.equal(voice.meta, 'Vitoria');
       assert.equal(voice.main, 'Ricardo');
     });
     it('should return a language and meta for Romanian', async () => {

@@ -15,7 +15,9 @@ module.exports = Object.freeze({
     TYPE_OUTRO: 'outro',
     VOICE_FIELD: 'voice',
     CONTAINER_CAF: 'caf',
-    CONTAINER_MKV: 'mkv'
+    CONTAINER_MKV: 'mkv',
+    LANG_FIELD: 'lang',
+    LOCALE_FIELD: 'locale'
   },
   bitrate: {
     BITRATE_MP3: 40000,

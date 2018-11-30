@@ -136,7 +136,8 @@ describe('CommandController - Endpoints', function() {
         return [
           {
             url: 'http://audio_file.mp3',
-            duration: 300
+            duration: 300,
+            size: 1234
           }
         ];
       })
@@ -578,10 +579,12 @@ describe('CommandController - Endpoints', function() {
     beforeEach(function() {
       userData.url = FIREFOX_ARTICLE_URL;
       userData.article_id = '1234';
+      userData.locale = 'en-US';
     });
     afterEach(function() {
       delete userData.url;
       delete userData.article_id;
+      delete userData.locale;
     });
 
     it('should return metadata for the article', done => {
@@ -592,7 +595,8 @@ describe('CommandController - Endpoints', function() {
         .send(userData)
         .end((err, res) => {
           expect(res).have.status(200);
-          expect(res.body).be.a('object');
+          console.log(JSON.stringify(res.body));
+          expect(res.body).be.an('array');
           done();
         });
     });

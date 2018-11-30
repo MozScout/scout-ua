@@ -65,6 +65,43 @@ class Database {
     });
   }
 
+  async getMobileLang(articleId) {
+    logger.info(`getMobileLang for ${articleId}`);
+    return new Promise(resolve => {
+      AudioFiles.query('item_id')
+        .eq(articleId)
+        .filter(constants.strings.TYPE_FIELD)
+        .eq(constants.strings.TYPE_MOBILE)
+        .exec()
+        .then(function(data) {
+          if (data.count) {
+            resolve(data[0].lang);
+          } else {
+            resolve('');
+          }
+        });
+    });
+  }
+
+  async getMobileMetadataForLocale(articleId, locale) {
+    logger.info(`getMobileMetadata for ${articleId} and locale ${locale}`);
+    return new Promise(resolve => {
+      AudioFiles.query('item_id')
+        .eq(articleId)
+        .filter(constants.strings.TYPE_FIELD)
+        .eq(constants.strings.TYPE_MOBILE)
+        .filter(constants.strings.LOCALE_FIELD)
+        .eq(locale)
+        .exec()
+        .then(function(data) {
+          logger.debug(JSON.stringify(data));
+          logger.debug('length is: ' + data.length);
+
+          resolve(data);
+        });
+    });
+  }
+
   async getMobileMetadata(articleId) {
     logger.info(`getMobileMetadata for ${articleId}`);
     return new Promise(resolve => {
@@ -169,6 +206,7 @@ class Database {
     type,
     voice,
     lang = 'en',
+    locale = '',
     additionalMp3Info = {},
     additionalOpusInfo = {}
   ) {
@@ -180,6 +218,7 @@ class Database {
       item_id: articleId,
       voice,
       lang,
+      locale,
       type,
       date: Date.now()
     };

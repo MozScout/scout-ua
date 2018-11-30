@@ -2,7 +2,7 @@
  * AudioFiles.js
  *
  * Data model for storing audio files.
- * 
+ *
  * Author: Tamara Hills
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -23,6 +23,7 @@ const schema = new dynamoose.Schema({
   },
   type: String, // Can be intro, outro, article, mobile
   lang: String, // localization identifier for lang (e.g en)
+  locale: String, // locale the voice is synthesized for (e.g. US)
   voice: String, // voice the file is synthesized with (e.g. Joanna)
   codec: String, // codec (e.g. opus|mp3)
   bitrate: String, // bit rate of the file (e.g. 24000)
