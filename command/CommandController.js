@@ -19,14 +19,6 @@ const database = new Database();
 const HostnameHelper = require('./HostnameHelper.js');
 const hostnameHelper = new HostnameHelper();
 
-var endInstructionsData = {
-  text:
-    'Your article is finished. ' +
-    'To listen to more articles say "Alexa, tell Scout to get titles"',
-  url: '',
-  date: 0
-};
-
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
@@ -401,7 +393,6 @@ async function processArticleRequest(
   if (metaAudioRequested) {
     let metaAudio = await generateMetaAudio(result, summaryOnly);
 
-    result.instructions_url = metaAudio.instructions_url;
     result.intro_url = metaAudio.intro_url;
     result.outro_url = metaAudio.outro_url;
   }
@@ -510,20 +501,10 @@ async function generateMetaAudio(data, summaryOnly) {
 
     await audioHelper.storeOutroLocation(data.item_id, outro, voice);
   }
-  // regenerate end_instructions if file doesn't exist anymore
-  if (!(await audioHelper.checkFileExistence(endInstructionsData.url))) {
-    endInstructionsData.url = await buildAudioFromText(
-      endInstructionsData.text,
-      voice,
-      data.item_id
-    );
-    endInstructionsData.date = Date.now();
-  }
 
   return {
     intro_url: intro,
-    outro_url: outro,
-    instructions_url: endInstructionsData.url
+    outro_url: outro
   };
 }
 
