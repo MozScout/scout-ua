@@ -118,7 +118,7 @@ router.post('/intent', VerifyToken, async function(req, res) {
 // url: article url
 // userid
 // extended_data: 1 (optional) to have publisher name and favicon
-// meta_audio: 1 (optional) to have intro/outro/instructions audiofiles
+// meta_audio: 1 (optional) to have intro/outro audiofiles
 router.post('/article', VerifyToken, async function(req, res) {
   logger.info(`POST /article: ${req.body.url}`);
   logMetric('article', req.body.userid, req.get('User-Agent'));
@@ -402,7 +402,7 @@ async function processArticleRequest(
   return result;
 }
 
-// generateMetaAudio returns urls to intro/outro/instructions audio files.
+// generateMetaAudio returns urls to intro/outro audio files.
 // It tries to fetch them from the database
 // It regenerates them if they are in db but they were deleted from S3
 // or generates them if they are not in db
