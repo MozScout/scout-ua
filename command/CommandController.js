@@ -215,7 +215,8 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
           let audioMetadata = await buildPocketAudio(
             introFile,
             articleFile,
-            req.body.article_id
+            req.body.article_id,
+            req.body.locale
           );
           // Add the correct voice:
           audioMetadata['voice'] = voice.main;
@@ -902,16 +903,22 @@ async function buildSummaryAudioFromUrl(url, item_id) {
 async function buildAudioFromText(
   textString,
   voiceType = process.env.POLLY_VOICE || 'Salli',
-  article_id
+  article_id,
+  locale
 ) {
   const cleanText = texttools.cleanText(textString);
   const chunkText = texttools.chunkText(cleanText);
   logger.debug('chunkText is: ', chunkText.length, chunkText);
-  return polly_tts.getSpeechSynthUrl(chunkText, voiceType, article_id);
+  return polly_tts.getSpeechSynthUrl(chunkText, voiceType, article_id, locale);
 }
 
-async function buildPocketAudio(introFile, articleFile, article_id) {
-  return polly_tts.processPocketAudio(introFile, articleFile, article_id);
+async function buildPocketAudio(introFile, articleFile, article_id, locale) {
+  return polly_tts.processPocketAudio(
+    introFile,
+    articleFile,
+    article_id,
+    locale
+  );
 }
 
 async function buildPocketResponseFromMetadata(mmd, version) {

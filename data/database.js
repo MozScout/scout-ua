@@ -266,7 +266,7 @@ class Database {
           additionalOpusInfo,
           {
             uuid: uuidgen.generate(),
-            url: mp3FileUrl.replace('.mp3', '.opus-caf')
+            url: mp3FileUrl.replace('.mp3', '.caf')
           }
         );
         const opusAudioFile = new AudioFiles(opusCafFileInfo);
@@ -280,7 +280,7 @@ class Database {
           additionalOpusInfo,
           {
             uuid: uuidgen.generate(),
-            url: mp3FileUrl.replace('.mp3', '.opus-mkv')
+            url: mp3FileUrl.replace('.mp3', '.mkv')
           }
         );
         const opusMkvAudioFile = new AudioFiles(opusMkvFileInfo);

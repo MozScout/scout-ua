@@ -22,33 +22,36 @@ const xcodeQueue = {
     return !!process.env.SQS_QUEUE;
   },
 
-  add: function(file, item_id) {
+  add: function(file, item_id, locale) {
     if (this.useXcode()) {
       logger.debug('XCODE: filename: ' + file);
       this.addTranscode(
         file,
         item_id,
         constants.strings.CODEC_OPUS_CAF,
-        constants.strings.CONTAINER_CAF
+        constants.strings.CONTAINER_CAF,
+        locale
       );
       this.addTranscode(
         file,
         item_id,
         constants.strings.CODEC_OPUS_MKV,
-        constants.strings.CONTAINER_MKV
+        constants.strings.CONTAINER_MKV,
+        locale
       );
     } else {
       logger.debug('No SQS queue defined, skipping XCode message.');
     }
   },
 
-  addTranscode: function(file, item_id, codec, container) {
+  addTranscode: function(file, item_id, codec, container, locale) {
     var jsonBody = {
       filename: file,
       targetCodec: codec,
       bitrate: '24k',
       container: container,
-      item_id: item_id
+      item_id: item_id,
+      locale: locale
     };
 
     var params = {
