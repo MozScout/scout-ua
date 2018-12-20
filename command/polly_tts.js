@@ -220,7 +220,7 @@ var polly_tts = {
    * resolves: URL of the file
    * reject: error
    */
-  getSpeechSynthUrl: function(parts, voiceType, item_id) {
+  getSpeechSynthUrl: function(parts, voiceType) {
     return new Promise((resolve, reject) => {
       let audio_file = uuidgen.generate();
       let promArray = [];
