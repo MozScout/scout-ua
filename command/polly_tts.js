@@ -271,8 +271,6 @@ var polly_tts = {
                   logger.debug('all files removed');
                 }
               });
-              //Put the file in queue for transcoding.
-              // xcodeQueue.add(audio_file + '.mp3', item_id, 'none');
             }
           });
         });
