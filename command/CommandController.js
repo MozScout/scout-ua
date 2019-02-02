@@ -297,6 +297,7 @@ router.post('/webpage', VerifyToken, async function(req, res) {
     logger.debug('/webpage version is: ' + version);
 
     //Use the Pocket service to get the resolved id.
+    logger.debug('URL is: ' + req.body.url);
     let article = await getPocketArticleTextFromUrl(req.body.url);
     // Make sure it's an article
     if (article && article.isArticle && article.isArticle == 1) {
