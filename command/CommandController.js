@@ -304,7 +304,7 @@ router.post('/webpage', VerifyToken, async function(req, res) {
       let mData = getArticleMetadata(article, 1);
       let respData = {
         title: mData.title,
-        image_url: mData.image_url,
+        image_url: mData.topImageUrl,
         author: mData.author,
         listen_time: mData.listen_time
       };
@@ -740,7 +740,9 @@ async function scoutTitles(userid, res, extendedData) {
 async function getArticleMetadata(pocketArticle, extendedData) {
   const wordsPerMinute = 155;
   let lengthMinutes;
-  const wordCount = pocketArticle.word_count;
+  const wordCount = pocketArticle.word_count
+    ? pocketArticle.word_count
+    : pocketArticle.wordCount;
   if (wordCount) {
     lengthMinutes = Math.floor(parseInt(wordCount, 10) / wordsPerMinute);
   }
@@ -759,17 +761,20 @@ async function getArticleMetadata(pocketArticle, extendedData) {
     author,
     lengthMinutes,
     length_minutes: lengthMinutes,
-    imageURL: pocketArticle.top_image_url,
-    image_url: pocketArticle.top_image_url
+    imageURL: pocketArticle.top_image_url
+      ? pocketArticle.top_image_url
+      : pocketArticle.topImageUrl,
+    imageURL: pocketArticle.top_image_url
+      ? pocketArticle.top_image_url
+      : pocketArticle.topImageUrl
   };
-
-  logger.debug(' result: ' + result);
-  logger.debug('result: ' + JSON.stringify(result));
 
   if (extendedData) {
     try {
       const faviconData = await hostnameHelper.getHostnameData(
         pocketArticle.resolved_url
+          ? pocketArticle.resolved_url
+          : pocketArticle.resolvedUrl
       );
       result.publisher = faviconData.publisher_name;
       result.icon_url = faviconData.favicon_url;
