@@ -309,8 +309,8 @@ router.post('/webpage', VerifyToken, async function(req, res) {
         listen_time: mData.listen_time
       };
 
-      console.log('METADATA IS: ' + respData);
-      console.log('METADATA IS: ' + JSON.stringify(respData));
+      console.log('METADATA IS: ' + mData);
+      console.log('METADATA IS: ' + JSON.stringify(mData));
 
       let mobileMetadata = await audioHelper.getMobileFileMetadata(
         article.resolved_id,
@@ -762,6 +762,9 @@ async function getArticleMetadata(pocketArticle, extendedData) {
     imageURL: pocketArticle.top_image_url,
     image_url: pocketArticle.top_image_url
   };
+
+  logger.debug(' result: ' + result);
+  logger.debug('result: ' + JSON.stringify(result));
 
   if (extendedData) {
     try {
