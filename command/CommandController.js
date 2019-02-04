@@ -382,10 +382,10 @@ router.post('/webpage', VerifyToken, async function(req, res) {
             mobileMetadata,
             version
           );
-          respData.audio_url = response.url;
+          mData.audio_url = response.url;
 
           // Send it back to the mobile as quick as possible.
-          res.status(200).send(JSON.stringify(respData));
+          res.status(200).send(JSON.stringify(mData));
 
           // Upload the individual parts for use by Alexa later & cleanup.
           let introUrl = await polly_tts.postProcessPart(introFile);
