@@ -301,6 +301,14 @@ router.post('/webpage', VerifyToken, async function(req, res) {
     let article = await getPocketArticleTextFromUrl(req.body.url);
     // Make sure it's an article
     if (article && article.isArticle && article.isArticle == 1) {
+      let mData = getArticleMetadata(article, 1);
+      let respData = {
+        title: mData.title,
+        image_url: mData.image_url,
+        author: mData.author,
+        listen_time: mData.listen_time
+      };
+
       let mobileMetadata = await audioHelper.getMobileFileMetadata(
         article.resolved_id,
         req.body.locale
@@ -315,7 +323,8 @@ router.post('/webpage', VerifyToken, async function(req, res) {
           mobileMetadata,
           version
         );
-        res.status(200).send(JSON.stringify(response));
+        respData.audio_url = response.url;
+        res.status(200).send(JSON.stringify(respData));
       } else {
         let voice = vc.findVoice(article.lang, req.body.locale);
         if (voice.main && voice.meta) {
@@ -368,9 +377,10 @@ router.post('/webpage', VerifyToken, async function(req, res) {
             mobileMetadata,
             version
           );
+          respData.audio_url = response.url;
 
           // Send it back to the mobile as quick as possible.
-          res.status(200).send(JSON.stringify(response));
+          res.status(200).send(JSON.stringify(respData));
 
           // Upload the individual parts for use by Alexa later & cleanup.
           let introUrl = await polly_tts.postProcessPart(introFile);
