@@ -757,7 +757,9 @@ async function getArticleMetadata(pocketArticle, extendedData) {
     item_id: pocketArticle.item_id,
     sort_id: pocketArticle.sort_id,
     resolved_url: pocketArticle.resolved_url,
-    title: pocketArticle.resolved_title,
+    title: pocketArticle.resolved_title
+      ? pocketArticle.resolved_title
+      : pocketArticle.title,
     author,
     lengthMinutes,
     length_minutes: lengthMinutes,
@@ -768,6 +770,9 @@ async function getArticleMetadata(pocketArticle, extendedData) {
       ? pocketArticle.top_image_url
       : pocketArticle.topImageUrl
   };
+
+  logger.debug('metafunction: ' + result);
+  logger.debug('metafunction: ' + JSON.stringify(result));
 
   if (extendedData) {
     try {
