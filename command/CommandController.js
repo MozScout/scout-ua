@@ -309,6 +309,9 @@ router.post('/webpage', VerifyToken, async function(req, res) {
         listen_time: mData.listen_time
       };
 
+      console.log('METADATA IS: ' + respData);
+      console.log('METADATA IS: ' + JSON.stringify(respData));
+
       let mobileMetadata = await audioHelper.getMobileFileMetadata(
         article.resolved_id,
         req.body.locale
