@@ -302,7 +302,7 @@ router.post('/webpage', VerifyToken, async function(req, res) {
     // Make sure it's an article
     if (article && article.isArticle && article.isArticle == 1) {
       let mData = await getArticleMetadata(article, 1);
-      let respData = {
+      /*      let respData = {
         title: mData.title,
         image_url: mData.topImageUrl,
         author: mData.author,
@@ -310,7 +310,7 @@ router.post('/webpage', VerifyToken, async function(req, res) {
       };
 
       console.log('METADATA IS: ' + respData);
-      console.log('METADATA IS: ' + JSON.stringify(respData));
+      console.log('METADATA IS: ' + JSON.stringify(respData));*/
       console.log('METADATA FUNCTION IS: ' + mData);
       console.log('METADATA FUNCTION IS: ' + JSON.stringify(mData));
 
@@ -328,8 +328,8 @@ router.post('/webpage', VerifyToken, async function(req, res) {
           mobileMetadata,
           version
         );
-        respData.audio_url = response.url;
-        res.status(200).send(JSON.stringify(respData));
+        mData.audio_url = response.url;
+        res.status(200).send(JSON.stringify(mData));
       } else {
         let voice = vc.findVoice(article.lang, req.body.locale);
         if (voice.main && voice.meta) {
