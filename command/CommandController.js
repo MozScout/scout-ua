@@ -286,7 +286,6 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 });
-
 router.post('/webpage', VerifyToken, async function(req, res) {
   logger.info(`POST /webpage: ${req.body.url} `);
   logMetric('webpage', req.body.url, req.get('User-Agent'));
@@ -462,7 +461,7 @@ router.get('/search', VerifyToken, async function(req, res) {
 
 function logMetric(cmd, userid, agent) {
   if (process.env.GA_PROPERTY_ID) {
-    logger.info('User-Agent is: ' + agent);
+    logger.info('User-Agent is : ' + agent);
     var visitor = ua(process.env.GA_PROPERTY_ID, userid);
     var ga_params = {
       ec: cmd,
