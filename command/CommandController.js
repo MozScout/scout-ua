@@ -301,7 +301,7 @@ router.post('/webpage', VerifyToken, async function(req, res) {
     let article = await getPocketArticleTextFromUrl(req.body.url);
     // Make sure it's an article
     if (article && article.isArticle && article.isArticle == 1) {
-      let mData = getArticleMetadata(article, 1);
+      let mData = await getArticleMetadata(article, 1);
       let respData = {
         title: mData.title,
         image_url: mData.topImageUrl,
