@@ -457,12 +457,9 @@ router.post('/summary', VerifyToken, async function(req, res) {
         process.env.POLLY_VOICE
       );
 
-      logger.debug('before audiourl check it is: ' + audiourl);
-
       if (!audiourl) {
         // Build the summary audio as it was not found.
         audiourl = await buildSummaryAudioFromUrl(req.body.url);
-        logger.debug('After build... Audiourl is: ' + audiourl);
         // Store the file so we find it next time :)
         await audioHelper.storeAudioFileLocation(
           article.resolved_id,
