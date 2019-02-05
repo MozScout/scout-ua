@@ -445,21 +445,30 @@ router.post('/summary', VerifyToken, async function(req, res) {
       res.status(404).send(JSON.stringify({ speech: errSpeech }));
     }
   } else {
+    logger.debug('no user id');
     let article = await getPocketArticleTextFromUrl(req.body.url);
     // Make sure it's an article
     if (article && article.isArticle && article.isArticle == 1) {
+      logger.debug('THIS is an article');
       // Get the author, etc from the Pocket API.
       let mData = await getArticleMetadata(article, 1);
+      logger.debug(
+        'After getArticleMetadata resolved_id: ' + article.resolved_id
+      );
+      logger.debug('polly:' + process.env.POLLY_VOICE);
+
       // See if it exists already
       let audiourl = audioHelper.getAudioFileLocation(
         article.resolved_id,
-        1,
+        true,
         process.env.POLLY_VOICE
       );
+      logger.debug('Audiourl is: ' + audiourl);
 
       if (!audiourl) {
         // Build the summary audio as it was not found.
         audiourl = await buildSummaryAudioFromUrl(req.body.url);
+        logger.debug('After build... Audiourl is: ' + audiourl);
       }
 
       mData.audio_url = audiourl;
