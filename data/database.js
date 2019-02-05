@@ -42,6 +42,9 @@ class Database {
 
   async getAudioFileLocation(articleId, type, voice) {
     logger.info(`getAudioFileLocation for ${articleId}/${type}`);
+    logger.info('type is: ' + type);
+    logger.info('voice  is: ' + voice);
+    logger.info('articleId  is: ' + articleId);
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
@@ -59,6 +62,7 @@ class Database {
               logger.warn('duplicate entries!!!');
             }
           } else {
+            logger.debug('item not found');
             resolve('');
           }
         });
