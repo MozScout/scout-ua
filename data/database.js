@@ -59,6 +59,7 @@ class Database {
               logger.warn('duplicate entries!!!');
             }
           } else {
+            logger.debug('item not found');
             resolve('');
           }
         });

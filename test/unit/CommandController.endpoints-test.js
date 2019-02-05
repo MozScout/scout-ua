@@ -462,10 +462,12 @@ describe('CommandController - Endpoints', function() {
   describe('/summary', function() {
     before(function() {
       userData.url = FIREFOX_ARTICLE_URL;
+      userData.userid = 'existing-user@test.com';
     });
     after(function() {
       delete userData.url;
       delete userData.meta_audio;
+      delete userData.userid;
     });
     it('Returns data for article: firefox', done => {
       chai

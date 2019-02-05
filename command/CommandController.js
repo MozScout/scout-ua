@@ -421,6 +421,139 @@ router.post('/webpage', VerifyToken, async function(req, res) {
   }
 });
 
+router.post('/webpage', VerifyToken, async function(req, res) {
+  logger.info(`POST /webpage: ${req.body.url} `);
+  logMetric('webpage', req.body.url, req.get('User-Agent'));
+  res.setHeader('Content-Type', 'application/json');
+
+  try {
+    let version = req.body.v ? req.body.v : 1;
+    logger.debug('/webpage version is: ' + version);
+
+    logger.debug(req.body);
+    //Use the Pocket service to get the resolved id.
+    logger.debug('URL is: ' + req.body.url);
+    let article = await getPocketArticleTextFromUrl(req.body.url);
+    // Make sure it's an article
+    if (article && article.isArticle && article.isArticle == 1) {
+      let mData = await getArticleMetadata(article, 1);
+
+      let mobileMetadata = await audioHelper.getMobileFileMetadata(
+        article.resolved_id,
+        req.body.locale
+      );
+      // Do we have the article cached?
+      if (mobileMetadata && mobileMetadata.length > 0) {
+        // We have already processed this article
+        logger.debug(
+          `Found file(s) in the database for ${article.resolved_id}`
+        );
+        let response = await buildPocketResponseFromMetadata(
+          mobileMetadata,
+          version
+        );
+        mData.audio_url = response.url;
+        res.status(200).send(JSON.stringify(mData));
+      } else {
+        let voice = vc.findVoice(article.lang, req.body.locale);
+        if (voice.main && voice.meta) {
+          let articleFile = await createAudioFileFromText(
+            `${article.article}`,
+            voice.main
+          );
+
+          // Extract the publisher's name if available.
+          let publisher =
+            article.domainMetadata && article.domainMetadata.name
+              ? article.domainMetadata.name
+              : article.host;
+
+          let introFile = await createAudioFileFromText(
+            await buildIntro(
+              article.resolvedUrl,
+              article.title,
+              article.lang,
+              article.timePublished,
+              publisher
+            ),
+            voice.meta
+          );
+          let audioMetadata = await buildPocketAudio(
+            introFile,
+            articleFile,
+            article.resolved_id,
+            req.body.locale
+          );
+          // Add the correct voice:
+          audioMetadata['voice'] = voice.main;
+
+          logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
+          await audioHelper.storeMobileLocation(
+            article.resolved_id,
+            article.lang,
+            voice.main,
+            audioMetadata,
+            voice.localeSynthesis
+          );
+
+          // Re-query the metadata for new file info
+          mobileMetadata = await audioHelper.getMobileMetadataForLocale(
+            article.resolved_id,
+            voice.localeSynthesis
+          );
+          logger.debug('mobilemetadata is: ' + mobileMetadata);
+          let response = await buildPocketResponseFromMetadata(
+            mobileMetadata,
+            version
+          );
+          mData.audio_url = response.url;
+
+          // Send it back to the mobile as quick as possible.
+          res.status(200).send(JSON.stringify(mData));
+
+          // Upload the individual parts for use by Alexa later & cleanup.
+          let introUrl = await polly_tts.postProcessPart(introFile);
+          let articleUrl = await polly_tts.postProcessPart(articleFile);
+          await audioHelper.storeIntroLocation(
+            article.resolved_id,
+            introUrl,
+            voice.meta,
+            false,
+            article.lang,
+            voice.localeSynthesis
+          );
+          await audioHelper.storeAudioFileLocation(
+            article.resolved_id,
+            false,
+            voice.main,
+            articleUrl,
+            article.lang,
+            voice.localeSynthesis
+          );
+        } else {
+          logger.error('No language found for article:' + req.body.url);
+          res.status(404).send(
+            JSON.stringify({
+              speech: `There was an error processing the article. No language`
+            })
+          );
+        }
+      }
+    } else {
+      logger.error('Not an article: ' + req.body.url);
+      res.status(404).send(
+        JSON.stringify({
+          speech: `There was an error processing the article. Not an article`
+        })
+      );
+    }
+  } catch (reason) {
+    logger.error('Error in /webpage ' + reason);
+    const errSpeech = `There was an error processing the article. ${reason}`;
+    res.status(404).send(JSON.stringify({ speech: errSpeech }));
+  }
+});
+
 // Request body parameters:
 // url: article url
 // userid
@@ -430,19 +563,56 @@ router.post('/summary', VerifyToken, async function(req, res) {
   logger.info(`POST /summary: ${req.body.url}`);
   logMetric('summary', req.body.userid, req.get('User-Agent'));
 
-  try {
-    res.setHeader('Content-Type', 'application/json');
-    const result = await processArticleRequest(
-      req,
-      true,
-      req.body.extendedData == true || req.body.extended_data == true,
-      req.body.meta_audio == true
-    );
-    res.status(200).send(JSON.stringify(result));
-  } catch (reason) {
-    logger.error('Error in /summary ' + reason);
-    const errSpeech = `There was an error processing the article. ${reason}`;
-    res.status(404).send(JSON.stringify({ speech: errSpeech }));
+  if (req.body.userid) {
+    try {
+      res.setHeader('Content-Type', 'application/json');
+      const result = await processArticleRequest(
+        req,
+        true,
+        req.body.extendedData == true || req.body.extended_data == true,
+        req.body.meta_audio == true
+      );
+      res.status(200).send(JSON.stringify(result));
+    } catch (reason) {
+      logger.error('Error in /summary ' + reason);
+      const errSpeech = `There was an error processing the article. ${reason}`;
+      res.status(404).send(JSON.stringify({ speech: errSpeech }));
+    }
+  } else {
+    let article = await getPocketArticleTextFromUrl(req.body.url);
+    // Make sure it's an article
+    if (article && article.isArticle && article.isArticle == 1) {
+      // Get the author, etc from the Pocket API.
+      let mData = await getArticleMetadata(article, 1);
+      // See if it exists already
+      let audiourl = await audioHelper.getAudioFileLocation(
+        article.resolved_id,
+        true,
+        process.env.POLLY_VOICE
+      );
+
+      if (!audiourl) {
+        // Build the summary audio as it was not found.
+        audiourl = await buildSummaryAudioFromUrl(req.body.url);
+        // Store the file so we find it next time :)
+        await audioHelper.storeAudioFileLocation(
+          article.resolved_id,
+          true,
+          process.env.POLLY_VOICE,
+          audiourl
+        );
+      }
+
+      mData.audio_url = audiourl;
+      res.status(200).send(JSON.stringify(mData));
+    } else {
+      logger.error('Not an article: ' + req.body.article_id);
+      res.status(404).send(
+        JSON.stringify({
+          speech: `There was an error processing the article. Not an article`
+        })
+      );
+    }
   }
 });
 
