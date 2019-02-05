@@ -458,7 +458,7 @@ router.post('/summary', VerifyToken, async function(req, res) {
       logger.debug('polly:' + process.env.POLLY_VOICE);
 
       // See if it exists already
-      let audiourl = audioHelper.getAudioFileLocation(
+      let audiourl = await audioHelper.getAudioFileLocation(
         article.resolved_id,
         true,
         process.env.POLLY_VOICE
