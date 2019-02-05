@@ -462,7 +462,7 @@ router.post('/summary', VerifyToken, async function(req, res) {
         audiourl = await buildSummaryAudioFromUrl(req.body.url);
       }
 
-      mData.audio_url = audioUrl;
+      mData.audio_url = audiourl;
       res.status(200).send(JSON.stringify(mData));
     } else {
       logger.error('Not an article: ' + req.body.article_id);
