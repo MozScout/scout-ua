@@ -429,7 +429,7 @@ router.post('/summary', VerifyToken, async function(req, res) {
   logger.info(`POST /summary: ${req.body.url}`);
   logMetric('summary', req.body.userid, req.get('User-Agent'));
 
-  if (req.body.userId) {
+  if (req.body.userid) {
     try {
       res.setHeader('Content-Type', 'application/json');
       const result = await processArticleRequest(
