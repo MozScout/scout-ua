@@ -759,13 +759,10 @@ async function getArticleMetadata(pocketArticle, extendedData) {
     imageURL: pocketArticle.top_image_url
       ? pocketArticle.top_image_url
       : pocketArticle.topImageUrl,
-    imageURL: pocketArticle.top_image_url
+    image_url: pocketArticle.top_image_url
       ? pocketArticle.top_image_url
       : pocketArticle.topImageUrl
   };
-
-  logger.debug('metafunction: ' + result);
-  logger.debug('metafunction: ' + JSON.stringify(result));
 
   if (extendedData) {
     try {
