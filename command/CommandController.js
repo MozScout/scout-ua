@@ -459,7 +459,7 @@ router.post('/summary', VerifyToken, async function(req, res) {
 
       if (!audiourl) {
         // Build the summary audio as it was not found.
-        audioUrl = await buildSummaryAudioFromUrl(req.body.url);
+        audiourl = await buildSummaryAudioFromUrl(req.body.url);
       }
 
       mData.audio_url = audioUrl;
