@@ -286,6 +286,7 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
     res.status(404).send(JSON.stringify({ speech: errSpeech }));
   }
 });
+
 router.post('/webpage', VerifyToken, async function(req, res) {
   logger.info(`POST /webpage: ${req.body.url} `);
   logMetric('webpage', req.body.url, req.get('User-Agent'));
@@ -302,8 +303,6 @@ router.post('/webpage', VerifyToken, async function(req, res) {
     // Make sure it's an article
     if (article && article.isArticle && article.isArticle == 1) {
       let mData = await getArticleMetadata(article, 1);
-      console.log('METADATA FUNCTION IS: ' + mData);
-      console.log('METADATA FUNCTION IS: ' + JSON.stringify(mData));
 
       let mobileMetadata = await audioHelper.getMobileFileMetadata(
         article.resolved_id,
@@ -430,19 +429,49 @@ router.post('/summary', VerifyToken, async function(req, res) {
   logger.info(`POST /summary: ${req.body.url}`);
   logMetric('summary', req.body.userid, req.get('User-Agent'));
 
-  try {
-    res.setHeader('Content-Type', 'application/json');
-    const result = await processArticleRequest(
-      req,
-      true,
-      req.body.extendedData == true || req.body.extended_data == true,
-      req.body.meta_audio == true
-    );
-    res.status(200).send(JSON.stringify(result));
-  } catch (reason) {
-    logger.error('Error in /summary ' + reason);
-    const errSpeech = `There was an error processing the article. ${reason}`;
-    res.status(404).send(JSON.stringify({ speech: errSpeech }));
+  if (req.body.userId) {
+    try {
+      res.setHeader('Content-Type', 'application/json');
+      const result = await processArticleRequest(
+        req,
+        true,
+        req.body.extendedData == true || req.body.extended_data == true,
+        req.body.meta_audio == true
+      );
+      res.status(200).send(JSON.stringify(result));
+    } catch (reason) {
+      logger.error('Error in /summary ' + reason);
+      const errSpeech = `There was an error processing the article. ${reason}`;
+      res.status(404).send(JSON.stringify({ speech: errSpeech }));
+    }
+  } else {
+    let article = await getPocketArticleTextFromUrl(req.body.url);
+    // Make sure it's an article
+    if (article && article.isArticle && article.isArticle == 1) {
+      // Get the author, etc from the Pocket API.
+      let mData = await getArticleMetadata(article, 1);
+      // See if it exists already
+      let audiourl = audioHelper.getAudioFileLocation(
+        article.resolved_id,
+        1,
+        process.env.POLLY_VOICE
+      );
+
+      if (!audiourl) {
+        // Build the summary audio as it was not found.
+        audioUrl = await buildSummaryAudioFromUrl(req.body.url);
+      }
+
+      mData.audio_url = audioUrl;
+      res.status(200).send(JSON.stringify(mData));
+    } else {
+      logger.error('Not an article: ' + req.body.article_id);
+      res.status(404).send(
+        JSON.stringify({
+          speech: `There was an error processing the article. Not an article`
+        })
+      );
+    }
   }
 });
 
