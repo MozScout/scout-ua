@@ -661,7 +661,7 @@ router.post('/trending', VerifyToken, async function(req, res) {
 
 async function getTopicRecommendations(topic, count) {
   explorePocketOptions.uri = exploreUri + `&query=${topic}&count=${count}`;
-  console.log(explorePocketOptions.uri);
+  // console.log(explorePocketOptions.uri);
   rp(explorePocketOptions).then(function(body) {
     var jsonBody = JSON.parse(body);
     let promiseArray = [];
@@ -683,10 +683,12 @@ async function getTopicRecommendations(topic, count) {
             : '';
         }
 
-        console.log(recItem);
+        // console.log(recItem);
         promiseArray.push(recItem);
       });
     }
+    console.log('promiseArray is:');
+    console.log(promiseArray);
     return promiseArray;
   });
 }
