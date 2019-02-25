@@ -666,6 +666,7 @@ router.post('/trending', VerifyToken, async function(req, res) {
 
 async function getTopicRecommendations(topic, count) {
   explorePocketOptions.uri += `&query=${topic}&count=${count}`;
+  console.log('uri is: ' + explorePocketOptions.uri);
   rp(explorePocketOptions).then(function(body) {
     var jsonBody = JSON.parse(body);
     let promiseArray = [];
