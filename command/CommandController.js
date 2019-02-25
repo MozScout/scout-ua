@@ -60,14 +60,6 @@ const articleOptions = {
   }
 };
 
-/*const pocketRecOptions = {
-  uri:
-    'https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?' +
-    'version=3&consumer_key=' +
-    process.env.POCKET_KEY,
-  method: 'GET'
-};*/
-
 const exploreUri =
   'https://getpocket.com/v3/getExploreFeed?locale_lang=en-US&version=2&' +
   'consumer_key=' +
@@ -675,14 +667,22 @@ async function getTopicRecommendations(topic, count) {
     let promiseArray = [];
     if (jsonBody.status == '1') {
       Object.keys(jsonBody.feed).forEach(key => {
+        let item = jsonBody.feed[key].item;
         let recItem = {
-          id: jsonBody.feed[key].item.resolved_id,
-          image_url: jsonBody.feed[key].item.top_image_url,
-          title: jsonBody.feed[key].item.title,
-          url: jsonBody.feed[key].item.resolved_url,
-          logo: jsonBody.feed[key].item.domain_metadata.logo,
-          domain_name: jsonBody.feed[key].item.domain_metadata.name
+          id: item.resolved_id,
+          image_url: item.top_image_url,
+          title: item.title,
+          url: item.resolved_url
         };
+        if (item.domain_metadata) {
+          recItem['logo'] = item.domain_metadata.logo
+            ? item.domain_metadata.logo
+            : '';
+          recItem['domain_name'] = item.domain_metadata.name
+            ? item.domain_metadata.name
+            : '';
+        }
+
         console.log(recItem);
         promiseArray.push(recItem);
       });
