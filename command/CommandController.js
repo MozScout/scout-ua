@@ -69,7 +69,7 @@ const articleOptions = {
 };*/
 
 const exploreUri =
-  'https://getpocket.com/v3/getExploreFeed?locale_lang=en-US&version=2' +
+  'https://getpocket.com/v3/getExploreFeed?locale_lang=en-US&version=2&' +
   'consumer_key=' +
   process.env.POCKET_KEY;
 const explorePocketOptions = {
