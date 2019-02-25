@@ -656,7 +656,6 @@ router.post('/trending', VerifyToken, async function(req, res) {
         promiseArray.push(recItem);
       });
       res.send(promiseArray);
-      resolve(promiseArray);
     } else {
       throw 'NoSearchMatch';
     }
