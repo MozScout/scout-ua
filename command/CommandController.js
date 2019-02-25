@@ -60,6 +60,14 @@ const articleOptions = {
   }
 };
 
+const pocketRecOptions = {
+  uri:
+    'https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?' +
+    'count=3&version=3&consumer_key=' +
+    process.env.POCKET_KEY,
+  method: 'GET'
+};
+
 const summaryLink =
   'https://api.smmry.com?SM_API_KEY=' + process.env.SM_API_KEY + '&SM_URL=';
 logger.info('SummaryLink Creation is: ' + summaryLink);
@@ -633,6 +641,26 @@ router.get('/search', VerifyToken, async function(req, res) {
     logger.error('Error on /search: ' + err);
     res.sendStatus(404);
   }
+});
+
+router.post('/trending', VerifyToken, async function(req, res) {
+  rp(pocketRecOptions).then(function(body) {
+    var jsonBody = JSON.parse(body);
+    if (jsonBody.status == '1') {
+      let promiseArray = [];
+      Object.keys(jsonBody.recommendations).forEach(key => {
+        let recItem = {
+          id: jsonBody.recommendations[key].url,
+          image_url: jsonBody.recommendations[key].image_src
+        };
+        promiseArray.push(recItem);
+      });
+      res.send(promiseArray);
+      resolve(promiseArray);
+    } else {
+      throw 'NoSearchMatch';
+    }
+  });
 });
 
 function logMetric(cmd, userid, agent) {
