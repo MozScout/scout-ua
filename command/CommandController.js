@@ -68,6 +68,12 @@ const pocketRecOptions = {
   method: 'GET'
 };
 
+const explorePocketOptions = {
+  uri: 'https://getpocket.com/v3/getExploreFeed/?&locale_lang=en-US&version=2' +
+  'consumer_key=' + process.env.POCKET_KEY,
+  method: 'GET'
+};
+
 const summaryLink =
   'https://api.smmry.com?SM_API_KEY=' + process.env.SM_API_KEY + '&SM_URL=';
 logger.info('SummaryLink Creation is: ' + summaryLink);
@@ -644,26 +650,38 @@ router.get('/search', VerifyToken, async function(req, res) {
 });
 
 router.post('/trending', VerifyToken, async function(req, res) {
-  pocketRecOptions.uri += '&count=' + req.body.count;
+  let topicArray = req.body.topic;
+  let resArray = [];
 
-  rp(pocketRecOptions).then(function(body) {
+  topicArray.forEach(topic => {
+    resArray.push(await getTopicRecommendations(topic, req.body.count));
+  });
+
+  res.send(promiseArray);
+});
+
+async function getTopicRecommendations(topic, count) {
+  explorePocketOptions.uri += `&query=${topic}&count=${count}`;
+  rp(explorePocketOptions).then(function(body) {
     var jsonBody = JSON.parse(body);
+    let promiseArray = [];
     if (jsonBody.status == '1') {
-      let promiseArray = [];
-      Object.keys(jsonBody.recommendations).forEach(key => {
+      Object.keys(jsonBody.feed).forEach(key => {
         let recItem = {
-          id: jsonBody.recommendations[key].url,
-          image_url: jsonBody.recommendations[key].image_src,
-          title: jsonBody.recommendations[key].title
+          id: jsonBody.feed[key].item.resolved_id,
+          image_url: jsonBody.feed[key].item.top_image_url,
+          title: jsonBody.feed[key].item.title,
+          url: jsonBody.feed[key].item.resolved_url,
+          logo: jsonBody.feed[key].item.domain_metadata.logo,
+          domain_name: jsonBody.feed[key].item.domain_metadata.name
         };
+        console.log(recItem);
         promiseArray.push(recItem);
       });
-      res.send(promiseArray);
-    } else {
-      res.sendStatus(500);
     }
+    return promiseArray; 
   });
-});
+}
 
 function logMetric(cmd, userid, agent) {
   if (process.env.GA_PROPERTY_ID) {
