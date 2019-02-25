@@ -658,14 +658,14 @@ router.post('/trending', VerifyToken, async function(req, res) {
   for (var i = 0; i < req.body.topic.length; i++) {
     console.log(req.body.topic[i]);
     console.log(req.body.count);
-    /*resArray.push(
+    resArray.push(
       await getTopicRecommendations(req.body.topic[i], req.body.count)
-    );*/
+    );
   }
 
   res.send(resArray);
 });
-/*
+
 async function getTopicRecommendations(topic, count) {
   explorePocketOptions.uri += `&query=${topic}&count=${count}`;
   console.log('uri is: ' + explorePocketOptions.uri);
@@ -688,7 +688,7 @@ async function getTopicRecommendations(topic, count) {
     }
     return promiseArray;
   });
-}*/
+}
 
 function logMetric(cmd, userid, agent) {
   if (process.env.GA_PROPERTY_ID) {
