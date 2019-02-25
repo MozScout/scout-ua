@@ -68,11 +68,12 @@ const articleOptions = {
   method: 'GET'
 };*/
 
+const exploreUri =
+  'https://getpocket.com/v3/getExploreFeed/?&locale_lang=en-US&version=2' +
+  'consumer_key=' +
+  process.env.POCKET_KEY;
 const explorePocketOptions = {
-  uri:
-    'https://getpocket.com/v3/getExploreFeed/?&locale_lang=en-US&version=2' +
-    'consumer_key=' +
-    process.env.POCKET_KEY,
+  uri: '',
   method: 'GET'
 };
 
@@ -667,8 +668,8 @@ router.post('/trending', VerifyToken, async function(req, res) {
 });
 
 async function getTopicRecommendations(topic, count) {
-  explorePocketOptions.uri += `&query=${topic}&count=${count}`;
-  console.log('uri is: ' + explorePocketOptions.uri);
+  explorePocketOptions.uri = exploreUri + `&query=${topic}&count=${count}`;
+  console.log(explorePocketOptions.uri);
   rp(explorePocketOptions).then(function(body) {
     var jsonBody = JSON.parse(body);
     let promiseArray = [];
