@@ -653,13 +653,14 @@ router.post('/trending', VerifyToken, async function(req, res) {
       Object.keys(jsonBody.recommendations).forEach(key => {
         let recItem = {
           id: jsonBody.recommendations[key].url,
-          image_url: jsonBody.recommendations[key].image_src
+          image_url: jsonBody.recommendations[key].image_src,
+          title: jsonBody.recommendations[key].title
         };
         promiseArray.push(recItem);
       });
       res.send(promiseArray);
     } else {
-      throw 'NoSearchMatch';
+      res.sendStatus(500);
     }
   });
 });
