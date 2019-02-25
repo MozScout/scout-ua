@@ -661,7 +661,7 @@ router.post('/trending', VerifyToken, async function(req, res) {
     );
   }
 
-  res.send(promiseArray);
+  res.send(resArray);
 });
 
 async function getTopicRecommendations(topic, count) {
