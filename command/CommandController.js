@@ -665,7 +665,7 @@ router.post('/trending', VerifyToken, async function(req, res) {
 
   res.send(resArray);
 });
-
+/*
 async function getTopicRecommendations(topic, count) {
   explorePocketOptions.uri += `&query=${topic}&count=${count}`;
   console.log('uri is: ' + explorePocketOptions.uri);
@@ -688,7 +688,7 @@ async function getTopicRecommendations(topic, count) {
     }
     return promiseArray;
   });
-}
+}*/
 
 function logMetric(cmd, userid, agent) {
   if (process.env.GA_PROPERTY_ID) {
