@@ -63,7 +63,7 @@ const articleOptions = {
 const pocketRecOptions = {
   uri:
     'https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?' +
-    'count=3&version=3&consumer_key=' +
+    'version=3&consumer_key=' +
     process.env.POCKET_KEY,
   method: 'GET'
 };
@@ -644,6 +644,8 @@ router.get('/search', VerifyToken, async function(req, res) {
 });
 
 router.post('/trending', VerifyToken, async function(req, res) {
+  pocketRecOptions.uri += '&count=' + req.body.count;
+
   rp(pocketRecOptions).then(function(body) {
     var jsonBody = JSON.parse(body);
     if (jsonBody.status == '1') {
