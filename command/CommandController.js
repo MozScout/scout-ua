@@ -60,13 +60,13 @@ const articleOptions = {
   }
 };
 
-const pocketRecOptions = {
+/*const pocketRecOptions = {
   uri:
     'https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?' +
     'version=3&consumer_key=' +
     process.env.POCKET_KEY,
   method: 'GET'
-};
+};*/
 
 const explorePocketOptions = {
   uri:
@@ -655,7 +655,7 @@ router.post('/trending', VerifyToken, async function(req, res) {
   let topicArray = req.body.topic;
   let resArray = [];
   console.log('topic array is: ' + topicArray);
-  for (i = 0; i < req.body.topic.length; i++) {
+  for (var i = 0; i < req.body.topic.length; i++) {
     console.log(req.body.topic[i]);
     console.log(req.body.count);
     /*resArray.push(
