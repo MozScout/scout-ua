@@ -69,8 +69,10 @@ const pocketRecOptions = {
 };
 
 const explorePocketOptions = {
-  uri: 'https://getpocket.com/v3/getExploreFeed/?&locale_lang=en-US&version=2' +
-  'consumer_key=' + process.env.POCKET_KEY,
+  uri:
+    'https://getpocket.com/v3/getExploreFeed/?&locale_lang=en-US&version=2' +
+    'consumer_key=' +
+    process.env.POCKET_KEY,
   method: 'GET'
 };
 
@@ -653,9 +655,11 @@ router.post('/trending', VerifyToken, async function(req, res) {
   let topicArray = req.body.topic;
   let resArray = [];
 
-  topicArray.forEach(topic => {
-    resArray.push(await getTopicRecommendations(topic, req.body.count));
-  });
+  for (i = 0; i < req.body.topic.length; i++) {
+    resArray.push(
+      await getTopicRecommendations(req.body.topic[i], req.body.count)
+    );
+  }
 
   res.send(promiseArray);
 });
@@ -679,7 +683,7 @@ async function getTopicRecommendations(topic, count) {
         promiseArray.push(recItem);
       });
     }
-    return promiseArray; 
+    return promiseArray;
   });
 }
 
