@@ -648,7 +648,6 @@ router.post('/trending', VerifyToken, async function(req, res) {
   let topicArray = req.body.topic;
   let resArray = [];
   console.log('topic array is: ' + topicArray);
-  let articlesPromises = [];
   for (var i = 0; i < req.body.topic.length; i++) {
     let jsonRes = await getTopicRecommendations(
       req.body.topic[i],
