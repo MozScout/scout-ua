@@ -648,49 +648,50 @@ router.post('/trending', VerifyToken, async function(req, res) {
   let topicArray = req.body.topic;
   let resArray = [];
   console.log('topic array is: ' + topicArray);
+  let articlesPromises = [];
   for (var i = 0; i < req.body.topic.length; i++) {
-    console.log(req.body.topic[i]);
-    console.log(req.body.count);
-    let resJson = await getTopicRecommendations(
+    let jsonRes = await getTopicRecommendations(
       req.body.topic[i],
       req.body.count
     );
     console.log(resJson);
-    resArray.concat(resJson);
   }
+  //  resArray.concat(resJson);
 
   res.send(resArray);
 });
 
 async function getTopicRecommendations(topic, count) {
-  explorePocketOptions.uri = exploreUri + `&query=${topic}&count=${count}`;
-  // console.log(explorePocketOptions.uri);
-  rp(explorePocketOptions).then(function(body) {
-    var jsonBody = JSON.parse(body);
-    let promiseArray = [];
-    if (jsonBody.status == '1') {
-      Object.keys(jsonBody.feed).forEach(key => {
-        let item = jsonBody.feed[key].item;
-        let recItem = {
-          id: item.resolved_id,
-          image_url: item.top_image_url,
-          title: item.title,
-          url: item.resolved_url
-        };
-        if (item.domain_metadata) {
-          recItem['logo'] = item.domain_metadata.logo
-            ? item.domain_metadata.logo
-            : '';
-          recItem['domain_name'] = item.domain_metadata.name
-            ? item.domain_metadata.name
-            : '';
-        }
+  return new Promise(resolve => {
+    explorePocketOptions.uri = exploreUri + `&query=${topic}&count=${count}`;
+    // console.log(explorePocketOptions.uri);
+    rp(explorePocketOptions).then(function(body) {
+      var jsonBody = JSON.parse(body);
+      let promiseArray = [];
+      if (jsonBody.status == '1') {
+        Object.keys(jsonBody.feed).forEach(key => {
+          let item = jsonBody.feed[key].item;
+          let recItem = {
+            id: item.resolved_id,
+            image_url: item.top_image_url,
+            title: item.title,
+            url: item.resolved_url
+          };
+          if (item.domain_metadata) {
+            recItem['logo'] = item.domain_metadata.logo
+              ? item.domain_metadata.logo
+              : '';
+            recItem['domain_name'] = item.domain_metadata.name
+              ? item.domain_metadata.name
+              : '';
+          }
 
-        // console.log(recItem);
-        promiseArray.push(recItem);
-      });
-      return Promise.resolve(promiseArray);
-    }
+          // console.log(recItem);
+          promiseArray.push(recItem);
+        });
+        resolve(promiseArray);
+      }
+    });
   });
 }
 
