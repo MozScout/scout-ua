@@ -645,7 +645,6 @@ router.get('/search', VerifyToken, async function(req, res) {
 });
 
 router.post('/trending', VerifyToken, async function(req, res) {
-  let topicArray = req.body.topic;
   let resArray = [];
   for (var i = 0; i < req.body.topic.length; i++) {
     let jsonRes = await getTopicRecommendations(
