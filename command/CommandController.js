@@ -689,7 +689,7 @@ async function getTopicRecommendations(topic, count) {
         // console.log(recItem);
         promiseArray.push(recItem);
       });
-      return promiseArray;
+      return Promise.resolve(promiseArray);
     }
   });
 }
