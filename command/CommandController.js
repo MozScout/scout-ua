@@ -647,24 +647,20 @@ router.get('/search', VerifyToken, async function(req, res) {
 router.post('/trending', VerifyToken, async function(req, res) {
   let topicArray = req.body.topic;
   let resArray = [];
-  console.log('topic array is: ' + topicArray);
   for (var i = 0; i < req.body.topic.length; i++) {
     let jsonRes = await getTopicRecommendations(
       req.body.topic[i],
       req.body.count
     );
-    //console.log(jsonRes);
     resArray = resArray.concat(jsonRes);
   }
 
-  console.log(resArray);
   res.send(resArray);
 });
 
 async function getTopicRecommendations(topic, count) {
   return new Promise(resolve => {
     explorePocketOptions.uri = exploreUri + `&query=${topic}&count=${count}`;
-    // console.log(explorePocketOptions.uri);
     rp(explorePocketOptions).then(function(body) {
       var jsonBody = JSON.parse(body);
       let promiseArray = [];
@@ -686,7 +682,6 @@ async function getTopicRecommendations(topic, count) {
               : '';
           }
 
-          // console.log(recItem);
           promiseArray.push(recItem);
         });
         resolve(promiseArray);
