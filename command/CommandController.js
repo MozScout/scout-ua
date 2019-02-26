@@ -654,7 +654,7 @@ router.post('/trending', VerifyToken, async function(req, res) {
       req.body.topic[i],
       req.body.count
     );
-    console.log(resJson);
+    console.log(jsonRes);
   }
   //  resArray.concat(resJson);
 
