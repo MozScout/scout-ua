@@ -670,7 +670,10 @@ async function getTopicRecommendations(topic, count) {
             id: item.resolved_id,
             image_url: item.top_image_url,
             title: item.title,
-            url: item.resolved_url
+            url: item.resolved_url,
+            duration: item.word_count
+              ? Math.floor(parseInt(item.word_count, 10) / 155)
+              : 0
           };
           if (item.domain_metadata) {
             recItem['logo'] = item.domain_metadata.logo
