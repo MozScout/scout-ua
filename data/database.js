@@ -84,13 +84,17 @@ class Database {
     });
   }
 
-  async getMobileMetadataForLocale(articleId, locale) {
+  async getMobileMetadataForLocale(
+    articleId,
+    locale,
+    type = constants.strings.TYPE_MOBILE
+  ) {
     logger.info(`getMobileMetadata for ${articleId} and locale ${locale}`);
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
         .filter(constants.strings.TYPE_FIELD)
-        .eq(constants.strings.TYPE_MOBILE)
+        .eq(type)
         .filter(constants.strings.LOCALE_FIELD)
         .eq(locale)
         .exec()
@@ -103,13 +107,13 @@ class Database {
     });
   }
 
-  async getMobileMetadata(articleId) {
+  async getMobileMetadata(articleId, type = constants.strings.TYPE_MOBILE) {
     logger.info(`getMobileMetadata for ${articleId}`);
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)
         .filter(constants.strings.TYPE_FIELD)
-        .eq(constants.strings.TYPE_MOBILE)
+        .eq(type)
         .exec()
         .then(function(data) {
           resolve(data);

@@ -26,14 +26,22 @@ class CommandHelper {
     return fileUrl;
   }
 
-  async getMobileMetadataForLocale(articleId, locale) {
-    let mmd = await database.getMobileMetadataForLocale(articleId, locale);
+  async getMobileMetadataForLocale(articleId, locale, type) {
+    let mmd = await database.getMobileMetadataForLocale(
+      articleId,
+      locale,
+      type
+    );
     return mmd;
   }
-  async getMobileFileMetadata(articleId, locale) {
+  async getMobileFileMetadata(articleId, locale, summary) {
     // first get the language of this article
     let result = {};
     let lang = await database.getMobileLang(articleId);
+    let type =
+      summary && summary == 1
+        ? constants.strings.TYPE_SUMMARY
+        : constants.strings.TYPE_MOBILE;
     if (lang) {
       logger.debug('lang is ' + lang);
       // We might have it in their locale
@@ -43,11 +51,12 @@ class CommandHelper {
         logger.debug('We support local specific:  ' + voice.localeSynthesis);
         result = await database.getMobileMetadataForLocale(
           articleId,
-          voice.localeSynthesis
+          voice.localeSynthesis,
+          type
         );
       } else {
         logger.debug('Not local specific:  ' + voice.localeSynthesis);
-        result = await database.getMobileMetadata(articleId);
+        result = await database.getMobileMetadata(articleId, type);
       }
     } else {
       logger.debug('no lang in database for this article');
