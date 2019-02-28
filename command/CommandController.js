@@ -582,7 +582,12 @@ function logMetric(cmd, userid, agent) {
   }
 }
 
-async function summaryOnly(req, summaryOnly, extendedData, metaAudioRequested) {
+async function processArticleRequest(
+  req,
+  summaryOnly,
+  extendedData,
+  metaAudioRequested
+) {
   const getBody = await buildPocketRequestBody(req.body.userid);
   let result = await searchForPocketArticleByUrl(
     getBody,
