@@ -1,5 +1,6 @@
 const natural = require('natural');
 const texttools = require('./texttools');
+const logger = require('../logger');
 
 const ignore = ['she', 'he', 'not', 'don'];
 
@@ -8,18 +9,24 @@ var summary = {
   getSummary: function(fullText) {
     //Clean the text
     let text = texttools.cleanText(fullText);
+    logger.debug('Cleaned the text');
     //Stem the words
     let stemmedText = summary.stem(text);
+    logger.debug('stemmed');
     summary.countOcurrence(stemmedText);
+    logger.debug('countOcurrence');
     // Sort them by most frequent.
     curMap[Symbol.iterator] = function*() {
       yield* [...this.entries()].sort((a, b) => b[1] - a[1]);
     };
+    logger.debug('sorted');
 
     let scoreMap = summary.getScoreMap();
+    logger.debug('getScoreMap');
 
     let tokenizer = new natural.SentenceTokenizer();
     let sentTok = tokenizer.tokenize(text);
+    logger.debug('tokenize');
     let stemSent = new Array();
     for (var i = 0; i < sentTok.length; i++) {
       stemSent.push(summary.stem(sentTok[i]));
@@ -39,6 +46,7 @@ var summary = {
       }
       scoreArr[k] = sentTotal;
     }
+    logger.debug('scored');
 
     //Now sort by the indices so the most popular sentences are first
     //but we don't lose the index of it into original array.
