@@ -89,7 +89,9 @@ class Database {
     locale,
     type = constants.strings.TYPE_MOBILE
   ) {
-    logger.info(`getMobileMetadata for ${articleId} and locale ${locale}`);
+    logger.info(
+      `getMobileMetadata for ${articleId} and locale ${locale} and type ${type}`
+    );
     return new Promise(resolve => {
       AudioFiles.query('item_id')
         .eq(articleId)

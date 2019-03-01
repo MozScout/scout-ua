@@ -42,6 +42,7 @@ class CommandHelper {
       summary && summary == 1
         ? constants.strings.TYPE_SUMMARY
         : constants.strings.TYPE_MOBILE;
+    console.log('Type is: ' + type);
     if (lang) {
       logger.debug('lang is ' + lang);
       // We might have it in their locale
@@ -161,12 +162,19 @@ class CommandHelper {
    * Mobile file has the stitched intro and the body of the
    * file.
    */
-  async storeMobileLocation(articleId, lang, voice, audioMetadata, locale) {
+  async storeMobileLocation(
+    articleId,
+    lang,
+    voice,
+    audioMetadata,
+    locale,
+    type = constants.strings.TYPE_MOBILE
+  ) {
     const { url, size, duration } = audioMetadata;
     await database.storeAudioFileLocation(
       articleId,
       url,
-      constants.strings.TYPE_MOBILE,
+      type,
       voice,
       lang,
       locale,

@@ -379,7 +379,10 @@ router.post('/webpage', VerifyToken, async function(req, res) {
             article.lang,
             voice.main,
             audioMetadata,
-            voice.localeSynthesis
+            voice.localeSynthesis,
+            summ == 1
+              ? constants.strings.TYPE_SUMMARY
+              : constants.strings.TYPE_MOBILE
           );
 
           // Re-query the metadata for new file info
