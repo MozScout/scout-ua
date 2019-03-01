@@ -335,6 +335,7 @@ router.post('/webpage', VerifyToken, async function(req, res) {
         mData.audio_url = response.url;
         res.status(200).send(JSON.stringify(mData));
       } else {
+        logger.debug('This article is not cached');
         let voice = vc.findVoice(article.lang, req.body.locale);
         if (voice.main && voice.meta) {
           // Need to build the summary here.
@@ -389,7 +390,10 @@ router.post('/webpage', VerifyToken, async function(req, res) {
           // Re-query the metadata for new file info
           mobileMetadata = await audioHelper.getMobileMetadataForLocale(
             article.resolved_id,
-            voice.localeSynthesis
+            voice.localeSynthesis,
+            summ == 1
+              ? constants.strings.TYPE_SUMMARY
+              : constants.strings.TYPE_MOBILE
           );
           logger.debug('mobilemetadata is: ' + mobileMetadata);
           let response = await buildPocketResponseFromMetadata(
