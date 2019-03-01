@@ -42,7 +42,7 @@ var summary = {
 
     //Now sort by the indices so the most popular sentences are first
     //but we don't lose the index of it into original array.
-    let sortedIndexes = stem.sortWithIndices(scoreArr, 8);
+    let sortedIndexes = summary.sortWithIndices(scoreArr, 8);
     sortedIndexes.sort(function(a, b) {
       return a - b;
     });
