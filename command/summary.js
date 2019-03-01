@@ -22,7 +22,7 @@ var summary = {
     let sentTok = tokenizer.tokenize(text);
     let stemSent = new Array();
     for (var i = 0; i < sentTok.length; i++) {
-      stemSent.push(stem(sentTok[i]));
+      stemSent.push(summary.stem(sentTok[i]));
     }
 
     let scoreArr = new Array();
@@ -42,14 +42,14 @@ var summary = {
 
     //Now sort by the indices so the most popular sentences are first
     //but we don't lose the index of it into original array.
-    let sortedIndexes = sortWithIndices(scoreArr, 8);
+    let sortedIndexes = stem.sortWithIndices(scoreArr, 8);
     sortedIndexes.sort(function(a, b) {
       return a - b;
     });
 
     let summaryText = '';
-    for (var i = 0; i < sortedIndexes.length; i++) {
-      summaryText = summaryText.concat(sentTok[sortedIndexes[i]] + '  ');
+    for (var p = 0; p < sortedIndexes.length; p++) {
+      summaryText = summaryText.concat(sentTok[sortedIndexes[p]] + '  ');
     }
     console.log('Final summary: ' + summaryText);
     return summaryText;
