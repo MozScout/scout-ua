@@ -1,6 +1,5 @@
 const natural = require('natural');
 const texttools = require('./texttools');
-const logger = require('../logger');
 
 const ignore = ['she', 'he', 'not', 'don'];
 
