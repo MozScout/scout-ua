@@ -5,10 +5,12 @@ const ignore = ['she', 'he', 'not', 'don'];
 
 var curMap = new Map();
 var summary = {
-  getSummary: function(text) {
+  getSummary: function(fullText) {
+    //Clean the text
+    let text = texttools.cleanText(fullText);
     //Stem the words
     let stemmedText = summary.stem(text);
-    countOcurrence(stemmedText);
+    summary.countOcurrence(stemmedText);
     // Sort them by most frequent.
     curMap[Symbol.iterator] = function*() {
       yield* [...this.entries()].sort((a, b) => b[1] - a[1]);
@@ -16,7 +18,7 @@ var summary = {
 
     let scoreMap = summary.getScoreMap();
 
-    tokenizer = new natural.SentenceTokenizer();
+    let tokenizer = new natural.SentenceTokenizer();
     let sentTok = tokenizer.tokenize(text);
     let stemSent = new Array();
     for (var i = 0; i < sentTok.length; i++) {
