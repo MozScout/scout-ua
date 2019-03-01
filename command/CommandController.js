@@ -5,7 +5,7 @@ const rp = require('request-promise');
 const VerifyToken = require('../VerifyToken');
 const texttools = require('./texttools');
 const polly_tts = require('./polly_tts');
-const summary = require('./summary');
+const sumObj = require('./summary');
 const AudioFileHelper = require('./AudioFileHelper');
 const audioHelper = new AudioFileHelper();
 const Database = require('../data/database');
@@ -338,8 +338,10 @@ router.post('/webpage', VerifyToken, async function(req, res) {
         if (voice.main && voice.meta) {
           // Need to build the summary here.
           let textToSynth = `${article.article}`;
+          console.log(textToSynth);
           if (summ) {
-            textToSynth = summary.getSummary();
+            logger.debug('Calling summary');
+            textToSynth = sumObj.getSummary();
           }
 
           let articleFile = await createAudioFileFromText(
