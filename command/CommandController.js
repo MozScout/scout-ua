@@ -338,10 +338,9 @@ router.post('/webpage', VerifyToken, async function(req, res) {
         if (voice.main && voice.meta) {
           // Need to build the summary here.
           let textToSynth = `${article.article}`;
-          console.log(textToSynth);
           if (summ) {
             logger.debug('Calling summary');
-            textToSynth = sumObj.getSummary();
+            textToSynth = sumObj.getSummary(textToSynth);
           }
 
           let articleFile = await createAudioFileFromText(
