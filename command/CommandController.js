@@ -14,6 +14,7 @@ const astatHelper = new ArticleStatusHelper();
 const ua = require('universal-analytics');
 const logger = require('../logger');
 const vc = require('./voiceChoice');
+const constants = require('../constants');
 
 const router = express.Router();
 const database = new Database();
