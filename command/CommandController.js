@@ -306,7 +306,7 @@ router.post('/webpage', VerifyToken, async function(req, res) {
   logger.debug('summary is: ' + summ);
 
   try {
-    let version = req.body.v ? req.body.v : 1;
+    let version = 1;
     logger.debug('/webpage version is: ' + version);
 
     logger.debug(req.body);
