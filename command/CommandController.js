@@ -316,7 +316,7 @@ router.post('/webpage', VerifyToken, async function(req, res) {
     // Make sure it's an article
     if (article && article.isArticle && article.isArticle == 1) {
       let mData = await getArticleMetadata(article, 1);
-      logger.debug('Article metadata is: ' + mData);
+      logger.debug('Article metadata is: ' + JSON.stringify(mData));
 
       let mobileMetadata = await audioHelper.getMobileFileMetadata(
         article.resolved_id,
