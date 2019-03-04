@@ -334,7 +334,11 @@ router.post('/webpage', VerifyToken, async function(req, res) {
           mobileMetadata,
           version
         );
-        mData.audio_url = response.url;
+        mData['audioUrl'] = response.url;
+        delete mData.length_minutes;
+        delete mData.image_url;
+        mData['iconUrl'] = mData.icon_url;
+        delete mData.icon_url;
         logger.debug('Before response: ' + JSON.stringify(mData));
         res.status(200).send(JSON.stringify(mData));
       } else {
@@ -403,7 +407,11 @@ router.post('/webpage', VerifyToken, async function(req, res) {
             mobileMetadata,
             version
           );
-          mData.audio_url = response.url;
+          mData['audioUrl'] = response.url;
+          delete mData.length_minutes;
+          delete mData.image_url;
+          mData['iconUrl'] = mData.icon_url;
+          delete mData.icon_url;
           console.log('mData is: ' + mData);
 
           // Send it back to the mobile as quick as possible.
