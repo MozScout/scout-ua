@@ -323,7 +323,7 @@ router.post('/webpage', VerifyToken, async function(req, res) {
         req.body.locale,
         summ
       );
-      logger.debug('Mobile metadata is: ' + JSON.parse(mobileMetadata));
+      logger.debug('Mobile metadata is: ' + JSON.stringify(mobileMetadata));
       // Do we have the article cached?
       if (mobileMetadata && mobileMetadata.length > 0) {
         // We have already processed this article
@@ -335,7 +335,7 @@ router.post('/webpage', VerifyToken, async function(req, res) {
           version
         );
         mData.audio_url = response.url;
-        logger.debug('Before response: ' + JSON.parse(mData));
+        logger.debug('Before response: ' + JSON.stringify(mData));
         res.status(200).send(JSON.stringify(mData));
       } else {
         logger.debug('This article is not cached');
