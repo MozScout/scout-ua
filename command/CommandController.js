@@ -316,12 +316,14 @@ router.post('/webpage', VerifyToken, async function(req, res) {
     // Make sure it's an article
     if (article && article.isArticle && article.isArticle == 1) {
       let mData = await getArticleMetadata(article, 1);
+      logger.debug('Article metadata is: ' + mData);
 
       let mobileMetadata = await audioHelper.getMobileFileMetadata(
         article.resolved_id,
         req.body.locale,
         summ
       );
+      logger.debug('Mobile metadata is: ' + mobileMetadata);
       // Do we have the article cached?
       if (mobileMetadata && mobileMetadata.length > 0) {
         // We have already processed this article
@@ -333,6 +335,7 @@ router.post('/webpage', VerifyToken, async function(req, res) {
           version
         );
         mData.audio_url = response.url;
+        logger.debug('Before response: ' + mData);
         res.status(200).send(JSON.stringify(mData));
       } else {
         logger.debug('This article is not cached');
