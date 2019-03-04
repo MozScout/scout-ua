@@ -316,14 +316,12 @@ router.post('/webpage', VerifyToken, async function(req, res) {
     // Make sure it's an article
     if (article && article.isArticle && article.isArticle == 1) {
       let mData = await getArticleMetadata(article, 1);
-      logger.debug('Article metadata is: ' + JSON.stringify(mData));
 
       let mobileMetadata = await audioHelper.getMobileFileMetadata(
         article.resolved_id,
         req.body.locale,
         summ
       );
-      logger.debug('Mobile metadata is: ' + JSON.stringify(mobileMetadata));
       // Do we have the article cached?
       if (mobileMetadata && mobileMetadata.length > 0) {
         // We have already processed this article
@@ -334,12 +332,14 @@ router.post('/webpage', VerifyToken, async function(req, res) {
           mobileMetadata,
           version
         );
+        // Cleanup the old snake_case... TODO:  SEE IF WE CAN REMOVE
+        // WITHOUT AFFECTING ALEXA.
         mData['audioUrl'] = response.url;
         delete mData.length_minutes;
         delete mData.image_url;
         mData['iconUrl'] = mData.icon_url;
         delete mData.icon_url;
-        logger.debug('Before response: ' + JSON.stringify(mData));
+
         res.status(200).send(JSON.stringify(mData));
       } else {
         logger.debug('This article is not cached');
@@ -382,7 +382,6 @@ router.post('/webpage', VerifyToken, async function(req, res) {
           // Add the correct voice:
           audioMetadata['voice'] = voice.main;
 
-          logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
           await audioHelper.storeMobileLocation(
             article.resolved_id,
             article.lang,
@@ -402,17 +401,17 @@ router.post('/webpage', VerifyToken, async function(req, res) {
               ? constants.strings.TYPE_SUMMARY
               : constants.strings.TYPE_MOBILE
           );
-          logger.debug('mobilemetadata is: ' + mobileMetadata);
           let response = await buildPocketResponseFromMetadata(
             mobileMetadata,
             version
           );
+          // Cleanup the old snake_case... TODO:  SEE IF WE CAN REMOVE
+          // WITHOUT AFFECTING ALEXA.
           mData['audioUrl'] = response.url;
           delete mData.length_minutes;
           delete mData.image_url;
           mData['iconUrl'] = mData.icon_url;
           delete mData.icon_url;
-          console.log('mData is: ' + mData);
 
           // Send it back to the mobile as quick as possible.
           res.status(200).send(JSON.stringify(mData));
