@@ -306,7 +306,7 @@ router.post('/webpage', VerifyToken, async function(req, res) {
   logger.debug('summary is: ' + summ);
 
   try {
-    let version = req.body.v ? req.body.v : 1;
+    let version = 1;
     logger.debug('/webpage version is: ' + version);
 
     logger.debug(req.body);
@@ -332,7 +332,14 @@ router.post('/webpage', VerifyToken, async function(req, res) {
           mobileMetadata,
           version
         );
-        mData.audio_url = response.url;
+        // Cleanup the old snake_case... TODO:  SEE IF WE CAN REMOVE
+        // WITHOUT AFFECTING ALEXA.
+        mData['audioUrl'] = response.url;
+        delete mData.length_minutes;
+        delete mData.image_url;
+        mData['iconUrl'] = mData.icon_url;
+        delete mData.icon_url;
+
         res.status(200).send(JSON.stringify(mData));
       } else {
         logger.debug('This article is not cached');
@@ -375,7 +382,6 @@ router.post('/webpage', VerifyToken, async function(req, res) {
           // Add the correct voice:
           audioMetadata['voice'] = voice.main;
 
-          logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
           await audioHelper.storeMobileLocation(
             article.resolved_id,
             article.lang,
@@ -395,12 +401,17 @@ router.post('/webpage', VerifyToken, async function(req, res) {
               ? constants.strings.TYPE_SUMMARY
               : constants.strings.TYPE_MOBILE
           );
-          logger.debug('mobilemetadata is: ' + mobileMetadata);
           let response = await buildPocketResponseFromMetadata(
             mobileMetadata,
             version
           );
-          mData.audio_url = response.url;
+          // Cleanup the old snake_case... TODO:  SEE IF WE CAN REMOVE
+          // WITHOUT AFFECTING ALEXA.
+          mData['audioUrl'] = response.url;
+          delete mData.length_minutes;
+          delete mData.image_url;
+          mData['iconUrl'] = mData.icon_url;
+          delete mData.icon_url;
 
           // Send it back to the mobile as quick as possible.
           res.status(200).send(JSON.stringify(mData));
