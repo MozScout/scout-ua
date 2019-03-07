@@ -549,12 +549,14 @@ router.post('/trending', VerifyToken, async function(req, res) {
     );
     resArray = resArray.concat(jsonRes);
   }
-
+  logger.debug(resArray);
+  logger.debug(JSON.stringify(resArray));
   res.send(resArray);
 });
 
 async function getTopicRecommendations(topic, count) {
   return new Promise(resolve => {
+    logger.debug('Topic is: ' + topic);
     explorePocketOptions.uri = exploreUri + `&query=${topic}&count=${count}`;
     rp(explorePocketOptions).then(function(body) {
       var jsonBody = JSON.parse(body);
@@ -579,7 +581,8 @@ async function getTopicRecommendations(topic, count) {
               ? item.domain_metadata.name
               : '';
           }
-
+          logger.debug(recItem);
+          logger.debug(JSON.stringify(recItem));
           promiseArray.push(recItem);
         });
         resolve(promiseArray);
