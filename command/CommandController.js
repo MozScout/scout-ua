@@ -71,6 +71,14 @@ const explorePocketOptions = {
   method: 'GET'
 };
 
+const pocketRecOptions = {
+  uri:
+    'https://getpocket.cdn.mozilla.net/v3/firefox/global-recs?' +
+    'version=3&consumer_key=' +
+    process.env.POCKET_KEY,
+  method: 'GET'
+};
+
 const summaryLink =
   'https://api.smmry.com?SM_API_KEY=' + process.env.SM_API_KEY + '&SM_URL=';
 logger.info('SummaryLink Creation is: ' + summaryLink);
@@ -542,16 +550,46 @@ router.get('/search', VerifyToken, async function(req, res) {
 
 router.post('/trending', VerifyToken, async function(req, res) {
   let resArray = [];
-  for (var i = 0; i < req.body.topic.length; i++) {
-    let jsonRes = await getTopicRecommendations(
-      req.body.topic[i],
-      req.body.count
-    );
+  if (req.body.topic && req.body.topic.length > 0) {
+    for (var i = 0; i < req.body.topic.length; i++) {
+      let jsonRes = await getTopicRecommendations(
+        req.body.topic[i],
+        req.body.count
+      );
+      resArray = resArray.concat(jsonRes);
+    }
+  } else {
+    let jsonRes = await getTrendingPocket(req.body.count);
     resArray = resArray.concat(jsonRes);
   }
-
   res.send(resArray);
 });
+
+async function getTrendingPocket(count) {
+  return new Promise(resolve => {
+    pocketRecOptions.uri = pocketRecOptions.uri + `&count=${count}`;
+    rp(pocketRecOptions).then(function(body) {
+      var jsonBody = JSON.parse(body);
+      let promiseArray = [];
+      if (jsonBody.status == '1') {
+        Object.keys(jsonBody.recommendations).forEach(key => {
+          let item = jsonBody.recommendations[key];
+          let recItem = {
+            image_url: item.image_src,
+            title: item.title,
+            url: item.url
+          };
+          if (item.domain) {
+            recItem['domain'] = item.domain;
+          }
+
+          promiseArray.push(recItem);
+        });
+        resolve(promiseArray);
+      }
+    });
+  });
+}
 
 async function getTopicRecommendations(topic, count) {
   return new Promise(resolve => {
@@ -579,7 +617,6 @@ async function getTopicRecommendations(topic, count) {
               ? item.domain_metadata.name
               : '';
           }
-
           promiseArray.push(recItem);
         });
         resolve(promiseArray);
