@@ -551,9 +551,7 @@ router.get('/search', VerifyToken, async function(req, res) {
 router.post('/trending', VerifyToken, async function(req, res) {
   let resArray = [];
   if (req.body.topic && req.body.topic.length > 0) {
-    logger.debug('Topic is greater than 0');
     for (var i = 0; i < req.body.topic.length; i++) {
-      logger.debug('topic is: ' + req.body.topic[i]);
       let jsonRes = await getTopicRecommendations(
         req.body.topic[i],
         req.body.count
@@ -570,7 +568,6 @@ router.post('/trending', VerifyToken, async function(req, res) {
 async function getTrendingPocket(count) {
   return new Promise(resolve => {
     pocketRecOptions.uri = pocketRecOptions.uri + `&count=${count}`;
-    logger.debug('uri is: ' + pocketRecOptions.uri);
     rp(pocketRecOptions).then(function(body) {
       var jsonBody = JSON.parse(body);
       let promiseArray = [];
@@ -597,7 +594,6 @@ async function getTrendingPocket(count) {
 async function getTopicRecommendations(topic, count) {
   return new Promise(resolve => {
     explorePocketOptions.uri = exploreUri + `&query=${topic}&count=${count}`;
-    logger.debug('uri is: ' + explorePocketOptions.uri);
     rp(explorePocketOptions).then(function(body) {
       var jsonBody = JSON.parse(body);
       let promiseArray = [];
