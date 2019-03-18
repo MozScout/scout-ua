@@ -416,7 +416,9 @@ router.post('/webpage', VerifyToken, async function(req, res) {
           // Cleanup the old snake_case... TODO:  SEE IF WE CAN REMOVE
           // WITHOUT AFFECTING ALEXA.
           mData['audioUrl'] = response.url;
-          mData['summaryText'] = textToSynth;
+          if (summ == 1) {
+            mData['summaryText'] = textToSynth;
+          }
           delete mData.length_minutes;
           delete mData.image_url;
           mData['iconUrl'] = mData.icon_url;
