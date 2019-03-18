@@ -347,6 +347,10 @@ router.post('/webpage', VerifyToken, async function(req, res) {
         delete mData.image_url;
         mData['iconUrl'] = mData.icon_url;
         delete mData.icon_url;
+        if (summ == 1) {
+          let textToSynth = sumObj.getSummary(article.article);
+          mData['summaryText'] = textToSynth;
+        }
 
         res.status(200).send(JSON.stringify(mData));
       } else {
