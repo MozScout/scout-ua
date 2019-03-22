@@ -474,6 +474,40 @@ router.post('/webpage', VerifyToken, async function(req, res) {
   }
 });
 
+router.post('/summaryText', VerifyToken, async function(req, res) {
+  logger.info(`POST /summaryText: ${req.body.url} `);
+  logMetric('summaryText', req.body.url, req.get('User-Agent'));
+  res.setHeader('Content-Type', 'application/json');
+
+  try {
+    logger.debug(req.body);
+    //Use the Pocket service to get the resolved id.
+    logger.debug('URL is: ' + req.body.url);
+    let article = await getPocketArticleTextFromUrl(req.body.url);
+    // Make sure it's an article
+    if (article && article.isArticle && article.isArticle == 1) {
+      let mData = await getArticleMetadata(article, 1);
+      mData['iconUrl'] = mData.icon_url;
+      delete mData.icon_url;
+      let textToSynth = sumObj.getSummary(article.article);
+      mData['summaryText'] = textToSynth;
+
+      res.status(200).send(JSON.stringify(mData));
+    } else {
+      logger.error('Not an article: ' + req.body.url);
+      res.status(404).send(
+        JSON.stringify({
+          speech: `There was an error processing the article. Not an article`
+        })
+      );
+    }
+  } catch (reason) {
+    logger.error('Error in /summaryText ' + reason);
+    const errSpeech = `There was an error processing the article. ${reason}`;
+    res.status(404).send(JSON.stringify({ speech: errSpeech }));
+  }
+});
+
 // Request body parameters:
 // url: article url
 // userid
