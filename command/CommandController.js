@@ -21,14 +21,6 @@ const database = new Database();
 const HostnameHelper = require('./HostnameHelper.js');
 const hostnameHelper = new HostnameHelper();
 
-var endInstructionsData = {
-  text:
-    'Your article is finished. ' +
-    'To listen to more articles say "Alexa, tell Scout to get titles"',
-  url: '',
-  date: 0
-};
-
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(bodyParser.json());
 
@@ -145,7 +137,7 @@ router.post('/intent', VerifyToken, async function(req, res) {
 // url: article url
 // userid
 // extended_data: 1 (optional) to have publisher name and favicon
-// meta_audio: 1 (optional) to have intro/outro/instructions audiofiles
+// meta_audio: 1 (optional) to have intro/outro audiofiles
 router.post('/article', VerifyToken, async function(req, res) {
   logger.info(`POST /article: ${req.body.url}`);
   logMetric('article', req.body.userid, req.get('User-Agent'));
@@ -696,7 +688,6 @@ async function processArticleRequest(
   if (metaAudioRequested) {
     let metaAudio = await generateMetaAudio(result, summaryOnly);
 
-    result.instructions_url = metaAudio.instructions_url;
     result.intro_url = metaAudio.intro_url;
     result.outro_url = metaAudio.outro_url;
   }
@@ -706,7 +697,7 @@ async function processArticleRequest(
   return result;
 }
 
-// generateMetaAudio returns urls to intro/outro/instructions audio files.
+// generateMetaAudio returns urls to intro/outro audio files.
 // It tries to fetch them from the database
 // It regenerates them if they are in db but they were deleted from S3
 // or generates them if they are not in db
@@ -805,20 +796,10 @@ async function generateMetaAudio(data, summaryOnly) {
 
     await audioHelper.storeOutroLocation(data.item_id, outro, voice);
   }
-  // regenerate end_instructions if file doesn't exist anymore
-  if (!(await audioHelper.checkFileExistence(endInstructionsData.url))) {
-    endInstructionsData.url = await buildAudioFromText(
-      endInstructionsData.text,
-      voice,
-      data.item_id
-    );
-    endInstructionsData.date = Date.now();
-  }
 
   return {
     intro_url: intro,
-    outro_url: outro,
-    instructions_url: endInstructionsData.url
+    outro_url: outro
   };
 }
 
