@@ -68,51 +68,72 @@ class Database {
   async getMobileLang(articleId) {
     logger.info(`getMobileLang for ${articleId}`);
     return new Promise(resolve => {
-      AudioFiles.query('item_id')
-        .eq(articleId)
-        .filter(constants.strings.TYPE_FIELD)
-        .eq(constants.strings.TYPE_MOBILE)
-        .exec()
-        .then(function(data) {
-          if (data.count) {
-            resolve(data[0].lang);
-          } else {
-            resolve('');
-          }
-        });
+      try {
+        AudioFiles.query('item_id')
+          .eq(articleId)
+          .filter(constants.strings.TYPE_FIELD)
+          .eq(constants.strings.TYPE_MOBILE)
+          .exec()
+          .then(function(data) {
+            if (data.count) {
+              resolve(data[0].lang);
+            } else {
+              logger.error('GETMOBILELANG RETURNED NO DATA TAMARA');
+              resolve('');
+            }
+          });
+      } catch (error) {
+        logger.error('GETMOBILELANG EXCEPTION TAMARA: ');
+        logger.error(error);
+      }
     });
   }
 
   async getMobileMetadataForLocale(articleId, locale) {
     logger.info(`getMobileMetadata for ${articleId} and locale ${locale}`);
     return new Promise(resolve => {
-      AudioFiles.query('item_id')
-        .eq(articleId)
-        .filter(constants.strings.TYPE_FIELD)
-        .eq(constants.strings.TYPE_MOBILE)
-        .filter(constants.strings.LOCALE_FIELD)
-        .eq(locale)
-        .exec()
-        .then(function(data) {
-          logger.debug(JSON.stringify(data));
-          logger.debug('length is: ' + data.length);
-
-          resolve(data);
-        });
+      try {
+        AudioFiles.query('item_id')
+          .eq(articleId)
+          .filter(constants.strings.TYPE_FIELD)
+          .eq(constants.strings.TYPE_MOBILE)
+          .filter(constants.strings.LOCALE_FIELD)
+          .eq(locale)
+          .exec()
+          .then(function(data) {
+            if (data) {
+              logger.debug('TAMARA length is: ' + data.length);
+              logger.debug(JSON.stringify(data));
+            } else {
+              logger.error(
+                'getMobileMetadataForLocale RETURNED NO DATA TAMARA'
+              );
+            }
+            resolve(data);
+          });
+      } catch (error) {
+        logger.error('TAMARA caught query error:  ' + error);
+        resolve('');
+      }
     });
   }
 
   async getMobileMetadata(articleId) {
     logger.info(`getMobileMetadata for ${articleId}`);
     return new Promise(resolve => {
-      AudioFiles.query('item_id')
-        .eq(articleId)
-        .filter(constants.strings.TYPE_FIELD)
-        .eq(constants.strings.TYPE_MOBILE)
-        .exec()
-        .then(function(data) {
-          resolve(data);
-        });
+      try {
+        AudioFiles.query('item_id')
+          .eq(articleId)
+          .filter(constants.strings.TYPE_FIELD)
+          .eq(constants.strings.TYPE_MOBILE)
+          .exec()
+          .then(function(data) {
+            resolve(data);
+          });
+      } catch (error) {
+        logger.error('TAMARA GETMOBILEMETADATA THREW EXCEPTION');
+        logger.error(error);
+      }
     });
   }
 
@@ -157,46 +178,56 @@ class Database {
       ? constants.strings.TYPE_INTRO_SUMMARY
       : constants.strings.TYPE_INTRO_FULL;
     return new Promise(resolve => {
-      AudioFiles.query('item_id')
-        .eq(articleId)
-        .filter(constants.strings.TYPE_FIELD)
-        .eq(type)
-        .filter(constants.strings.VOICE_FIELD)
-        .eq(voice)
-        .filter(constants.strings.CODEC_FIELD)
-        .eq(constants.strings.CODEC_MP3) //Limit this to mp3 for Alexa
-        .exec()
-        .then(function(data) {
-          if (data.count) {
-            resolve(data[0].url);
-          } else {
-            logger.warn('data.count is NULL');
-            resolve('');
-          }
-        });
+      try {
+        AudioFiles.query('item_id')
+          .eq(articleId)
+          .filter(constants.strings.TYPE_FIELD)
+          .eq(type)
+          .filter(constants.strings.VOICE_FIELD)
+          .eq(voice)
+          .filter(constants.strings.CODEC_FIELD)
+          .eq(constants.strings.CODEC_MP3) //Limit this to mp3 for Alexa
+          .exec()
+          .then(function(data) {
+            if (data.count) {
+              resolve(data[0].url);
+            } else {
+              logger.warn('data.count is NULL');
+              resolve('');
+            }
+          });
+      } catch (error) {
+        logger.error('getIntroAudioLocation threw EXCEPTION: TAMARA');
+        logger.error(error);
+      }
     });
   }
 
   async getOutroAudioLocation(articleId, voice) {
     logger.info(`getOutroAudioLocation for ${articleId}`);
     return new Promise(resolve => {
-      AudioFiles.query('item_id')
-        .eq(articleId)
-        .filter(constants.strings.TYPE_FIELD)
-        .eq(constants.strings.TYPE_OUTRO)
-        .filter(constants.strings.VOICE_FIELD)
-        .eq(voice)
-        .filter(constants.strings.CODEC_FIELD)
-        .eq(constants.strings.CODEC_MP3) //Limit to mp3 for Alexa
-        .exec()
-        .then(function(data) {
-          if (data.count) {
-            resolve(data[0].url);
-          } else {
-            logger.warn('Data count is null');
-            resolve('');
-          }
-        });
+      try {
+        AudioFiles.query('item_id')
+          .eq(articleId)
+          .filter(constants.strings.TYPE_FIELD)
+          .eq(constants.strings.TYPE_OUTRO)
+          .filter(constants.strings.VOICE_FIELD)
+          .eq(voice)
+          .filter(constants.strings.CODEC_FIELD)
+          .eq(constants.strings.CODEC_MP3) //Limit to mp3 for Alexa
+          .exec()
+          .then(function(data) {
+            if (data.count) {
+              resolve(data[0].url);
+            } else {
+              logger.warn('Data count is null');
+              resolve('');
+            }
+          });
+      } catch (error) {
+        logger.error('TAMARA: getOutroAudioLocation threw EXCEPTION');
+        logger.error(error);
+      }
     });
   }
 
@@ -289,6 +320,7 @@ class Database {
       await Promise.all(promiseArr);
     } catch (err) {
       logger.error(`storeAudioFileLocation error: ${err}`);
+      logger.error(`TAMARA storeAudioFileLocation error: ${err}`);
     }
   }
 }

@@ -212,15 +212,18 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
             ),
             voice.meta
           );
+          logger.debug('calling buildPocketAudio: ' + req.body.article_id);
           let audioMetadata = await buildPocketAudio(
             introFile,
             articleFile,
             req.body.article_id
           );
+          logger.debug('returning buildPocketAudio: ' + req.body.article_id);
           // Add the correct voice:
           audioMetadata['voice'] = voice.main;
 
           logger.debug('Calling StoreMobileLocation: ' + audioMetadata.url);
+          logger.debug('Calling StoreMobileLocation: ' + req.body.article_id);
           await audioHelper.storeMobileLocation(
             req.body.article_id,
             article.lang,
@@ -229,12 +232,15 @@ router.post('/articleservice', VerifyToken, async function(req, res) {
             voice.localeSynthesis
           );
 
+          logger.debug('Returning StoreMobileLocation: ' + req.body.article_id);
           // Re-query the metadata for new file info
           mobileMetadata = await audioHelper.getMobileMetadataForLocale(
             req.body.article_id,
             voice.localeSynthesis
           );
-          logger.debug('mobilemetadata is: ' + mobileMetadata);
+          logger.debug(
+            'mobilemetadata is: ' + mobileMetadata + ':' + req.body.article_id
+          );
           let response = await buildPocketResponseFromMetadata(
             mobileMetadata,
             version
@@ -904,6 +910,7 @@ async function buildAudioFromText(
   voiceType = process.env.POLLY_VOICE || 'Salli',
   article_id
 ) {
+  logger.debug('Calling buildAudioFromText');
   const cleanText = texttools.cleanText(textString);
   const chunkText = texttools.chunkText(cleanText);
   logger.debug('chunkText is: ', chunkText.length, chunkText);

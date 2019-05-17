@@ -12,16 +12,16 @@ const utils = new Utils();
 
 var polly_tts = {
   /* Sends a chunk of text to be synthesized by Polly.
-  * text: Text to be synthesized (with ssml tags)
-  * filenameIndex: an index denoting this chunk of 
-  * text's array index (for later stitching)
-  * audio_file: the name of the root of the file to
-  * attach the index to.
-  * voiceType: 
-  *
-  * resolves: The name of the new synthesized local file.
-  * reject: error from Polly.
-  */
+   * text: Text to be synthesized (with ssml tags)
+   * filenameIndex: an index denoting this chunk of
+   * text's array index (for later stitching)
+   * audio_file: the name of the root of the file to
+   * attach the index to.
+   * voiceType:
+   *
+   * resolves: The name of the new synthesized local file.
+   * reject: error from Polly.
+   */
   getPollyChunk: function(text, filenameIndex, audio_file, voiceType) {
     return new Promise(function(resolve, reject) {
       let rate = process.env.PROSODY_RATE || 'medium';
@@ -55,6 +55,7 @@ var polly_tts = {
         } else if (data) {
           if (data.AudioStream instanceof Buffer) {
             let audioFile = './' + audio_file + '-' + filenameIndex + '.mp3';
+            logger.debug('audioFile is: ' + audioFile);
             fs.writeFile(audioFile, data.AudioStream, function(err) {
               if (err) {
                 reject(err);
@@ -65,6 +66,7 @@ var polly_tts = {
               }
             });
           } else {
+            logger.error('TAMARA: not a proper audio stream');
             reject('Not a proper AudioStream');
           }
         }
@@ -73,11 +75,11 @@ var polly_tts = {
   },
 
   /* Stitches together an array of local audio
-  * files using ffmpeg.
-  *
-  * resolves: The name of the new stitches file.
-  * reject: error from ffmpeg 
-  */
+   * files using ffmpeg.
+   *
+   * resolves: The name of the new stitches file.
+   * reject: error from ffmpeg
+   */
   concatAudio: function(parts, audio_file) {
     return new Promise((resolve, reject) => {
       let filename = './' + audio_file + '.mp3';
@@ -95,17 +97,18 @@ var polly_tts = {
         .on('end', function(output) {
           logger.debug('ending: ' + Date.now());
           logger.debug('Audio created in:' + output);
+          logger.debug('Filename is: ' + filename);
           resolve(filename);
         });
     });
   },
 
   /* This is special handling for the Pocket audio file.
-  * Synthesizes a speech file for an array of text 
-  * chunks.
-  *  
-  * resolves: The name of the new local audio file 
-  */
+   * Synthesizes a speech file for an array of text
+   * chunks.
+   *
+   * resolves: The name of the new local audio file
+   */
   synthesizeSpeechFile(parts, voiceType) {
     return new Promise(resolve => {
       let audio_file = uuidgen.generate();
@@ -120,57 +123,73 @@ var polly_tts = {
           return polly_tts.concatAudio(values, audio_file);
         })
         .then(function(newAudioFile) {
+          logger.debug('TAMARA NEWAUDIOFILE ' + newAudioFile);
           resolve(newAudioFile);
         });
     });
   },
 
   /* This is special handling for the Pocket audio file.
-  * It stitches together the intro and outro for the clients.
-  *   
-  *    concat intro + body
-  *    upload stitched file
-  *    resolve stitched file
-  *    ... then the rest can be done after the promise resolves
-  *    fire xcode request to sqs
-  *    handle db writes
-  *    upload intro & body separately for Alexa.
-  */
+   * It stitches together the intro and outro for the clients.
+   *
+   *    concat intro + body
+   *    upload stitched file
+   *    resolve stitched file
+   *    ... then the rest can be done after the promise resolves
+   *    fire xcode request to sqs
+   *    handle db writes
+   *    upload intro & body separately for Alexa.
+   */
   processPocketAudio(introFile, articleFile, article_id) {
+    logger.debug('processPocketAudio: ' + article_id);
     return new Promise(resolve => {
-      polly_tts
-        .concatAudio([introFile, articleFile], uuidgen.generate())
-        .then(function(audio_file) {
-          return polly_tts.uploadFile(audio_file);
-        })
-        .then(function(audio_url) {
-          return polly_tts.getFileMetadata(audio_url);
-        })
-        .then(function(audio_metadata) {
-          resolve(audio_metadata);
-          // Delete the local file now that it's uploaded.
-          let audio_file = utils.urlToFile(audio_metadata.url);
-          polly_tts.deleteLocalFiles(audio_file, function(err) {
-            if (err) {
-              logger.error('Error removing files ' + err);
-            } else {
-              logger.debug('all files removed');
-            }
+      try {
+        let fileStub = uuidgen.generate();
+        logger.debug('TAMARA: File root: ' + fileStub + ':' + article_id);
+        polly_tts
+          .concatAudio([introFile, articleFile], fileStub)
+          .then(function(audio_file) {
+            logger.debug('Uploading file: ' + audio_file);
+            return polly_tts.uploadFile(audio_file);
+          })
+          .then(function(audio_url) {
+            logger.debug('Getting audio_url: ' + audio_url);
+            return polly_tts.getFileMetadata(audio_url);
+          })
+          .then(function(audio_metadata) {
+            resolve(audio_metadata);
+            // Delete the local file now that it's uploaded.
+            let audio_file = utils.urlToFile(audio_metadata.url);
+            logger.debug('TAMARA Deleting audio_file: ' + audio_file);
+            polly_tts.deleteLocalFiles(audio_file, function(err) {
+              if (err) {
+                logger.error('Error removing files ' + err);
+              } else {
+                logger.debug('all files removed');
+              }
+            });
+            // Send the stitched file off for transcoding.
+            xcodeQueue.add(audio_file, article_id);
           });
-          // Send the stitched file off for transcoding.
-          xcodeQueue.add(audio_file, article_id);
-        });
+      } catch (error) {
+        logger.error(
+          'TAMARA Caught an exception in processPocketAudio: ' +
+            articleFile +
+            ':' +
+            article_id
+        );
+      }
     });
   },
 
-  /* 
-  * This uploads a synthesized file to the
-  * configured S3 bucket in the environment
-  * variable POLLY_S3_BUCKET.  
-  * 
-  * resolves: URL of the file
-  * reject: error
-  */
+  /*
+   * This uploads a synthesized file to the
+   * configured S3 bucket in the environment
+   * variable POLLY_S3_BUCKET.
+   *
+   * resolves: URL of the file
+   * reject: error
+   */
   uploadFile: function(newAudioFile) {
     return new Promise((resolve, reject) => {
       var s3 = new AWS.S3({
@@ -206,20 +225,20 @@ var polly_tts = {
     });
   },
 
-  /* 
-  * This synthesizes the chunked up file
-  * and returns a URL of the mp3.  Clients
-  * of this function are the Scout skill, 
-  * mobile app.  Not used by the pocket app.
-  *
-  * It also queues the final product for
-  * transcoding to opus format in the S3
-  * bucket at a later date.  All temp files
-  * used to synthesize the file are deleted
-  * 
-  * resolves: URL of the file
-  * reject: error
-  */
+  /*
+   * This synthesizes the chunked up file
+   * and returns a URL of the mp3.  Clients
+   * of this function are the Scout skill,
+   * mobile app.  Not used by the pocket app.
+   *
+   * It also queues the final product for
+   * transcoding to opus format in the S3
+   * bucket at a later date.  All temp files
+   * used to synthesize the file are deleted
+   *
+   * resolves: URL of the file
+   * reject: error
+   */
   getSpeechSynthUrl: function(parts, voiceType, item_id) {
     return new Promise((resolve, reject) => {
       let audio_file = uuidgen.generate();
@@ -279,19 +298,19 @@ var polly_tts = {
     });
   },
 
-  /* 
-  * Takes a local audio file and:
-  * 1.  Uploads to the S3 bucket
-  * 2.  Queues it for transcoding to opus
-  * 3.  Deletes the local file.
-  * Currently used by the Pocket app as a 
-  * special handling for the case of stitching
-  * the intro/main article instead of returning
-  * separate parts.
-  *
-  * resolves: URL of the audio file in S3 Bucket.
-  * reject: error
-  */
+  /*
+   * Takes a local audio file and:
+   * 1.  Uploads to the S3 bucket
+   * 2.  Queues it for transcoding to opus
+   * 3.  Deletes the local file.
+   * Currently used by the Pocket app as a
+   * special handling for the case of stitching
+   * the intro/main article instead of returning
+   * separate parts.
+   *
+   * resolves: URL of the audio file in S3 Bucket.
+   * reject: error
+   */
   postProcessPart: function(audio_file) {
     return new Promise(resolve => {
       polly_tts.uploadFile(audio_file).then(function(audio_url) {
@@ -309,15 +328,15 @@ var polly_tts = {
     });
   },
 
-  /* 
-  * Takes a local mp3 file:
-  * 1. Changes file.mp3 to file*.*
-  * 2. Searches locally for file*.* files
-  * 3. Iterates through those files and 
-  *    deletes them
-  * Should only be called after everything has
-  * been uploaded.
-  */
+  /*
+   * Takes a local mp3 file:
+   * 1. Changes file.mp3 to file*.*
+   * 2. Searches locally for file*.* files
+   * 3. Iterates through those files and
+   *    deletes them
+   * Should only be called after everything has
+   * been uploaded.
+   */
   deleteLocalFiles: function(rootFile, callback) {
     logger.debug('Entering deleteLocalFiles: ' + rootFile);
     let files = glob.sync(rootFile.replace('.mp3', '*.*'));
@@ -338,18 +357,18 @@ var polly_tts = {
     });
   },
 
-  /* 
-  * Takes an audio_url in S3:
-  * Gets the size, sample rate, duration, format, voice
-  * for the given file
-  *
-  * 1. Convert URL to local filename
-  * 2. Get the filesize.
-  * 3. Get the audio attributes using ffmpeg
-  *
-  * resolve: metadata object
-  * reject: err
-  */
+  /*
+   * Takes an audio_url in S3:
+   * Gets the size, sample rate, duration, format, voice
+   * for the given file
+   *
+   * 1. Convert URL to local filename
+   * 2. Get the filesize.
+   * 3. Get the audio attributes using ffmpeg
+   *
+   * resolve: metadata object
+   * reject: err
+   */
   getFileMetadata: function(audio_url) {
     let audio_file = './' + utils.urlToFile(audio_url);
     return new Promise((resolve, reject) => {
@@ -376,9 +395,9 @@ var polly_tts = {
   },
 
   /*
-  * Given an audio_url in an S3 bucket, returns the
-  * size of the file.
-  */
+   * Given an audio_url in an S3 bucket, returns the
+   * size of the file.
+   */
   getFileSizeFromUrl: async function(audio_url) {
     return new Promise(resolve => {
       logger.debug('getFileSizeFromUrl');
